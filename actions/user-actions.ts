@@ -37,12 +37,19 @@ export async function updateApiKeys(formData: FormData) {
     }
 }
 
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+
 export async function updateClaudeSettings(formData: FormData) {
     try {
         const session = await auth();
 
         if (!session?.user?.id) {
             return { success: false, error: 'Unauthorized' };
+        }
+
+        const subscriptionPlan = await getUserSubscriptionPlan();
+        if (!subscriptionPlan.isPro) {
+            return { success: false, error: 'Pro subscription required for Claude features' };
         }
 
         const claudeApiKey = formData.get('claudeApiKey') as string;

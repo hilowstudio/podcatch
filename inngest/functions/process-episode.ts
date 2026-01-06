@@ -24,11 +24,14 @@ export const processEpisode = inngest.createFunction(
                         include: {
                             user: {
                                 select: {
+                                    id: true,
                                     geminiApiKey: true,
                                     deepgramApiKey: true,
                                     claudeApiKey: true,
                                     claudeProjectId: true,
                                     autoSyncToClaude: true,
+                                    stripePriceId: true,
+                                    stripeCurrentPeriodEnd: true,
                                 },
                             },
                         },
@@ -40,6 +43,16 @@ export const processEpisode = inngest.createFunction(
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
+            // Check Subscription Status
+            const DAY_IN_MS = 86_400_000;
+            const isPro = !!ep.feed.user.stripePriceId &&
+                (ep.feed.user.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
+
+            if (!isPro) {
+                console.log(`Skipping processing for user ${ep.feed.user.id} (Not Pro)`);
+                return { ...ep, skipped: true };
+            }
+
             // Update status to PROCESSING
             await prisma.episode.update({
                 where: { id: episodeId },
@@ -48,6 +61,10 @@ export const processEpisode = inngest.createFunction(
 
             return ep;
         });
+
+        if ((episode as any).skipped) {
+            return { skipped: true, reason: 'Upgrade to Pro to process episodes' };
+        }
 
         console.log(`Processing episode: ${episode.title}`);
 

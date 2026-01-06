@@ -35,6 +35,12 @@ model User {
   claudeApiKey     String? // For Claude API access
   claudeProjectId  String? // User's Claude Project ID to sync to
   autoSyncToClaude Boolean @default(true) // Auto-add episodes to Claude Project
+
+  // Stripe Pro Subscription
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
