@@ -42,7 +42,13 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate }: Fe
                         <CardTitle className="line-clamp-2 text-lg flex-1">
                             {title || 'Untitled Feed'}
                         </CardTitle>
-                        <div onClick={(e) => e.preventDefault()} className="flex-shrink-0">
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                            }}
+                            className="flex-shrink-0"
+                        >
                             <DeleteFeedButton feedId={id} feedTitle={title || 'Untitled Feed'} />
                         </div>
                     </div>
