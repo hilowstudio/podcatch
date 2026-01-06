@@ -24,12 +24,16 @@ export async function POST(req: Request) {
 
     if (event.type === 'checkout.session.completed') {
         const subscription = await stripe.subscriptions.retrieve(
-            session.subscription as string
-        ) as any;
+            session.subscription as string,
+            { expand: ['items.data.price'] }
+        ) as Stripe.Subscription;
 
         if (!session?.metadata?.userId) {
+            console.error('Webhook Error: No userId in session metadata', session);
             return new NextResponse('User id is required', { status: 400 });
         }
+
+        console.log(`[WEBHOOK] Updating subscription for user ${session.metadata.userId}`);
 
         await prisma.user.update({
             where: {
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
                 stripeCustomerId: subscription.customer as string,
                 stripePriceId: subscription.items.data[0].price.id,
                 stripeCurrentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000
+                    (subscription as any).current_period_end * 1000
                 ),
             },
         });
@@ -49,8 +53,9 @@ export async function POST(req: Request) {
     if (event.type === 'invoice.payment_succeeded') {
         const invoice = event.data.object as any;
         const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-        ) as any;
+            invoice.subscription as string,
+            { expand: ['items.data.price'] }
+        ) as Stripe.Subscription;
 
         await prisma.user.update({
             where: {
@@ -59,7 +64,7 @@ export async function POST(req: Request) {
             data: {
                 stripePriceId: subscription.items.data[0].price.id,
                 stripeCurrentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000
+                    (subscription as any).current_period_end * 1000
                 ),
             },
         });
