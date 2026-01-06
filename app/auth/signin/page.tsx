@@ -65,21 +65,19 @@ export default function SignInPage() {
             </div>
 
             {/* Right Column: Visual */}
-            <div className="hidden md:flex flex-col justify-center items-center bg-zinc-50 p-12 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50"></div>
-
-                {/* Abstract Visual / Hero Image representation */}
-                <div className="relative w-full max-w-lg aspect-square">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-zinc-200 to-white rounded-3xl shadow-xl flex items-center justify-center border border-zinc-100">
-                        <div className="text-center p-8">
-                            <div className="text-6xl mb-4">🎙️ ➔ 🤖</div>
-                            <h3 className="text-2xl font-bold text-zinc-900 mb-2">Seamless Sync</h3>
-                            <p className="text-zinc-500">Your podcasts, transcribed and analyzed, waiting for you in Claude.</p>
-                        </div>
-                    </div>
-                    {/* Floating Elements decoration */}
-                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-black rounded-2xl shadow-lg opacity-5 animate-pulse"></div>
-                    <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-zinc-300 rounded-full blur-3xl opacity-20"></div>
+            <div className="hidden md:block relative h-full w-full bg-zinc-900">
+                <Image
+                    src="/podcast.jpg"
+                    alt="Podcast listening experience"
+                    fill
+                    className="object-cover opacity-80 mix-blend-overlay grayscale"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-12 left-12 right-12 z-10 text-white">
+                    <blockquote className="border-l-2 border-white pl-4 text-lg italic">
+                        &quot;The most efficient way to capture knowledge from audio.&quot;
+                    </blockquote>
                 </div>
             </div>
         </div>
