@@ -60,6 +60,7 @@ export async function getUserSubscriptionPlan() {
                     { expand: ['items.data.price'] }
                 );
 
+
                 if (subscription.status === 'active' || subscription.status === 'trialing') {
                     await syncSubscription(user.id, subscription);
                     isPro = true;
@@ -72,7 +73,7 @@ export async function getUserSubscriptionPlan() {
             if (!isPro) {
                 const subscriptions = await stripe.subscriptions.list({
                     customer: user.stripeCustomerId,
-                    status: 'all', // Fetch all then filter, or specific status. 'all' lets us see trialing.
+                    status: 'all',
                     expand: ['data.items.data.price'],
                     limit: 1,
                 });
@@ -80,14 +81,24 @@ export async function getUserSubscriptionPlan() {
                 const activeSub = subscriptions.data.find(sub => sub.status === 'active' || sub.status === 'trialing');
 
                 if (activeSub) {
-                    await syncSubscription(user.id, activeSub as any);
+                    console.log(`[SUBSCRIPTION_CHECK] Found active/trialing subscription: ${activeSub.id}`);
+                    try {
+                        console.log(`[SUBSCRIPTION_CHECK] Calling syncSubscription...`);
+                        await syncSubscription(user.id, activeSub as any);
+                        console.log(`[SUBSCRIPTION_CHECK] syncSubscription completed.`);
+                    } catch (syncError) {
+                        console.error(`[SUBSCRIPTION_CHECK] syncSubscription FAILED:`, syncError);
+                    }
+
                     isPro = true;
+                    console.log(`[SUBSCRIPTION_CHECK] Set isPro to true.`);
+
                     user.stripePriceId = activeSub.items.data[0].price.id;
                     user.stripeCurrentPeriodEnd = new Date((activeSub as any).current_period_end * 1000);
                 }
             }
         } catch (error) {
-            console.error('Error syncing subscription:', error);
+            console.error('[SUBSCRIPTION_CHECK] HUGE ERROR in self-heal block:', error);
         }
     }
 
