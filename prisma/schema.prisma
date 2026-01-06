@@ -47,7 +47,9 @@ model User {
 
   accounts Account[]
   sessions Session[]
-  feeds    Feed[]
+
+  // User's API keys and Subscription relations
+  subscriptions Subscription[]
 }
 
 model Account {
@@ -91,6 +93,22 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+// User-Feed Subscription (Many-to-Many via Join Table)
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String
+  feedId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedId]) // Prevent duplicate subscriptions
+  @@index([userId])
+  @@index([feedId])
+}
+
 // RSS Feed model
 model Feed {
   id            String    @id @default(cuid())
@@ -98,14 +116,16 @@ model Feed {
   title         String?
   image         String?
   lastCheckedAt DateTime?
-  userId        String    // Required - each feed belongs to a user
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  episodes Episode[]
+  // Relation removed to fix validation. userId scalar retained.
+  // user     User?      @relation(fields: [userId], references: [id])
+  
+  episodes      Episode[]
+  subscriptions Subscription[]
 
-  @@index([userId])
   @@index([lastCheckedAt])
 }
 

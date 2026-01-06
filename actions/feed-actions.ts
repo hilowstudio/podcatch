@@ -30,38 +30,62 @@ export async function addFeed(formData: FormData) {
             };
         }
 
-        // Check if user already has this feed
-        const existingFeed = await prisma.feed.findFirst({
+        // Check if feed exists globally
+        let feed = await prisma.feed.findUnique({
             where: {
                 url: validation.data.url,
-                userId: session.user.id,
             },
         });
 
-        if (existingFeed) {
-            return {
-                success: false,
-                error: 'You have already added this podcast feed',
-            };
+        if (feed) {
+            // Check if user already subscribed
+            const existingSubscription = await prisma.subscription.findUnique({
+                where: {
+                    userId_feedId: {
+                        userId: session.user.id,
+                        feedId: feed.id,
+                    },
+                },
+            });
+
+            if (existingSubscription) {
+                return {
+                    success: false,
+                    error: 'You have already added this podcast feed',
+                };
+            }
+
+            // Create subscription to existing feed
+            await prisma.subscription.create({
+                data: {
+                    userId: session.user.id,
+                    feedId: feed.id,
+                },
+            });
+        } else {
+            // Create new feed AND subscription
+            feed = await prisma.feed.create({
+                data: {
+                    url,
+                    title: null,
+                    image: null,
+                    // userId: session.user.id, // Deprecated, but create subscription below
+                    subscriptions: {
+                        create: {
+                            userId: session.user.id
+                        }
+                    }
+                },
+            });
+
+            // Trigger Inngest only for new feeds (or we could trigger refresh)
+            await inngest.send({
+                name: 'feed/check.requested',
+                data: {
+                    feedId: feed.id,
+                },
+            });
         }
-
-        // Create the feed with userId (title/image will be populated by Inngest)
-        const feed = await prisma.feed.create({
-            data: {
-                url,
-                title: null, // Will be updated by background job
-                image: null,
-                userId: session.user.id,
-            },
-        });
-
-        // Trigger the feed check/parsing immediately in background
-        await inngest.send({
-            name: 'feed/check.requested',
-            data: {
-                feedId: feed.id,
-            },
-        });
 
         revalidatePath('/');
 
@@ -87,24 +111,31 @@ export async function getFeeds(userId?: string) {
             currentUserId = session.user.id;
         }
 
-        const feeds = await prisma.feed.findMany({
+        const subscriptions = await prisma.subscription.findMany({
             where: {
-                userId: currentUserId, // Only return user's own feeds
+                userId: currentUserId,
             },
             include: {
-                _count: {
-                    select: { episodes: true },
-                },
-                episodes: {
-                    orderBy: { publishedAt: 'desc' },
-                    take: 1,
-                    select: { publishedAt: true },
+                feed: {
+                    include: {
+                        _count: {
+                            select: { episodes: true },
+                        },
+                        episodes: {
+                            orderBy: { publishedAt: 'desc' },
+                            take: 1,
+                            select: { publishedAt: true },
+                        },
+                    },
                 },
             },
             orderBy: { createdAt: 'desc' },
         });
 
-        return feeds;
+        // Map back to feed structure for frontend compatibility
+        return subscriptions.map(sub => sub.feed);
+
+
     } catch (error) {
         console.error('Error fetching feeds:', error);
         return [];
@@ -119,18 +150,25 @@ export async function deleteFeed(feedId: string) {
             return { success: false, error: 'Unauthorized' };
         }
 
-        // Verify user owns this feed
-        const feed = await prisma.feed.findUnique({
-            where: { id: feedId },
-            select: { userId: true },
+        // Delete the subscription, not the feed
+        // We verify ownership by the where clause on delete?
+        // No, verify existence first.
+
+        const subscription = await prisma.subscription.findFirst({
+            where: {
+                feedId: feedId,
+                userId: session.user.id,
+            },
         });
 
-        if (!feed || feed.userId !== session.user.id) {
-            return { success: false, error: 'Feed not found or unauthorized' };
+        if (!subscription) {
+            return { success: false, error: 'Feed not found in your library' };
         }
 
-        await prisma.feed.delete({
-            where: { id: feedId },
+        await prisma.subscription.delete({
+            where: {
+                id: subscription.id,
+            },
         });
 
         revalidatePath('/');
