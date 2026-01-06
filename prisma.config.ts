@@ -7,7 +7,7 @@ export default defineConfig({
         path: 'prisma/migrations',
     },
     datasource: {
-        // Supabase Direct TCP connection
-        url: env('DATABASE_URL'),
+        // Supabase Direct TCP connection (for Migrations)
+        url: env('DIRECT_DATABASE_URL'),
     },
 });
