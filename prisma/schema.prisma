@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Episode processing status
+enum EpisodeStatus {
+  DISCOVERED // Episode found in RSS feed
+  PROCESSING // Transcription and AI analysis in progress
+  COMPLETED  // All processing complete
+  FAILED     // Processing failed
+}
+
+// NextAuth User model with API keys
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  
+  // User's personal API keys (optional - falls back to system keys)
+  geminiApiKey    String?
+  deepgramApiKey  String?
+  openaiApiKey    String? // For future OpenAI support
+  
+  // Claude Projects integration
+  claudeApiKey     String? // For Claude API access
+  claudeProjectId  String? // User's Claude Project ID to sync to
+  autoSyncToClaude Boolean @default(true) // Auto-add episodes to Claude Project
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  feeds    Feed[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([sessionToken])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// RSS Feed model
+model Feed {
+  id            String    @id @default(cuid())
+  url           String    @unique
+  title         String?
+  image         String?
+  lastCheckedAt DateTime?
+  userId        String    // Required - each feed belongs to a user
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episodes Episode[]
+
+  @@index([userId])
+  @@index([lastCheckedAt])
+}
+
+// Podcast Episode model
+model Episode {
+  id          String        @id @default(cuid())
+  title       String
+  description String?       @db.Text
+  audioUrl    String
+  publishedAt DateTime
+  status      EpisodeStatus @default(DISCOVERED)
+  feedId      String
+  guid        String        @unique // RSS guid for deduplication
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  feed    Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  insight Insight?
+
+  @@index([feedId])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+// AI-generated insights
+model Insight {
+  id           String   @id @default(cuid())
+  episodeId    String   @unique
+  transcript   String   @db.Text
+  summary      String   @db.Text
+  keyTakeaways Json     // Array of 5 bullet points
+  links        Json     // Array of URLs mentioned
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([episodeId])
+}
