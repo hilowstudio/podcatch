@@ -23,9 +23,9 @@ export const processEpisode = inngest.createFunction(
                     feed: {
                         include: {
                             subscriptions: {
-                                take: 10, // Check multiple users to find a Pro sponsor
+                                take: 50, // Check plenty of users
                                 orderBy: [
-                                    { user: { stripePriceId: 'desc' } }, // Prioritize those with a Price ID
+                                    { user: { stripePriceId: 'asc' } }, // ASC puts non-nulls BEFORE nulls in Postgres
                                     { createdAt: 'asc' }
                                 ],
                                 include: {
@@ -52,9 +52,17 @@ export const processEpisode = inngest.createFunction(
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
-            // Find the first valid Pro user to fund the processing
+            // Find the first valid Pro user
             const DAY_IN_MS = 86_400_000;
             const now = Date.now();
+
+            console.log(`Checking ${ep.feed.subscriptions.length} subscribers for Pro status...`);
+            ep.feed.subscriptions.forEach(s => {
+                const u = s.user;
+                const end = u?.stripeCurrentPeriodEnd?.getTime() ?? 0;
+                const active = end + DAY_IN_MS > now;
+                console.log(`- User ${u?.id?.slice(0, 8)}: Price=${u?.stripePriceId ?? 'None'}, Ends=${u?.stripeCurrentPeriodEnd?.toISOString() ?? 'N/A'}, Active=${active}`);
+            });
 
             const fundingUser = ep.feed.subscriptions.map(s => s.user).find(u => {
                 return !!u?.stripePriceId &&
@@ -65,10 +73,12 @@ export const processEpisode = inngest.createFunction(
             const fallbackUser = ep.feed.subscriptions[0]?.user;
 
             if (!fundingUser) {
-                console.log(`Skipping processing for episode ${episodeId} (No Pro subscribers found)`);
+                console.log(`Skipping: No qualifying Pro user found among ${ep.feed.subscriptions.length} subscribers.`);
                 // Return fallback user logic but marked as skipped
                 return { ...ep, feed: { ...ep.feed, user: fallbackUser || null }, skipped: true };
             }
+
+            console.log(`Funded by Pro User: ${fundingUser.id} (${fundingUser.stripePriceId})`);
 
             // Update status to PROCESSING
             await prisma.episode.update({
