@@ -9,11 +9,17 @@ export const checkFeeds = inngest.createFunction(
         id: 'check-feeds',
         name: 'Check RSS Feeds for New Episodes',
     },
-    { cron: '0 * * * *' }, // Run hourly
-    async ({ step }) => {
-        // Step 1: Fetch all feeds from the database
+    [
+        { cron: '0 * * * *' }, // Run hourly
+        { event: 'feed/check.requested' }, // OR run when requested
+    ],
+    async ({ step, event }) => {
+        const feedId = event.name === 'feed/check.requested' ? event.data.feedId : undefined;
+
+        // Step 1: Fetch feeds (specific feed if requested, or all feeds)
         const feeds = await step.run('fetch-feeds', async () => {
             return prisma.feed.findMany({
+                where: feedId ? { id: feedId } : undefined,
                 select: {
                     id: true,
                     url: true,

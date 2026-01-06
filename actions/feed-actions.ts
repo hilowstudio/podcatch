@@ -4,10 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { inngest } from '@/lib/inngest/client';
 import { addFeedSchema } from '@/lib/validations/feed';
-import Parser from 'rss-parser';
 import { auth } from '@/auth';
 
-const rssParser = new Parser();
 
 export async function addFeed(formData: FormData) {
     try {
@@ -47,20 +45,17 @@ export async function addFeed(formData: FormData) {
             };
         }
 
-        // Parse the RSS feed to get metadata
-        const rssFeed = await rssParser.parseURL(url);
-
-        // Create the feed with userId
+        // Create the feed with userId (title/image will be populated by Inngest)
         const feed = await prisma.feed.create({
             data: {
                 url,
-                title: rssFeed.title || null,
-                image: rssFeed.image?.url || rssFeed.itunes?.image || null,
-                userId: session.user.id, // Associate with current user
+                title: null, // Will be updated by background job
+                image: null,
+                userId: session.user.id,
             },
         });
 
-        // Trigger the feed check immediately
+        // Trigger the feed check/parsing immediately in background
         await inngest.send({
             name: 'feed/check.requested',
             data: {
@@ -80,17 +75,21 @@ export async function addFeed(formData: FormData) {
     }
 }
 
-export async function getFeeds() {
+export async function getFeeds(userId?: string) {
     try {
-        const session = await auth();
+        let currentUserId = userId;
 
-        if (!session?.user?.id) {
-            return [];
+        if (!currentUserId) {
+            const session = await auth();
+            if (!session?.user?.id) {
+                return [];
+            }
+            currentUserId = session.user.id;
         }
 
         const feeds = await prisma.feed.findMany({
             where: {
-                userId: session.user.id, // Only return user's own feeds
+                userId: currentUserId, // Only return user's own feeds
             },
             include: {
                 _count: {
