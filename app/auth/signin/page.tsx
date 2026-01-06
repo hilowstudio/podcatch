@@ -67,7 +67,7 @@ export default function SignInPage() {
             {/* Right Column: Visual */}
             <div className="hidden md:block relative h-full w-full bg-muted">
                 <Image
-                    src="/podcast.jpg"
+                    src="/podcast.png"
                     alt="Podcast listening experience"
                     fill
                     className="object-cover"
