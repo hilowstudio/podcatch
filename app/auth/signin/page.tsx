@@ -3,13 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Rss } from 'lucide-react';
 
+import Image from 'next/image';
+
 export default function SignInPage() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-muted/20 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                        <Rss className="h-8 w-8 text-primary" />
+                    <div className="mx-auto mb-4 relative h-20 w-20">
+                        <Image
+                            src="/podcatch.png"
+                            alt="PodCatch Logo"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
                     </div>
                     <CardTitle className="text-3xl">Welcome to PodFlow</CardTitle>
                     <CardDescription className="text-base">

@@ -31,19 +31,17 @@ export default async function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-            <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container mx-auto flex h-16 items-center px-4">
+            <main className="container mx-auto max-w-2xl px-4 py-8">
+                <div className="mb-8">
                     <Link
                         href="/"
-                        className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+                        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground mb-6"
                     >
-                        <ArrowLeft className="h-5 w-5" />
+                        <ArrowLeft className="h-4 w-4" />
                         Back to Dashboard
                     </Link>
                 </div>
-            </header>
 
-            <main className="container mx-auto max-w-2xl px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                     <p className="text-muted-foreground mt-2">Connect your Claude Project for automatic podcast insights</p>

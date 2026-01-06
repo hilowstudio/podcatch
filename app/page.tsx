@@ -11,22 +11,12 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Rss className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">PodFlow</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <AddFeedDialog />
-            {session?.user && <UserMenu user={session.user} />}
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold tracking-tight">Your Podcasts</h2>
+          <AddFeedDialog />
+        </div>
         {feeds.length === 0 ? (
           <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
             <Rss className="h-24 w-24 text-muted-foreground/40 mb-6" />
@@ -39,8 +29,7 @@ export default async function Home() {
           </div>
         ) : (
           <>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold tracking-tight mb-2">Your Podcasts</h2>
+            <div className="mb-6">
               <p className="text-muted-foreground">
                 {feeds.length} {feeds.length === 1 ? 'feed' : 'feeds'} • Automated intelligence extraction
               </p>
