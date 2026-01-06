@@ -22,18 +22,24 @@ export const processEpisode = inngest.createFunction(
                 include: {
                     feed: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    geminiApiKey: true,
-                                    deepgramApiKey: true,
-                                    claudeApiKey: true,
-                                    claudeProjectId: true,
-                                    autoSyncToClaude: true,
-                                    stripePriceId: true,
-                                    stripeCurrentPeriodEnd: true,
-                                },
-                            },
+                            subscriptions: {
+                                take: 1,
+                                orderBy: { createdAt: 'asc' }, // Use valid initial subscriber
+                                include: {
+                                    user: {
+                                        select: {
+                                            id: true,
+                                            geminiApiKey: true,
+                                            deepgramApiKey: true,
+                                            claudeApiKey: true,
+                                            claudeProjectId: true,
+                                            autoSyncToClaude: true,
+                                            stripePriceId: true,
+                                            stripeCurrentPeriodEnd: true,
+                                        },
+                                    },
+                                }
+                            }
                         },
                     },
                 },
@@ -43,14 +49,22 @@ export const processEpisode = inngest.createFunction(
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
-            // Check Subscription Status
+            // Extract the funding user (first subscriber)
+            const fundingUser = ep.feed.subscriptions[0]?.user;
+
+            if (!fundingUser) {
+                console.log(`Skipping processing for episode ${episodeId} (No subscribers found)`);
+                return { ...ep, feed: { ...ep.feed, user: null }, skipped: true };
+            }
+
+            // Check Subscription Status using the funding user
             const DAY_IN_MS = 86_400_000;
-            const isPro = !!ep.feed.user.stripePriceId &&
-                (ep.feed.user.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
+            const isPro = !!fundingUser.stripePriceId &&
+                (fundingUser.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
 
             if (!isPro) {
-                console.log(`Skipping processing for user ${ep.feed.user.id} (Not Pro)`);
-                return { ...ep, skipped: true };
+                console.log(`Skipping processing for user ${fundingUser.id} (Not Pro)`);
+                return { ...ep, feed: { ...ep.feed, user: fundingUser }, skipped: true };
             }
 
             // Update status to PROCESSING
@@ -59,7 +73,14 @@ export const processEpisode = inngest.createFunction(
                 data: { status: 'PROCESSING' },
             });
 
-            return ep;
+            // Return with 'user' patched into feed for backward compatibility
+            return {
+                ...ep,
+                feed: {
+                    ...ep.feed,
+                    user: fundingUser
+                }
+            };
         });
 
         if ((episode as any).skipped) {
@@ -72,7 +93,7 @@ export const processEpisode = inngest.createFunction(
         const transcript = await step.run('transcribe-audio', async () => {
             try {
                 // Use user's Deepgram API key if available, fallback to system key
-                const deepgramApiKey = episode.feed.user.deepgramApiKey || process.env.DEEPGRAM_API_KEY;
+                const deepgramApiKey = episode.feed.user?.deepgramApiKey || process.env.DEEPGRAM_API_KEY;
 
                 if (!deepgramApiKey) {
                     throw new Error('No Deepgram API key available (user or system)');
@@ -114,7 +135,7 @@ export const processEpisode = inngest.createFunction(
         const insights = await step.run('analyze-with-ai', async () => {
             try {
                 // Use user's Gemini API key if available, fallback to system key
-                const geminiApiKey = episode.feed.user.geminiApiKey || process.env.GEMINI_API_KEY;
+                const geminiApiKey = episode.feed.user?.geminiApiKey || process.env.GEMINI_API_KEY;
 
                 if (!geminiApiKey) {
                     throw new Error('No Gemini API key available (user or system)');
@@ -170,14 +191,14 @@ Please provide detailed, actionable insights that would be valuable to someone w
         });
 
         // Step 5: Sync to Claude Project (if user has it configured)
-        if (episode.feed.user.autoSyncToClaude && episode.feed.user.claudeApiKey && episode.feed.user.claudeProjectId) {
+        if (episode.feed.user?.autoSyncToClaude && episode.feed.user?.claudeApiKey && episode.feed.user?.claudeProjectId) {
             await step.run('sync-to-claude', async () => {
                 try {
                     const { syncEpisodeToClaude } = await import('@/lib/claude/sync');
 
                     const result = await syncEpisodeToClaude({
-                        apiKey: episode.feed.user.claudeApiKey!,
-                        projectId: episode.feed.user.claudeProjectId!,
+                        apiKey: episode.feed.user?.claudeApiKey!,
+                        projectId: episode.feed.user?.claudeProjectId!,
                         episodeTitle: episode.title,
                         feedTitle: episode.feed.title || 'Podcast',
                         publishedAt: new Date(episode.publishedAt),
