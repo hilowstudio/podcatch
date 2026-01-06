@@ -37,21 +37,37 @@ export async function POST(req: Request) {
             return new NextResponse('User not found', { status: 404 });
         }
 
-        // If user already has a Stripe Customer ID, reuse it
+        // If user already has a Stripe Customer ID, ensure it exists in the current environment (Test vs Live)
         let customerId = user.stripeCustomerId;
 
-        // If user has a subscription, redirect to billing portal (manage subscription)
-        if (user.stripeSubscriptionId && user.stripeCustomerId) {
-            const stripeSession = await stripe.billingPortal.sessions.create({
-                customer: user.stripeCustomerId,
-                return_url: settingsUrl,
-            });
-
-            return NextResponse.json({ url: stripeSession.url });
+        if (customerId) {
+            try {
+                // Verify customer exists in Stripe
+                const customer = await stripe.customers.retrieve(customerId);
+                if ((customer as any).deleted) {
+                    customerId = null; // Customer was deleted in Stripe
+                }
+            } catch (error) {
+                // If ID exists in DB but not in Stripe (e.g. environment switch), reset it
+                console.warn(`[STRIPE] Customer ${customerId} not found. Creating new one.`);
+                customerId = null;
+            }
         }
 
-        // If no customer ID exists, create one (OPTIONAL: In simple flow, Checkout can create customer)
-        // But creating it ensures we have it linked
+        if (customerId && user.stripeSubscriptionId) {
+            try {
+                const stripeSession = await stripe.billingPortal.sessions.create({
+                    customer: customerId,
+                    return_url: settingsUrl,
+                });
+                return NextResponse.json({ url: stripeSession.url });
+            } catch (e) {
+                console.error('[STRIPE_PORTAL]', e);
+                // Fall through to checkout if portal fails
+            }
+        }
+
+        // If no customer ID exists (or was invalid), create one
         if (!customerId) {
             const customer = await stripe.customers.create({
                 email: session.user.email,
@@ -61,7 +77,7 @@ export async function POST(req: Request) {
             });
             customerId = customer.id;
 
-            // Save it immediately so next time we reuse it
+            // Save it immediately
             await prisma.user.update({
                 where: { id: session.user.id },
                 data: { stripeCustomerId: customerId }
