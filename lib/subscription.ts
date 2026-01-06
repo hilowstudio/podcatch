@@ -25,6 +25,7 @@ export async function getUserSubscriptionPlan() {
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: {
+            id: true,
             stripePriceId: true,
             stripeCurrentPeriodEnd: true,
             stripeCustomerId: true,
@@ -41,9 +42,42 @@ export async function getUserSubscriptionPlan() {
         };
     }
 
-    const isPro =
+    let isPro =
         !!user.stripePriceId &&
         (user.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
+
+    // Self-healing: If user has a subscription ID but is not Pro (maybe missing priceId or expired/trial issue)
+    // Fetch fresh data from Stripe to confirm status (e.g. Trialing)
+    if (user.stripeSubscriptionId && !isPro) {
+        try {
+            const { stripe } = await import('@/lib/stripe');
+            const subscription = await stripe.subscriptions.retrieve(
+                user.stripeSubscriptionId,
+                { expand: ['items.data.price'] }
+            );
+
+            // Check if subscription is active or trialing
+            const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+
+            if (isActive) {
+                // Update DB with fresh data
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        stripePriceId: subscription.items.data[0].price.id,
+                        stripeCurrentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                    },
+                });
+
+                // Update local state
+                user.stripePriceId = subscription.items.data[0].price.id;
+                user.stripeCurrentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+                isPro = true;
+            }
+        } catch (error) {
+            console.error('Error syncing subscription:', error);
+        }
+    }
 
     const plan: SubscriptionPlan = isPro
         ? {
