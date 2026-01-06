@@ -7,7 +7,7 @@ import { insightSchema } from '@/lib/ai/schemas';
 
 export const processEpisode = inngest.createFunction(
     {
-        id: 'process-episode',
+        id: 'process-episode-shared',
         name: 'Process Podcast Episode',
         retries: 2,
     },
