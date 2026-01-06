@@ -23,8 +23,11 @@ export const processEpisode = inngest.createFunction(
                     feed: {
                         include: {
                             subscriptions: {
-                                take: 1,
-                                orderBy: { createdAt: 'asc' }, // Use valid initial subscriber
+                                take: 10, // Check multiple users to find a Pro sponsor
+                                orderBy: [
+                                    { user: { stripePriceId: 'desc' } }, // Prioritize those with a Price ID
+                                    { createdAt: 'asc' }
+                                ],
                                 include: {
                                     user: {
                                         select: {
@@ -49,22 +52,22 @@ export const processEpisode = inngest.createFunction(
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
-            // Extract the funding user (first subscriber)
-            const fundingUser = ep.feed.subscriptions[0]?.user;
+            // Find the first valid Pro user to fund the processing
+            const DAY_IN_MS = 86_400_000;
+            const now = Date.now();
+
+            const fundingUser = ep.feed.subscriptions.map(s => s.user).find(u => {
+                return !!u?.stripePriceId &&
+                    (u.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > now;
+            });
+
+            // If no Pro user found, fallback to the first user (for logging/error context)
+            const fallbackUser = ep.feed.subscriptions[0]?.user;
 
             if (!fundingUser) {
-                console.log(`Skipping processing for episode ${episodeId} (No subscribers found)`);
-                return { ...ep, feed: { ...ep.feed, user: null }, skipped: true };
-            }
-
-            // Check Subscription Status using the funding user
-            const DAY_IN_MS = 86_400_000;
-            const isPro = !!fundingUser.stripePriceId &&
-                (fundingUser.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
-
-            if (!isPro) {
-                console.log(`Skipping processing for user ${fundingUser.id} (Not Pro)`);
-                return { ...ep, feed: { ...ep.feed, user: fundingUser }, skipped: true };
+                console.log(`Skipping processing for episode ${episodeId} (No Pro subscribers found)`);
+                // Return fallback user logic but marked as skipped
+                return { ...ep, feed: { ...ep.feed, user: fallbackUser || null }, skipped: true };
             }
 
             // Update status to PROCESSING
