@@ -13,7 +13,7 @@ import { SubscriptionPlan } from '@/lib/subscription';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { PLANS, PlanType } from '@/lib/stripe-config';
+import { PLANS, PlanType, TRIAL_DAYS } from '@/lib/stripe-config';
 import { cn } from '@/lib/utils';
 
 interface BillingFormProps {
@@ -99,6 +99,12 @@ export function BillingForm({ subscriptionPlan }: BillingFormProps) {
                     )}
                     {subscriptionPlan.isPro ? 'Manage Subscription' : `Upgrade to Pro (${interval === 'monthly' ? 'Monthly' : 'Annual'})`}
                 </Button>
+
+                {!subscriptionPlan.isPro && (
+                    <p className="text-xs text-muted-foreground mt-2 md:mt-0">
+                        Includes {TRIAL_DAYS}-day free trial. Cancel anytime.
+                    </p>
+                )}
 
                 {subscriptionPlan.isPro && subscriptionPlan.stripeCurrentPeriodEnd && (
                     <p className="rounded-full text-xs font-medium text-muted-foreground mt-2 md:mt-0">

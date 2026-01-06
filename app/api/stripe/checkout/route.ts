@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { NextResponse } from 'next/server';
-import { PLANS } from '@/lib/stripe-config';
+import { PLANS, TRIAL_DAYS } from '@/lib/stripe-config';
 
 const settingsUrl = process.env.NEXTAUTH_URL + '/settings';
 
@@ -82,6 +82,9 @@ export async function POST(req: Request) {
                 },
             ],
             allow_promotion_codes: true,
+            subscription_data: {
+                trial_period_days: TRIAL_DAYS,
+            },
             metadata: {
                 userId: session.user.id,
             },
