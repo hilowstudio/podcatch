@@ -65,15 +65,15 @@ export default function SignInPage() {
             </div>
 
             {/* Right Column: Visual */}
-            <div className="hidden md:block relative h-full w-full bg-zinc-900">
+            <div className="hidden md:block relative h-full w-full bg-muted">
                 <Image
                     src="/podcast.jpg"
                     alt="Podcast listening experience"
                     fill
-                    className="object-cover opacity-80 mix-blend-overlay grayscale"
+                    className="object-cover"
                     priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-12 left-12 right-12 z-10 text-white">
                     <blockquote className="border-l-2 border-white pl-4 text-lg italic">
                         &quot;The most efficient way to capture knowledge from audio.&quot;
