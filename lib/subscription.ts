@@ -46,33 +46,45 @@ export async function getUserSubscriptionPlan() {
         !!user.stripePriceId &&
         (user.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
 
-    // Self-healing: If user has a subscription ID but is not Pro (maybe missing priceId or expired/trial issue)
-    // Fetch fresh data from Stripe to confirm status (e.g. Trialing)
-    if (user.stripeSubscriptionId && !isPro) {
+    // Self-healing: Query Stripe if we have a Customer ID but don't think we're Pro
+    // This handles cases where the Webhook failed completely (so we have no stripeSubscriptionId)
+    // or where we have an ID but the data is stale/missing priceId.
+    if (user.stripeCustomerId && !isPro) {
         try {
             const { stripe } = await import('@/lib/stripe');
-            const subscription = await stripe.subscriptions.retrieve(
-                user.stripeSubscriptionId,
-                { expand: ['items.data.price'] }
-            );
 
-            // Check if subscription is active or trialing
-            const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+            // If we have a specific subscription ID, check that first (faster)
+            if (user.stripeSubscriptionId) {
+                const subscription = await stripe.subscriptions.retrieve(
+                    user.stripeSubscriptionId,
+                    { expand: ['items.data.price'] }
+                );
 
-            if (isActive) {
-                // Update DB with fresh data
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: {
-                        stripePriceId: subscription.items.data[0].price.id,
-                        stripeCurrentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-                    },
+                if (subscription.status === 'active' || subscription.status === 'trialing') {
+                    await syncSubscription(user.id, subscription);
+                    isPro = true;
+                    user.stripePriceId = subscription.items.data[0].price.id;
+                    user.stripeCurrentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+                }
+            }
+            // Otherwise/Else: List subscriptions for this customer to find any active one
+            // (Only do this if the check above didn't pass or didn't exist)
+            if (!isPro) {
+                const subscriptions = await stripe.subscriptions.list({
+                    customer: user.stripeCustomerId,
+                    status: 'all', // Fetch all then filter, or specific status. 'all' lets us see trialing.
+                    expand: ['data.items.data.price'],
+                    limit: 1,
                 });
 
-                // Update local state
-                user.stripePriceId = subscription.items.data[0].price.id;
-                user.stripeCurrentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
-                isPro = true;
+                const activeSub = subscriptions.data.find(sub => sub.status === 'active' || sub.status === 'trialing');
+
+                if (activeSub) {
+                    await syncSubscription(user.id, activeSub as any);
+                    isPro = true;
+                    user.stripePriceId = activeSub.items.data[0].price.id;
+                    user.stripeCurrentPeriodEnd = new Date((activeSub as any).current_period_end * 1000);
+                }
             }
         } catch (error) {
             console.error('Error syncing subscription:', error);
@@ -98,4 +110,19 @@ export async function getUserSubscriptionPlan() {
         ...user,
         stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd?.getTime(),
     };
+}
+
+// Helper to update DB with fresh Stripe data
+async function syncSubscription(userId: string, subscription: any) {
+    if (!subscription.items?.data?.[0]?.price?.id) return;
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer as string,
+            stripePriceId: subscription.items.data[0].price.id,
+            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        },
+    });
 }
