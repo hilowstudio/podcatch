@@ -13,13 +13,13 @@ export async function SiteHeader() {
                     <div className="relative h-8 w-8 overflow-hidden">
                         <Image
                             src="/podcatch.png"
-                            alt="PodCatch Logo"
+                            alt="Podcatch Logo"
                             fill
                             className="object-contain"
                             sizes="32px"
                         />
                     </div>
-                    <span className="text-xl font-bold tracking-tight">PodCatch</span>
+                    <span className="text-xl font-bold tracking-tight">Podcatch</span>
                 </Link>
                 <div className="flex items-center gap-4">
                     {session?.user && <UserMenu user={session.user} />}
