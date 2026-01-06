@@ -88,6 +88,7 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
                         placeholder="sk-ant-..."
                         defaultValue={initialSettings.claudeApiKey}
                         className="pr-10"
+                        autoComplete="off"
                     />
                     <Button
                         type="button"
