@@ -26,7 +26,40 @@ export default function SignInPage() {
                     </p>
                 </div>
 
-                <div className="max-w-sm">
+                <div className="max-w-sm w-full space-y-4">
+                    <form
+                        action={async (formData) => {
+                            'use server';
+                            await signIn('resend', { email: formData.get('email'), redirectTo: '/' });
+                        }}
+                        className="space-y-4"
+                    >
+                        <div className="space-y-2">
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="name@example.com"
+                                className="w-full h-12 px-4 rounded-lg border border-zinc-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-zinc-50"
+                                required
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full h-12 text-base font-medium bg-black hover:bg-zinc-800 text-white rounded-full transition-all"
+                        >
+                            Sign in with Email
+                        </Button>
+                    </form>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-zinc-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-zinc-400">Or continue with</span>
+                        </div>
+                    </div>
+
                     <form
                         action={async () => {
                             'use server';
@@ -35,7 +68,8 @@ export default function SignInPage() {
                     >
                         <Button
                             type="submit"
-                            className="w-full h-12 text-base font-medium bg-black hover:bg-zinc-800 text-white rounded-full transition-all"
+                            variant="outline"
+                            className="w-full h-12 text-base font-medium rounded-full border-zinc-200 hover:bg-zinc-50 transition-all"
                         >
                             <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
                                 <path
@@ -55,10 +89,10 @@ export default function SignInPage() {
                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 />
                             </svg>
-                            Sign in with Google
+                            Google
                         </Button>
                     </form>
-                    <p className="mt-6 text-xs text-zinc-400">
+                    <p className="mt-6 text-xs text-center text-zinc-400">
                         By signing in, you agree to our Terms of Service and Privacy Policy.
                     </p>
                 </div>
