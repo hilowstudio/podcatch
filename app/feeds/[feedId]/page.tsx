@@ -104,9 +104,7 @@ export default async function FeedPage({ params }: PageProps) {
                                                         {status.label}
                                                     </Badge>
                                                     {episode.status === 'DISCOVERED' && (
-                                                        <div onClick={(e) => e.preventDefault()}>
-                                                            <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
-                                                        </div>
+                                                        <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                                     )}
                                                 </div>
                                             </div>

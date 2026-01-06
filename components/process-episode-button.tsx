@@ -17,7 +17,9 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
         return null; // Don't show button if already processing or done
     }
 
-    const handleProcess = async () => {
+    const handleProcess = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         setIsProcessing(true);
         try {
             await processEpisode(episodeId);
