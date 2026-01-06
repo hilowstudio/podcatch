@@ -8,7 +8,7 @@ export default function SignInPage() {
             {/* Left Column: Branding & Sign In */}
             <div className="flex flex-col justify-center px-8 md:px-16 lg:px-24 bg-white text-black">
                 <div className="mb-12">
-                    <div className="relative h-16 w-16 mb-6">
+                    <div className="relative h-32 w-32 mb-8">
                         <Image
                             src="/podcatch.png"
                             alt="Podcatch Logo"
@@ -17,7 +17,7 @@ export default function SignInPage() {
                             priority
                         />
                     </div>
-                    <h1 className="text-5xl font-bold tracking-tight mb-4">
+                    <h1 className="text-6xl font-bold tracking-tight mb-6">
                         Turn Listening <br />
                         <span className="text-zinc-500">into Knowledge.</span>
                     </h1>

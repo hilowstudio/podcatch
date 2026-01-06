@@ -16,7 +16,7 @@ type Events = {
 
 // Create the Inngest client
 export const inngest = new Inngest({
-    id: 'podflow',
+    id: 'podcatch',
     schemas: new EventSchemas().fromRecord<Events>(),
     // Event key and signing key are optional for local development
     eventKey: process.env.INNGEST_EVENT_KEY,
