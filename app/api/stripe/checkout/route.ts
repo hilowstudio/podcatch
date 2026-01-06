@@ -81,6 +81,7 @@ export async function POST(req: Request) {
                     quantity: 1,
                 },
             ],
+            allow_promotion_codes: true,
             metadata: {
                 userId: session.user.id,
             },
