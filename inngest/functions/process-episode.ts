@@ -387,6 +387,34 @@ ${transcript}
             });
         }
 
+
+        // Step 10: Upload to Gemini Store (Phase 2 Integration)
+        await step.run('upload-to-gemini-store', async () => {
+            // Only upload if we have a transcript
+            if (!transcript) return;
+
+            try {
+                const { uploadToGemini } = await import('@/lib/gemini-rag');
+                console.log('Uploading partial transcript to Gemini Files...');
+
+                const result = await uploadToGemini(transcript, `episode-${episode.id}.txt`);
+
+                if (result.success && result.fileUri) {
+                    console.log(`✅ Uploaded to Gemini: ${result.fileUri}`);
+
+                    // Update Insight with the URI
+                    await prisma.insight.update({
+                        where: { episodeId: episode.id },
+                        data: { geminiFileUri: result.fileUri }
+                    });
+                } else {
+                    console.error('Failed to upload to Gemini:', result.error);
+                }
+            } catch (e) {
+                console.error('Error in Gemini Store step:', e);
+            }
+        });
+
         return { success: true, episodeId: episode.id };
     }
 );
