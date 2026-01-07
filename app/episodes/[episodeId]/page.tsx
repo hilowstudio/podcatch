@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getEpisodeWithInsight } from '@/actions/episode-actions';
+import { ClaudeSyncButton } from '@/components/claude-sync-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2 } from 'lucide-react';
@@ -99,6 +100,11 @@ export default async function EpisodePage({ params }: PageProps) {
                             {episode.description && (
                                 <p className="text-muted-foreground text-lg leading-relaxed">{episode.description}</p>
                             )}
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-4 pt-4">
+                                <ClaudeSyncButton episodeId={episode.id} />
+                            </div>
                         </div>
 
                         {/* Processing State */}

@@ -164,6 +164,7 @@ model Insight {
   summary      String   @db.Text
   keyTakeaways Json     // Array of 5 bullet points
   links        Json     // Array of URLs mentioned
+  geminiFileUri String? // URI of the file uploaded to Gemini for RAG
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

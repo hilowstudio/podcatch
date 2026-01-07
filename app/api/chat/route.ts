@@ -21,5 +21,5 @@ export async function POST(req: Request) {
         (Note: Retrieval is not yet connected in this version, so answer generally or ask for context.)`,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 }

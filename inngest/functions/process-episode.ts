@@ -142,18 +142,35 @@ export const processEpisode = inngest.createFunction(
                     }
                 );
 
-                if (!result) {
+                if (!result || !result.results?.channels?.[0]?.alternatives?.[0]) {
                     throw new Error('No result returned from Deepgram');
                 }
 
-                const transcriptText = result.results?.channels?.[0]?.alternatives?.[0]?.transcript;
+                const alternative = result.results.channels[0].alternatives[0];
+                const rawTranscript = alternative.transcript;
 
-                if (!transcriptText) {
+                // Helper to format seconds to [MM:SS]
+                const formatTime = (seconds: number) => {
+                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                    return `[${m}:${s}]`;
+                };
+
+                // Create timestamped version from paragraphs if available, otherwise fallback
+                let timestampedTranscript = rawTranscript;
+                if (alternative.paragraphs?.paragraphs) {
+                    timestampedTranscript = alternative.paragraphs.paragraphs.map((p: any) => {
+                        const start = formatTime(p.start);
+                        return `${start} ${p.sentences.map((s: any) => s.text).join(' ')}`;
+                    }).join('\n\n');
+                }
+
+                if (!rawTranscript) {
                     throw new Error('No transcript returned from Deepgram');
                 }
 
                 console.log('Transcription complete');
-                return transcriptText;
+                return { rawTranscript, timestampedTranscript };
             } catch (error) {
                 console.error('Deepgram transcription error:', error);
                 throw error;
@@ -184,7 +201,7 @@ export const processEpisode = inngest.createFunction(
 3. A list of all URLs mentioned in the transcript
 
 Transcript:
-${transcript}
+${transcript.rawTranscript}
 
 Please provide detailed, actionable insights that would be valuable to someone who wants to understand the episode without listening to it.`,
                 });
@@ -203,7 +220,7 @@ Please provide detailed, actionable insights that would be valuable to someone w
                 await prisma.insight.create({
                     data: {
                         episodeId: episode.id,
-                        transcript,
+                        transcript: transcript.rawTranscript, // Keep raw in DB for display? Or timestamped? Let's keep raw for clean reading.
                         summary: insights.summary,
                         keyTakeaways: insights.keyTakeaways || [],
                         links: insights.links || [],
@@ -238,7 +255,7 @@ Please provide detailed, actionable insights that would be valuable to someone w
                         summary: insights.summary,
                         keyTakeaways: insights.keyTakeaways || [],
                         links: insights.links || [],
-                        transcript,
+                        transcript: transcript.rawTranscript,
                     });
 
                     if (result.success) {
@@ -273,7 +290,7 @@ Please provide detailed, actionable insights that would be valuable to someone w
                         keyTakeaways: insights.keyTakeaways,
                         links: insights.links,
                     },
-                    transcript: transcript.substring(0, 5000) + '... (truncated for webhook)', // Optional truncation
+                    transcript: transcript.rawTranscript.substring(0, 5000) + '... (truncated for webhook)', // Optional truncation
                 });
 
                 if (result.success) {
@@ -307,7 +324,7 @@ Please provide detailed, actionable insights that would be valuable to someone w
                             ${(insights.keyTakeaways || []).map((t: string) => `<li>${t}</li>`).join('')}
                         </ul>
                         <h2>Transcript</h2>
-                        <p>${transcript.replace(/\n\n/g, '</p><p>')}</p>
+                        <p>${transcript.rawTranscript.replace(/\n\n/g, '</p><p>')}</p>
                     `,
                     published_date: new Date(episode.publishedAt).toISOString(),
                     image_url: episode.feed.image || undefined,
@@ -338,7 +355,7 @@ Please provide detailed, actionable insights that would be valuable to someone w
                     publishedAt: new Date(episode.publishedAt),
                     summary: insights.summary,
                     keyTakeaways: insights.keyTakeaways || [],
-                    transcript: transcript
+                    transcript: transcript.timestampedTranscript // Use timestamped for Notion? Users usually like that.
                 });
 
                 if (result.success) {
@@ -370,7 +387,7 @@ ${insights.summary}
 ${(insights.keyTakeaways || []).map((t: string) => `- ${t}`).join('\n')}
 
 ## Transcript
-${transcript}
+${transcript.timestampedTranscript}
                 `;
 
                 const result = await saveToDrive({
@@ -391,13 +408,13 @@ ${transcript}
         // Step 10: Upload to Gemini Store (Phase 2 Integration)
         await step.run('upload-to-gemini-store', async () => {
             // Only upload if we have a transcript
-            if (!transcript) return;
+            if (!transcript.timestampedTranscript) return;
 
             try {
                 const { uploadToGemini } = await import('@/lib/gemini-rag');
                 console.log('Uploading partial transcript to Gemini Files...');
 
-                const result = await uploadToGemini(transcript, `episode-${episode.id}.txt`);
+                const result = await uploadToGemini(transcript.timestampedTranscript, `episode-${episode.id}.txt`);
 
                 if (result.success && result.fileUri) {
                     console.log(`✅ Uploaded to Gemini: ${result.fileUri}`);

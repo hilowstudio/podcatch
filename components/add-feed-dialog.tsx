@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { addFeed } from '@/actions/feed-actions';
+import { searchItunesAction } from '@/actions/itunes';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,7 +15,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlusCircle, Loader2, Search, Rss, Info } from 'lucide-react';
+import { toast } from 'sonner';
+import Image from 'next/image';
+
+interface PodcastResult {
+    title: string;
+    author: string;
+    image: string;
+    feedUrl: string;
+}
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -35,26 +46,56 @@ function SubmitButton() {
 
 export function AddFeedDialog() {
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<PodcastResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
 
-    async function handleSubmit(formData: FormData) {
-        setError(null);
-        setSuccess(false);
+    async function handleSearch(e: React.FormEvent) {
+        e.preventDefault();
+        if (!searchTerm.trim()) return;
 
-        const result = await addFeed(formData);
-
-        if (result.success) {
-            setSuccess(true);
-            setError(null);
-            // Close dialog after short delay
-            setTimeout(() => {
-                setOpen(false);
-                setSuccess(false);
-            }, 1500);
-        } else {
-            setError(result.error || 'An error occurred');
+        setIsSearching(true);
+        try {
+            const results = await searchItunesAction(searchTerm);
+            setSearchResults(results);
+        } catch (error) {
+            toast.error('Failed to search iTunes');
+        } finally {
+            setIsSearching(false);
         }
+    }
+
+    async function handleAddFeed(url: string) {
+        setIsAdding(true);
+        const formData = new FormData();
+        formData.append('url', url);
+
+        try {
+            const result = await addFeed(formData);
+            if (result.success) {
+                toast.success('Podcast added successfully!');
+                setOpen(false);
+            } else {
+                toast.error(result.error || 'Failed to add podcast');
+            }
+        } catch (error) {
+            toast.error('An unexpected error occurred');
+        } finally {
+            setIsAdding(false);
+        }
+    }
+
+    // Direct form submit handler
+    async function handleDirectSubmit(formData: FormData) {
+        // We handle this via the server action wrapper to manage state here if needed, 
+        // but using the existing pattern is fine.
+        // We'll just let the form action run and handle the result via toast/close.
+        // Actually, to close the dialog, we need to wrap the action or use a separate handler.
+
+        // Let's use the same logic as the Search handler for consistency
+        const url = formData.get('url') as string;
+        await handleAddFeed(url);
     }
 
     return (
@@ -65,41 +106,96 @@ export function AddFeedDialog() {
                     Add Feed
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Add Podcast Feed</DialogTitle>
+                    <DialogTitle>Add Podcast</DialogTitle>
                     <DialogDescription>
-                        Enter the RSS feed URL of the podcast you want to add. We'll automatically discover episodes and start
-                        processing them.
+                        Search for a podcast or enter an RSS feed URL directly.
                     </DialogDescription>
                 </DialogHeader>
-                <form action={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="url">RSS Feed URL</Label>
-                        <Input
-                            id="url"
-                            name="url"
-                            type="url"
-                            placeholder="https://example.com/feed.xml"
-                            required
-                            className="w-full"
-                        />
-                    </div>
 
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                            {error}
+                <Tabs defaultValue="search" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="search">iTunes Search</TabsTrigger>
+                        <TabsTrigger value="direct">Direct RSS</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="search" className="space-y-4 pt-4">
+                        <form onSubmit={handleSearch} className="flex gap-2">
+                            <Input
+                                placeholder="Search by name (e.g. Huberman)"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Button type="submit" disabled={isSearching || !searchTerm}>
+                                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                            </Button>
+                        </form>
+
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                            {searchResults.map((podcast, idx) => (
+                                <div key={idx} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent transition-colors">
+                                    {podcast.image && (
+                                        <img
+                                            src={podcast.image}
+                                            alt={podcast.title}
+                                            className="w-12 h-12 rounded-md object-cover bg-muted"
+                                        />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-medium text-sm truncate">{podcast.title}</h4>
+                                        <p className="text-xs text-muted-foreground truncate">{podcast.author}</p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        disabled={isAdding}
+                                        onClick={() => handleAddFeed(podcast.feedUrl)}
+                                    >
+                                        {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
+                                    </Button>
+                                </div>
+                            ))}
+                            {searchResults.length === 0 && !isSearching && searchTerm && (
+                                <p className="text-center text-sm text-muted-foreground py-4">
+                                    No results found.
+                                </p>
+                            )}
+                            {!searchTerm && (
+                                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                    <Search className="h-8 w-8 mb-2 opacity-50" />
+                                    <p className="text-sm">Search for your favorite podcasts</p>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </TabsContent>
 
-                    {success && (
-                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                            Feed added successfully! Discoverin episodes...
-                        </div>
-                    )}
-
-                    <SubmitButton />
-                </form>
+                    <TabsContent value="direct" className="space-y-4 pt-4">
+                        <form action={handleDirectSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="url">RSS Feed URL</Label>
+                                <Input
+                                    id="url"
+                                    name="url"
+                                    type="url"
+                                    placeholder="https://example.com/feed.xml"
+                                    required
+                                    className="w-full"
+                                />
+                            </div>
+                            <Button type="submit" disabled={isAdding} className="w-full">
+                                {isAdding ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Adding Feed...
+                                    </>
+                                ) : (
+                                    'Add Feed'
+                                )}
+                            </Button>
+                        </form>
+                    </TabsContent>
+                </Tabs>
             </DialogContent>
         </Dialog>
     );
