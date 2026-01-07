@@ -26,7 +26,10 @@ export default async function SettingsPage() {
             claudeProjectId: true,
             autoSyncToClaude: true,
             webhookUrl: true,
+            webhookUrl: true,
             readwiseApiKey: true,
+            notionAccessToken: true,
+            notionPageId: true,
         },
     });
 
@@ -111,6 +114,8 @@ export default async function SettingsPage() {
                                     <IntegrationsForm
                                         initialWebhookUrl={user.webhookUrl}
                                         initialReadwiseApiKey={user.readwiseApiKey}
+                                        initialNotionAccessToken={user.notionAccessToken}
+                                        initialNotionPageId={user.notionPageId}
                                     />
                                 </CardContent>
                             </Card>

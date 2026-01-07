@@ -7,13 +7,15 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { updateWebhookUrl, updateReadwiseApiKey, testWebhook } from '@/actions/integrations';
-import { Loader2, Check, AlertCircle, Send, BookOpen } from 'lucide-react';
+import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook } from '@/actions/integrations';
+import { Loader2, Check, AlertCircle, Send, BookOpen, Database } from 'lucide-react';
 import { toast } from 'sonner';
 
 const schema = z.object({
     webhookUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
     readwiseApiKey: z.string().optional(),
+    notionAccessToken: z.string().optional(),
+    notionPageId: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -21,9 +23,16 @@ type FormValues = z.infer<typeof schema>;
 interface IntegrationsFormProps {
     initialWebhookUrl?: string | null;
     initialReadwiseApiKey?: string | null;
+    initialNotionAccessToken?: string | null;
+    initialNotionPageId?: string | null;
 }
 
-export function IntegrationsForm({ initialWebhookUrl, initialReadwiseApiKey }: IntegrationsFormProps) {
+export function IntegrationsForm({
+    initialWebhookUrl,
+    initialReadwiseApiKey,
+    initialNotionAccessToken,
+    initialNotionPageId
+}: IntegrationsFormProps) {
     const [isTesting, setIsTesting] = useState(false);
 
     const form = useForm<FormValues>({
@@ -31,15 +40,18 @@ export function IntegrationsForm({ initialWebhookUrl, initialReadwiseApiKey }: I
         defaultValues: {
             webhookUrl: initialWebhookUrl || '',
             readwiseApiKey: initialReadwiseApiKey || '',
+            notionAccessToken: initialNotionAccessToken || '',
+            notionPageId: initialNotionPageId || '',
         },
     });
 
     async function onSubmit(data: FormValues) {
-        // Save both (could be optimized to only save changed, but this is safe)
+        // Save all (could be optimized)
         const res1 = await updateWebhookUrl(data.webhookUrl || '');
         const res2 = await updateReadwiseApiKey(data.readwiseApiKey || '');
+        const res3 = await updateNotionSettings(data.notionAccessToken || '', data.notionPageId || '');
 
-        if (res1.success && res2.success) {
+        if (res1.success && res2.success && res3.success) {
             toast.success('Integration settings saved');
         } else {
             toast.error('Failed to save some settings');
@@ -132,6 +144,55 @@ export function IntegrationsForm({ initialWebhookUrl, initialReadwiseApiKey }: I
                             </FormItem>
                         )}
                     />
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Database className="h-5 w-5 text-muted-foreground" />
+                        <h3 className="font-semibold">Notion</h3>
+                    </div>
+                    <div className="grid gap-4">
+                        <FormField
+                            control={form.control}
+                            name="notionAccessToken"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Integration Token</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="password"
+                                            placeholder="secret_..."
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        Create an Internal Integration at <a href="https://www.notion.so/my-integrations" target="_blank" className="underline hover:text-foreground">notion.so/my-integrations</a>.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="notionPageId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Database ID</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="32 chars (from URL)"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        The ID of the Database where you want episodes to be saved.
+                                        Make sure to "Add connection" to your integration on this database page!
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
 
                 <div className="flex justify-end">
