@@ -54,6 +54,7 @@ export const processEpisode = inngest.createFunction(
                                             readwiseApiKey: true,
                                             notionAccessToken: true,
                                             notionPageId: true,
+                                            googleDriveRefreshToken: true,
                                         },
                                     },
                                 }
