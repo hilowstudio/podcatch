@@ -100,6 +100,34 @@ export function IntegrationsForm({ initialWebhookUrl }: IntegrationsFormProps) {
                     />
                 </div>
 
+                <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center gap-2 mb-4">
+                        <BookOpen className="h-5 w-5 text-muted-foreground" />
+                        <h3 className="font-semibold">Readwise Reader</h3>
+                    </div>
+                    <FormField
+                        control={form.control}
+                        name="readwiseApiKey"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Readwise Access Token</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="password"
+                                        placeholder="Enter your Readwise Access Token"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormDescription>
+                                    Get your token from <a href="https://readwise.io/access_token" target="_blank" className="underline hover:text-foreground">readwise.io/access_token</a>.
+                                    We will save the full transcript and summary to your Reader library.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
                 <div className="flex justify-end">
                     <Button type="submit" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting && (
