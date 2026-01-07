@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { ClaudeProjectsForm } from '@/components/settings/claude-projects-form';
+import { IntegrationsForm } from '@/components/settings/integrations-form';
 import { BillingForm } from '@/components/billing-form';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +24,9 @@ export default async function SettingsPage() {
             email: true,
             claudeApiKey: true,
             claudeProjectId: true,
+            claudeProjectId: true,
             autoSyncToClaude: true,
+            webhookUrl: true,
         },
     });
 
@@ -85,6 +88,27 @@ export default async function SettingsPage() {
                                             autoSyncToClaude: user.autoSyncToClaude,
                                         }}
                                     />
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        {!subscriptionPlan.isPro && (
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-background/60 backdrop-blur-[1px]">
+                                {/* Reusing the same gate overlay */}
+                            </div>
+                        )}
+                        <div className={!subscriptionPlan.isPro ? 'opacity-50 pointer-events-none filter grayscale-[0.5]' : ''}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Workflow Integrations</CardTitle>
+                                    <CardDescription>
+                                        Connect Podcatch to your other tools (Zapier, Make, etc).
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <IntegrationsForm initialWebhookUrl={user.webhookUrl} />
                                 </CardContent>
                             </Card>
                         </div>
