@@ -17,6 +17,17 @@ export const processEpisode = inngest.createFunction(
 
         // Step 1: Fetch episode with feed and user details
         const episode = await step.run('fetch-episode', async () => {
+            console.log('🚀 Starting process-episode-shared (New Function ID)');
+            try {
+                // @ts-ignore - Accessing internal DMMF for debugging
+                const feedModel = (prisma as any)._dmmf?.datamodel?.models.find((m: any) => m.name === 'Feed');
+                if (feedModel) {
+                    console.log('🔍 DEBUG: Prisma Client Feed Model Fields:', feedModel.fields.map((f: any) => f.name).join(', '));
+                }
+            } catch (e) {
+                console.log('Could not inspect DMMF', e);
+            }
+
             const ep = await prisma.episode.findUnique({
                 where: { id: episodeId },
                 include: {
