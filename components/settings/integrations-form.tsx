@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook } from '@/actions/integrations';
-import { Loader2, Check, AlertCircle, Send, BookOpen, Database } from 'lucide-react';
+import { Loader2, Check, AlertCircle, Send, BookOpen, Database, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const schema = z.object({
@@ -25,13 +25,15 @@ interface IntegrationsFormProps {
     initialReadwiseApiKey?: string | null;
     initialNotionAccessToken?: string | null;
     initialNotionPageId?: string | null;
+    isGoogleDriveConnected: boolean;
 }
 
 export function IntegrationsForm({
     initialWebhookUrl,
     initialReadwiseApiKey,
     initialNotionAccessToken,
-    initialNotionPageId
+    initialNotionPageId,
+    isGoogleDriveConnected
 }: IntegrationsFormProps) {
     const [isTesting, setIsTesting] = useState(false);
 
@@ -192,6 +194,33 @@ export function IntegrationsForm({
                                 </FormItem>
                             )}
                         />
+                    </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center gap-2 mb-4">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <h3 className="font-semibold">Google Drive</h3>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <div className="font-medium">Deep Research Export</div>
+                            <div className="text-sm text-muted-foreground">
+                                Save transcripts and insights to Google Docs (for NotebookLM).
+                            </div>
+                        </div>
+                        {isGoogleDriveConnected ? (
+                            <Button variant="outline" disabled className="text-green-600 border-green-200 bg-green-50">
+                                <Check className="mr-2 h-4 w-4" />
+                                Connected
+                            </Button>
+                        ) : (
+                            <Button asChild variant="outline">
+                                <a href="/api/integrations/google/auth">
+                                    Connect Google Drive
+                                </a>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
