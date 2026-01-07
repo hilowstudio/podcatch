@@ -24,9 +24,10 @@ export default async function SettingsPage() {
             email: true,
             claudeApiKey: true,
             claudeProjectId: true,
-            claudeProjectId: true,
+            autoSyncToClaude: true,
             autoSyncToClaude: true,
             webhookUrl: true,
+            readwiseApiKey: true,
         },
     });
 
@@ -85,7 +86,7 @@ export default async function SettingsPage() {
                                         initialSettings={{
                                             claudeApiKey: user.claudeApiKey || '',
                                             claudeProjectId: user.claudeProjectId || '',
-                                            autoSyncToClaude: user.autoSyncToClaude,
+                                            autoSyncToClaude: user.autoSyncToClaude || false,
                                         }}
                                     />
                                 </CardContent>
@@ -108,7 +109,10 @@ export default async function SettingsPage() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <IntegrationsForm initialWebhookUrl={user.webhookUrl} />
+                                    <IntegrationsForm
+                                        initialWebhookUrl={user.webhookUrl}
+                                        initialReadwiseApiKey={user.readwiseApiKey}
+                                    />
                                 </CardContent>
                             </Card>
                         </div>
