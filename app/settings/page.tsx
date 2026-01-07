@@ -29,6 +29,7 @@ export default async function SettingsPage() {
             readwiseApiKey: true,
             notionAccessToken: true,
             notionPageId: true,
+            googleDriveRefreshToken: true,
         },
     });
 
@@ -115,6 +116,7 @@ export default async function SettingsPage() {
                                         initialReadwiseApiKey={user.readwiseApiKey}
                                         initialNotionAccessToken={user.notionAccessToken}
                                         initialNotionPageId={user.notionPageId}
+                                        isGoogleDriveConnected={!!user.googleDriveRefreshToken}
                                     />
                                 </CardContent>
                             </Card>
