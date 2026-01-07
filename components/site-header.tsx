@@ -8,16 +8,16 @@ export async function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto flex h-32 items-center justify-center px-4 relative">
+            <div className="container mx-auto flex h-56 items-center justify-center px-4 relative">
                 {/* Logo Centered & Enlarged */}
                 <Link href="/" className="flex items-center hover:opacity-90 transition-opacity hover:scale-105 duration-200">
-                    <div className="relative h-24 w-24 overflow-hidden drop-shadow-sm">
+                    <div className="relative h-48 w-48 overflow-hidden drop-shadow-sm">
                         <Image
                             src="/podcatch.png"
                             alt="Podcatch Logo"
                             fill
                             className="object-contain"
-                            sizes="96px"
+                            sizes="192px"
                             priority
                         />
                     </div>

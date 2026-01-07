@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         <AudioProvider>
           <SiteHeader />
-          <div className="flex-1 mb-20"> {/* Add margin for sticky player */}
+          <div className="flex-1 mb-20 pt-12"> {/* Add margin for sticky player and padded top for header spacing */}
             {children}
           </div>
           <StickyPlayer />
