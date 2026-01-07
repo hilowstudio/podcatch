@@ -170,7 +170,7 @@ export const processEpisode = inngest.createFunction(
                 });
 
                 const { object } = await generateObject({
-                    model: google('gemini-3-pro'),
+                    model: google('gemini-3-pro-preview'),
                     schema: insightSchema,
                     prompt: `You are analyzing a podcast episode transcript. Extract the following information:
 
