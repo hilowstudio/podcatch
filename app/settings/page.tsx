@@ -26,7 +26,6 @@ export default async function SettingsPage() {
             claudeProjectId: true,
             autoSyncToClaude: true,
             webhookUrl: true,
-            webhookUrl: true,
             readwiseApiKey: true,
             notionAccessToken: true,
             notionPageId: true,
