@@ -349,16 +349,15 @@ Please provide detailed, actionable insights that would be valuable to someone w
             });
         }
 
-    });
-        }
 
-// Step 9: Save to Google Drive (Phase 2 integration)
-if (episode.feed.user?.googleDriveRefreshToken) {
-    await step.run('save-to-drive', async () => {
-        const { saveToDrive } = await import('@/lib/drive');
-        console.log('Saving to Google Drive...');
 
-        const content = `
+        // Step 9: Save to Google Drive (Phase 2 integration)
+        if (episode.feed.user?.googleDriveRefreshToken) {
+            await step.run('save-to-drive', async () => {
+                const { saveToDrive } = await import('@/lib/drive');
+                console.log('Saving to Google Drive...');
+
+                const content = `
 # ${episode.title}
 **Feed**: ${episode.feed.title}
 **Published**: ${new Date(episode.publishedAt).toLocaleDateString()}
@@ -374,20 +373,20 @@ ${(insights.keyTakeaways || []).map((t: string) => `- ${t}`).join('\n')}
 ${transcript}
                 `;
 
-        const result = await saveToDrive({
-            refreshToken: episode.feed.user?.googleDriveRefreshToken!,
-            title: `${episode.title} - Insights`,
-            content: content.trim(),
-        });
+                const result = await saveToDrive({
+                    refreshToken: episode.feed.user?.googleDriveRefreshToken!,
+                    title: `${episode.title} - Insights`,
+                    content: content.trim(),
+                });
 
-        if (result.success) {
-            console.log(`✅ Saved to Google Drive! Doc ID: ${result.fileId}`);
-        } else {
-            console.error('Failed to save to Google Drive:', result.error);
+                if (result.success) {
+                    console.log(`✅ Saved to Google Drive! Doc ID: ${result.fileId}`);
+                } else {
+                    console.error('Failed to save to Google Drive:', result.error);
+                }
+            });
         }
-    });
-}
 
-return { success: true, episodeId: episode.id };
+        return { success: true, episodeId: episode.id };
     }
 );
