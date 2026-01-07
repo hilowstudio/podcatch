@@ -25,7 +25,6 @@ export default async function SettingsPage() {
             claudeApiKey: true,
             claudeProjectId: true,
             autoSyncToClaude: true,
-            autoSyncToClaude: true,
             webhookUrl: true,
             readwiseApiKey: true,
         },

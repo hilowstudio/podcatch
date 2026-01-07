@@ -7,36 +7,42 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { updateWebhookUrl, testWebhook } from '@/actions/integrations';
-import { Loader2, Check, AlertCircle, Send } from 'lucide-react';
+import { updateWebhookUrl, updateReadwiseApiKey, testWebhook } from '@/actions/integrations';
+import { Loader2, Check, AlertCircle, Send, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
-const webhookSchema = z.object({
+const schema = z.object({
     webhookUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    readwiseApiKey: z.string().optional(),
 });
 
-type WebhookFormValues = z.infer<typeof webhookSchema>;
+type FormValues = z.infer<typeof schema>;
 
 interface IntegrationsFormProps {
     initialWebhookUrl?: string | null;
+    initialReadwiseApiKey?: string | null;
 }
 
-export function IntegrationsForm({ initialWebhookUrl }: IntegrationsFormProps) {
+export function IntegrationsForm({ initialWebhookUrl, initialReadwiseApiKey }: IntegrationsFormProps) {
     const [isTesting, setIsTesting] = useState(false);
 
-    const form = useForm<WebhookFormValues>({
-        resolver: zodResolver(webhookSchema),
+    const form = useForm<FormValues>({
+        resolver: zodResolver(schema),
         defaultValues: {
             webhookUrl: initialWebhookUrl || '',
+            readwiseApiKey: initialReadwiseApiKey || '',
         },
     });
 
-    async function onSubmit(data: WebhookFormValues) {
-        const result = await updateWebhookUrl(data.webhookUrl || '');
-        if (result.success) {
+    async function onSubmit(data: FormValues) {
+        // Save both (could be optimized to only save changed, but this is safe)
+        const res1 = await updateWebhookUrl(data.webhookUrl || '');
+        const res2 = await updateReadwiseApiKey(data.readwiseApiKey || '');
+
+        if (res1.success && res2.success) {
             toast.success('Integration settings saved');
         } else {
-            toast.error(result.error || 'Failed to save settings');
+            toast.error('Failed to save some settings');
         }
     }
 
