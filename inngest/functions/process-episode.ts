@@ -321,34 +321,33 @@ Please provide detailed, actionable insights that would be valuable to someone w
             });
         }
 
-    });
+
+
+        // Step 8: Sync to Notion (Phase 2 integration)
+        if (episode.feed.user?.notionAccessToken && episode.feed.user?.notionPageId) {
+            await step.run('sync-to-notion', async () => {
+                const { saveToNotion } = await import('@/lib/notion');
+                console.log('Syncing to Notion...');
+
+                const result = await saveToNotion(episode.feed.user?.notionAccessToken!, {
+                    pageId: episode.feed.user?.notionPageId!,
+                    title: episode.title,
+                    url: episode.audioUrl,
+                    feedTitle: episode.feed.title || 'Podcast',
+                    publishedAt: new Date(episode.publishedAt),
+                    summary: insights.summary,
+                    keyTakeaways: insights.keyTakeaways || [],
+                    transcript: transcript
+                });
+
+                if (result.success) {
+                    console.log('✅ Synced to Notion!');
+                } else {
+                    console.error('Failed to sync to Notion:', result.error);
+                }
+            });
         }
 
-// Step 8: Sync to Notion (Phase 2 integration)
-if (episode.feed.user?.notionAccessToken && episode.feed.user?.notionPageId) {
-    await step.run('sync-to-notion', async () => {
-        const { saveToNotion } = await import('@/lib/notion');
-        console.log('Syncing to Notion...');
-
-        const result = await saveToNotion(episode.feed.user?.notionAccessToken!, {
-            pageId: episode.feed.user?.notionPageId!,
-            title: episode.title,
-            url: episode.audioUrl,
-            feedTitle: episode.feed.title || 'Podcast',
-            publishedAt: new Date(episode.publishedAt),
-            summary: insights.summary,
-            keyTakeaways: insights.keyTakeaways || [],
-            transcript: transcript
-        });
-
-        if (result.success) {
-            console.log('✅ Synced to Notion!');
-        } else {
-            console.error('Failed to sync to Notion:', result.error);
-        }
-    });
-}
-
-return { success: true, episodeId: episode.id };
+        return { success: true, episodeId: episode.id };
     }
 );
