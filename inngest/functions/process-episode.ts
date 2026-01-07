@@ -281,20 +281,19 @@ Please provide detailed, actionable insights that would be valuable to someone w
             });
         }
 
-    });
-        }
 
-// Step 7: Save to Readwise Reader (Phase 2 Integration)
-if (episode.feed.user?.readwiseApiKey) {
-    await step.run('upload-to-readwise', async () => {
-        const { saveToReadwise } = await import('@/lib/readwise');
-        console.log('Uploading to Readwise...');
 
-        const result = await saveToReadwise(episode.feed.user?.readwiseApiKey!, {
-            url: episode.audioUrl, // Reader uses this as unique ID and source
-            title: episode.title,
-            summary: insights.summary, // Reader shows this in the list view
-            html: `
+        // Step 7: Save to Readwise Reader (Phase 2 Integration)
+        if (episode.feed.user?.readwiseApiKey) {
+            await step.run('upload-to-readwise', async () => {
+                const { saveToReadwise } = await import('@/lib/readwise');
+                console.log('Uploading to Readwise...');
+
+                const result = await saveToReadwise(episode.feed.user?.readwiseApiKey!, {
+                    url: episode.audioUrl, // Reader uses this as unique ID and source
+                    title: episode.title,
+                    summary: insights.summary, // Reader shows this in the list view
+                    html: `
                         <h1>${episode.title}</h1>
                         <p><strong>Feed:</strong> ${episode.feed.title}</p>
                         <p><strong>Published:</strong> ${new Date(episode.publishedAt).toLocaleDateString()}</p>
@@ -307,19 +306,19 @@ if (episode.feed.user?.readwiseApiKey) {
                         <h2>Transcript</h2>
                         <p>${transcript.replace(/\n\n/g, '</p><p>')}</p>
                     `,
-            published_date: new Date(episode.publishedAt).toISOString(),
-            image_url: episode.feed.image || undefined,
-            tags: ['podcatch', 'podcast', episode.feed.title || 'unknown'],
-        });
+                    published_date: new Date(episode.publishedAt).toISOString(),
+                    image_url: episode.feed.image || undefined,
+                    tags: ['podcatch', 'podcast', episode.feed.title || 'unknown'],
+                });
 
-        if (result.success) {
-            console.log('✅ Saved to Readwise Reader!');
-        } else {
-            console.error('Failed to save to Readwise:', result.error);
+                if (result.success) {
+                    console.log('✅ Saved to Readwise Reader!');
+                } else {
+                    console.error('Failed to save to Readwise:', result.error);
+                }
+            });
         }
-    });
-}
 
-return { success: true, episodeId: episode.id };
+        return { success: true, episodeId: episode.id };
     }
 );
