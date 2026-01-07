@@ -52,18 +52,20 @@ export default async function EpisodePage({ params }: PageProps) {
                                 </div>
                             )}
 
-                            {/* Audio Player */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Listen</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <audio controls className="w-full" preload="metadata">
-                                        <source src={episode.audioUrl} type="audio/mpeg" />
-                                        Your browser does not support the audio element.
-                                    </audio>
-                                </CardContent>
-                            </Card>
+                            {/* Audio Player (Only for RSS) */}
+                            {!episode.youtubeId && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">Listen</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <audio controls className="w-full" preload="metadata">
+                                            <source src={episode.audioUrl} type="audio/mpeg" />
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             {/* Metadata */}
                             <Card>
@@ -94,6 +96,19 @@ export default async function EpisodePage({ params }: PageProps) {
 
                     {/* Right Column: Content & Insights */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* YouTube Video Player - Top of Main Content */}
+                        {episode.youtubeId && (
+                            <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl border bg-black">
+                                <iframe
+                                    src={`https://www.youtube.com/embed/${episode.youtubeId}`}
+                                    title={episode.title}
+                                    className="w-full h-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>
+                        )}
+
                         {/* Title & Description */}
                         <div>
                             <h1 className="text-4xl font-bold tracking-tight mb-4">{episode.title}</h1>

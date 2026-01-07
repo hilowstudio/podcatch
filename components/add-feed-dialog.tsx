@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, Search, Rss, Info } from 'lucide-react';
+import { PlusCircle, Loader2, Search, Rss, Info, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
@@ -192,6 +192,42 @@ export function AddFeedDialog() {
                                 ) : (
                                     'Add Feed'
                                 )}
+                            </Button>
+                        </form>
+                    </TabsContent>
+
+                    <TabsContent value="youtube" className="space-y-4 pt-4">
+                        <form action={async (formData) => {
+                            setIsAdding(true);
+                            try {
+                                const input = formData.get('input') as string;
+                                const { subscribeToYoutubeChannel } = await import('@/actions/youtube');
+                                const result = await subscribeToYoutubeChannel(input);
+                                if (result.success) {
+                                    toast.success(result.message || 'Subscribed to YouTube Channel!');
+                                    setOpen(false);
+                                } else {
+                                    toast.error(result.error || 'Failed to subscribe');
+                                }
+                            } catch (err) {
+                                toast.error('Failed to subscribe');
+                            } finally {
+                                setIsAdding(false);
+                            }
+                        }} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="input">Channel URL or Handle</Label>
+                                <Input
+                                    id="input"
+                                    name="input"
+                                    placeholder="@User or youtube.com/channel/..."
+                                    required
+                                    className="w-full"
+                                />
+                            </div>
+                            <Button type="submit" disabled={isAdding} className="w-full gap-2">
+                                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Youtube className="h-4 w-4 text-red-600" />}
+                                {isAdding ? 'Subscribing...' : 'Subscribe to Channel'}
                             </Button>
                         </form>
                     </TabsContent>

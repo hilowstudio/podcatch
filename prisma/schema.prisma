@@ -115,12 +115,20 @@ model Subscription {
   @@index([feedId])
 }
 
+// Feed Type Enum
+enum FeedType {
+  RSS
+  YOUTUBE
+}
+
 // RSS Feed model
 model Feed {
   id            String    @id @default(cuid())
   url           String    @unique
   title         String?
   image         String?
+  type          FeedType  @default(RSS)
+  channelId     String?   // For YouTube Channel ID
   lastCheckedAt DateTime?
   
   createdAt     DateTime  @default(now())
@@ -141,6 +149,8 @@ model Episode {
   title       String
   description String?       @db.Text
   audioUrl    String
+  videoUrl    String?       // For YouTube Watch URL
+  youtubeId   String?       // For YouTube Video ID
   publishedAt DateTime
   status      EpisodeStatus @default(DISCOVERED)
   feedId      String
