@@ -49,7 +49,9 @@ export const processEpisode = inngest.createFunction(
                                             claudeProjectId: true,
                                             autoSyncToClaude: true,
                                             stripePriceId: true,
+                                            stripePriceId: true,
                                             stripeCurrentPeriodEnd: true,
+                                            webhookUrl: true,
                                         },
                                     },
                                 }
@@ -245,6 +247,36 @@ Please provide detailed, actionable insights that would be valuable to someone w
                 } catch (error) {
                     console.error('Error in Claude sync step:', error);
                     // Don't fail the whole job - sync is optional
+                }
+            });
+        }
+
+        // Step 6: Dispatch Webhook (Phase 2 Integration)
+        if (episode.feed.user?.webhookUrl) {
+            await step.run('dispatch-webhook', async () => {
+                const { dispatchWebhook } = await import('@/lib/webhooks');
+                console.log('Dispatching webhook...');
+                const result = await dispatchWebhook(episode.feed.user?.webhookUrl, {
+                    event: 'episode.processed',
+                    episode: {
+                        id: episode.id,
+                        title: episode.title,
+                        url: episode.audioUrl,
+                        publishedAt: episode.publishedAt,
+                        feedTitle: episode.feed.title,
+                    },
+                    insights: {
+                        summary: insights.summary,
+                        keyTakeaways: insights.keyTakeaways,
+                        links: insights.links,
+                    },
+                    transcript: transcript.substring(0, 5000) + '... (truncated for webhook)', // Optional truncation
+                });
+
+                if (result.success) {
+                    console.log('✅ Webhook dispatched successfully!');
+                } else {
+                    console.error('Webhook dispatch failed:', result.error);
                 }
             });
         }

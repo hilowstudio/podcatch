@@ -27,15 +27,21 @@ model User {
   image         String?
   
   // User's personal API keys (optional - falls back to system keys)
-  geminiApiKey    String?
-  deepgramApiKey  String?
-  openaiApiKey    String? // For future OpenAI support
+  // AI & Integrations
+  autoSyncToClaude    Boolean? @default(false)
+  claudeApiKey        String?
+  claudeProjectId     String?
+  geminiApiKey        String?
+  deepgramApiKey      String?
+  openaiApiKey        String? // For future OpenAI support
   
-  // Claude Projects integration
-  claudeApiKey     String? // For Claude API access
-  claudeProjectId  String? // User's Claude Project ID to sync to
-  autoSyncToClaude Boolean @default(true) // Auto-add episodes to Claude Project
-
+  // Phase 2 Integrations
+  webhookUrl              String? // Generic Webhook
+  readwiseApiKey          String? // Readwise Reader
+  notionAccessToken       String? // Notion OAuth
+  notionPageId            String? // Notion Target Page
+  googleDriveRefreshToken String? // Google Drive OAuth
+  
   // Stripe Pro Subscription
   stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
   stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
