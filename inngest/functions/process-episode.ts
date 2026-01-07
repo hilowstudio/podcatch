@@ -2,7 +2,7 @@ import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@deepgram/sdk';
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { insightSchema } from '@/lib/ai/schemas';
 
 export const processEpisode = inngest.createFunction(
@@ -165,8 +165,12 @@ export const processEpisode = inngest.createFunction(
                     throw new Error('No Gemini API key available (user or system)');
                 }
 
+                const google = createGoogleGenerativeAI({
+                    apiKey: geminiApiKey,
+                });
+
                 const { object } = await generateObject({
-                    model: google('gemini-3-pro'),
+                    model: google('gemini-1.5-pro'),
                     schema: insightSchema,
                     prompt: `You are analyzing a podcast episode transcript. Extract the following information:
 
