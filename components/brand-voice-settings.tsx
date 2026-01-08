@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BrandVoiceSettings({ initialVoice }: { initialVoice: string }) {
@@ -245,10 +244,10 @@ Important: Never mention that you are an AI. Stay in character.`;
     );
 
     return (
-        <Card className="border-indigo-500/20 shadow-sm relative overflow-hidden">
+        <Card className="border-neutral-200 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-muted">
                 <div
-                    className="h-full bg-indigo-500 transition-all duration-500"
+                    className="h-full bg-black transition-all duration-500"
                     style={{ width: step === 0 ? '100%' : `${(step / 4) * 100}%` }}
                 />
             </div>
@@ -281,9 +280,8 @@ Important: Never mention that you are an AI. Stay in character.`;
                             onChange={(e) => setResult(e.target.value)}
                         />
                         <div className="flex justify-end">
-                            <Button onClick={handleSave} disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Brand Voice
+                            <Button onClick={handleSave} disabled={isLoading} className="bg-black hover:bg-neutral-800 text-white">
+                                {isLoading ? 'Saving...' : 'Save Brand Voice'}
                             </Button>
                         </div>
                     </div>
@@ -306,7 +304,7 @@ Important: Never mention that you are an AI. Stay in character.`;
                             Next
                         </Button>
                     ) : (
-                        <Button onClick={generateVoice} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button onClick={generateVoice} className="bg-black hover:bg-neutral-800 text-white">
                             Generate Voice
                         </Button>
                     )}
@@ -321,7 +319,7 @@ function ToneSlider({ label, value, onChange, left, right }: { label: string, va
         <div className="space-y-3 pt-2">
             <div className="flex justify-between text-sm">
                 <span className="font-medium text-muted-foreground">{label}</span>
-                <span className="font-bold text-indigo-500">{value}%</span>
+                <span className="font-bold text-black">{value}%</span>
             </div>
             <Slider
                 value={[value]}
