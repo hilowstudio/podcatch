@@ -2,6 +2,8 @@ import { getBrandVoice } from '@/actions/settings-actions';
 import { BrandVoiceSettings } from '@/components/brand-voice-settings';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { ApiKeysForm } from '@/components/settings/api-keys-form';
+import { IntegrationsForm } from '@/components/settings/integrations-form';
 
 export const metadata = {
     title: 'Settings - Podcatch',
@@ -22,6 +24,15 @@ export default async function SettingsPage() {
                 <section>
                     <BrandVoiceSettings initialVoice={brandVoice} />
                 </section>
+
+                <div className="grid gap-8 md:grid-cols-2">
+                    <section>
+                        <IntegrationsForm />
+                    </section>
+                    <section>
+                        <ApiKeysForm />
+                    </section>
+                </div>
 
                 {/* Future settings sections can go here */}
             </div>
