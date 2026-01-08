@@ -56,6 +56,30 @@ export async function syncToOpenAI({
             file_id: file.id
         });
 
+        // 3a. Poll for File Processing Completion
+        console.log(`Polling for file processing...`);
+        let maxRetries = 20; // 20 * 1s = 20s timeout
+        while (maxRetries > 0) {
+            const vectorFile = await beta.vectorStores.files.retrieve(
+                storeId,
+                file.id
+            );
+
+            if (vectorFile.status === 'completed') {
+                console.log('File processing completed.');
+                break;
+            } else if (vectorFile.status === 'failed' || vectorFile.status === 'cancelled') {
+                throw new Error(`File processing failed with status: ${vectorFile.status}`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            maxRetries--;
+        }
+
+        if (maxRetries === 0) {
+            console.warn('File processing timed out, proceeding anyway (content may not be immediately available).');
+        }
+
         // 4. Ensure Assistant Exists and is linked to Store
         let assistant_id = assistantId;
         if (!assistant_id) {
