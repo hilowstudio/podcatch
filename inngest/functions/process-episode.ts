@@ -523,6 +523,22 @@ ${transcriptData.timestampedTranscript}
             }
         });
 
+        // Final Step: Create In-App Notification
+        await step.run('create-notification', async () => {
+            // Notify the funding user (Active Pro User) if identified
+            if (episode.feed.user?.id) {
+                await prisma.notification.create({
+                    data: {
+                        userId: episode.feed.user.id,
+                        title: 'Episode Processed',
+                        message: `"${episode.title}" is ready.`,
+                        link: `/episodes/${episode.id}`,
+                        type: 'SUCCESS'
+                    }
+                });
+            }
+        });
+
         // Step 11: Sync to OpenAI (User "Assistant" Claim)
         if (episode.feed.user?.openaiKey) {
             await step.run('sync-to-openai', async () => {
