@@ -1,3 +1,5 @@
+'use client';
+
 import { createSnip } from '@/actions/snip-actions';
 import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
