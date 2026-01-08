@@ -1,13 +1,15 @@
 import { google } from 'googleapis';
 
-if (!process.env.YOUTUBE_API_KEY) {
-    throw new Error('YOUTUBE_API_KEY is not defined');
+// Helper to get authenticated client lazily
+function getYoutubeClient() {
+    if (!process.env.YOUTUBE_API_KEY) {
+        throw new Error('YOUTUBE_API_KEY is not defined');
+    }
+    return google.youtube({
+        version: 'v3',
+        auth: process.env.YOUTUBE_API_KEY,
+    });
 }
-
-const youtube = google.youtube({
-    version: 'v3',
-    auth: process.env.YOUTUBE_API_KEY,
-});
 
 export interface YouTubeChannelDetails {
     id: string;
@@ -45,7 +47,7 @@ export async function getChannelDetails(input: string): Promise<YouTubeChannelDe
             // Handle search
             const handle = input.includes('@') ? input.split('@')[1].split('/')[0] : null;
             if (handle) {
-                const searchRes = await youtube.search.list({
+                const searchRes = await getYoutubeClient().search.list({
                     part: ['snippet'],
                     q: `@${handle}`,
                     type: ['channel'],
@@ -58,7 +60,7 @@ export async function getChannelDetails(input: string): Promise<YouTubeChannelDe
         }
 
         // Fetch channel details
-        const res = await youtube.channels.list({
+        const res = await getYoutubeClient().channels.list({
             part: ['snippet', 'contentDetails'],
             id: [channelId],
         });
@@ -88,7 +90,7 @@ export async function getChannelDetails(input: string): Promise<YouTubeChannelDe
  */
 export async function getLatestVideos(uploadPlaylistId: string, limit = 10): Promise<YouTubeVideoDetails[]> {
     try {
-        const res = await youtube.playlistItems.list({
+        const res = await getYoutubeClient().playlistItems.list({
             part: ['snippet', 'contentDetails'],
             playlistId: uploadPlaylistId,
             maxResults: limit,
