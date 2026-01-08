@@ -4,8 +4,8 @@ import { AddFeedDialog } from '@/components/add-feed-dialog';
 import { Rss } from 'lucide-react';
 
 export async function FeedList({ userId }: { userId: string }) {
-    // Pass userId to skip internal auth check
-    const feeds = await getFeeds(userId);
+    // usage of userId is deprecated in favor of server-side session check
+    const feeds = await getFeeds();
 
     if (feeds.length === 0) {
         return (

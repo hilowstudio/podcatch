@@ -8,10 +8,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Prisma v7 with "prisma-client" generator requires adapter or accelerateUrl
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
+// We use a getter to lazily initialize the connection to safe guard against
+// multiple connections during hot reload
+const prismaClientSingleton = () => {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const adapter = new PrismaPg(pool);
+    return new PrismaClient({ adapter });
+};
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter } as any);
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== 'production') {
     globalForPrisma.prisma = prisma;

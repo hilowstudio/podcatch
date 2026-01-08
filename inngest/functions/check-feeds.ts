@@ -2,7 +2,11 @@ import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import Parser from 'rss-parser';
 
-const rssParser = new Parser();
+const rssParser = new Parser({
+    customFields: {
+        item: [['podcast:transcript', 'transcript']],
+    },
+});
 
 export const checkFeeds = inngest.createFunction(
     {
@@ -75,6 +79,8 @@ export const checkFeeds = inngest.createFunction(
                                 title: item.title || 'Untitled Episode',
                                 description: item.contentSnippet || item.content || null,
                                 audioUrl,
+                                // @ts-ignore - 'transcript' is added via customFields
+                                transcriptUrl: item.transcript ? (item.transcript['@_url'] || item.transcript.url || null) : null,
                                 publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
                                 status: 'DISCOVERED',
                                 feedId: feed.id,

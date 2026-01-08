@@ -99,17 +99,13 @@ export async function addFeed(formData: FormData) {
     }
 }
 
-export async function getFeeds(userId?: string) {
+export async function getFeeds() {
     try {
-        let currentUserId = userId;
-
-        if (!currentUserId) {
-            const session = await auth();
-            if (!session?.user?.id) {
-                return [];
-            }
-            currentUserId = session.user.id;
+        const session = await auth();
+        if (!session?.user?.id) {
+            return [];
         }
+        const currentUserId = session.user.id;
 
         const subscriptions = await prisma.subscription.findMany({
             where: {

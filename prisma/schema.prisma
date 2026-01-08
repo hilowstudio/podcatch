@@ -151,6 +151,7 @@ model Episode {
   audioUrl    String
   videoUrl    String?       // For YouTube Watch URL
   youtubeId   String?       // For YouTube Video ID
+  transcriptUrl String?     // Source URL for existing transcript (e.g. from RSS)
   publishedAt DateTime
   status      EpisodeStatus @default(DISCOVERED)
   feedId      String

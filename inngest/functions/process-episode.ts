@@ -12,6 +12,9 @@ export const processEpisode = inngest.createFunction(
         id: 'process-episode-shared',
         name: 'Process Podcast Episode',
         retries: 2,
+        concurrency: {
+            limit: 2,
+        },
     },
     { event: 'episode/process.requested' },
     async ({ event, step }) => {
@@ -20,15 +23,7 @@ export const processEpisode = inngest.createFunction(
         // Step 1: Fetch episode with feed and user details
         const episode = await step.run('fetch-episode', async () => {
             console.log('🚀 Starting process-episode-shared (New Function ID)');
-            try {
-                // @ts-ignore - Accessing internal DMMF for debugging
-                const feedModel = (prisma as any)._dmmf?.datamodel?.models.find((m: any) => m.name === 'Feed');
-                if (feedModel) {
-                    console.log('🔍 DEBUG: Prisma Client Feed Model Fields:', feedModel.fields.map((f: any) => f.name).join(', '));
-                }
-            } catch (e) {
-                console.log('Could not inspect DMMF', e);
-            }
+            // Removed DMMF debugging
 
             const ep = await prisma.episode.findUnique({
                 where: { id: episodeId },
@@ -47,25 +42,26 @@ export const processEpisode = inngest.createFunction(
                                             id: true,
                                             geminiApiKey: true,
                                             deepgramApiKey: true,
-                                            claudeApiKey: true,
-                                            claudeProjectId: true,
-                                            autoSyncToClaude: true,
+                                            claudeApiKey: true, // Used in step 5
+                                            claudeProjectId: true, // Used in step 5
+                                            autoSyncToClaude: true, // Used in step 5
                                             stripePriceId: true,
                                             stripeCurrentPeriodEnd: true,
-                                            webhookUrl: true,
-                                            readwiseApiKey: true,
-                                            notionAccessToken: true,
-                                            notionPageId: true,
-                                            googleDriveRefreshToken: true,
+                                            webhookUrl: true, // Used in step 6
+                                            readwiseApiKey: true, // Used in step 7
+                                            notionAccessToken: true, // Used in step 8
+                                            notionPageId: true, // Used in step 8
+                                            googleDriveRefreshToken: true, // Used in step 9
                                         },
                                     },
-                                }
-                            }
+                                },
+                            },
                         },
                     },
                 },
             });
 
+            // Ensure we found the episode
             if (!ep) {
                 throw new Error(`Episode ${episodeId} not found`);
             }
@@ -121,84 +117,109 @@ export const processEpisode = inngest.createFunction(
         console.log(`Processing episode: ${episode.title}`);
 
         // Step 2: Transcribe/Analyze Content
-        // We branch here based on Feed Type: RSS (Audio) vs YOUTUBE (Video)
+        // We branch here based on Feed Type and available metadata
         let transcriptData: { rawTranscript: string, timestampedTranscript: string, fileUri?: string } = { rawTranscript: '', timestampedTranscript: '' };
 
-        if (episode.feed.type === 'RSS') {
-            // ... Existing Deepgram Logic ...
-            transcriptData = await step.run('transcribe-audio', async () => {
-                // ... (Deepgram code) ...
+        transcriptData = await step.run('get-transcript', async () => {
+            // Priority 1: Existing Transcript URL (from RSS)
+            if (episode.transcriptUrl) {
+                console.log('📄 Found existing transcript URL:', episode.transcriptUrl);
                 try {
-                    // Use user's Deepgram API key if available, fallback to system key
-                    const deepgramApiKey = episode.feed.user?.deepgramApiKey || process.env.DEEPGRAM_API_KEY;
-
-                    if (!deepgramApiKey) {
-                        throw new Error('No Deepgram API key available (user or system)');
+                    const response = await fetch(episode.transcriptUrl);
+                    if (response.ok) {
+                        const text = await response.text();
+                        // Naive parsing: If it's VTT/SRT, we should parse it. For now, assume simple text or raw format.
+                        // Ideally use srt-parser-2 if mime type matches.
+                        // Let's assume it's usable text.
+                        return {
+                            rawTranscript: text,
+                            timestampedTranscript: text // TODO: Parse timestamps if VTT
+                        };
                     }
-
-                    const deepgram = createClient(deepgramApiKey);
-
-                    const { result } = await deepgram.listen.prerecorded.transcribeUrl(
-                        {
-                            url: episode.audioUrl,
-                        },
-                        {
-                            model: 'nova-2',
-                            smart_format: true,
-                            punctuate: true,
-                            paragraphs: true,
-                        }
-                    );
-
-                    if (!result || !result.results?.channels?.[0]?.alternatives?.[0]) {
-                        throw new Error('No result returned from Deepgram');
-                    }
-
-                    const alternative = result.results.channels[0].alternatives[0];
-                    const rawTranscript = alternative.transcript;
-
-                    // Helper to format seconds to [MM:SS]
-                    const formatTime = (seconds: number) => {
-                        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-                        return `[${m}:${s}]`;
-                    };
-
-                    // Create timestamped version from paragraphs if available, otherwise fallback
-                    let timestampedTranscript = rawTranscript;
-                    if (alternative.paragraphs?.paragraphs) {
-                        timestampedTranscript = alternative.paragraphs.paragraphs.map((p: any) => {
-                            const start = formatTime(p.start);
-                            return `${start} ${p.sentences.map((s: any) => s.text).join(' ')}`;
-                        }).join('\n\n');
-                    }
-
-                    if (!rawTranscript) {
-                        throw new Error('No transcript returned from Deepgram');
-                    }
-
-                    console.log('Transcription complete');
-                    return { rawTranscript, timestampedTranscript };
-                } catch (error) {
-                    console.error('Deepgram transcription error:', error);
-                    throw error;
+                } catch (e) {
+                    console.error('Failed to fetch existing transcript:', e);
+                    // Fallback to generation
                 }
-            });
-        } else if (episode.feed.type === 'YOUTUBE' && episode.videoUrl) {
-            // YouTube Video Processing - Direct URL Method
-            transcriptData = await step.run('process-youtube-video', async () => {
-                console.log('🎥 Processing YouTube Video via URL:', episode.videoUrl);
-                const geminiApiKey = episode.feed.user?.geminiApiKey || process.env.GEMINI_API_KEY;
-                if (!geminiApiKey) throw new Error('Gemini API Key required for Video analysis');
+            }
 
-                // We no longer download/upload. We simply pass the URL.
+            // Priority 2: YouTube Captions
+            if (episode.youtubeId) {
+                console.log('🎥 Checking for YouTube Captions:', episode.youtubeId);
+                try {
+                    const { YoutubeTranscript } = await import('youtube-transcript');
+                    const captions = await YoutubeTranscript.fetchTranscript(episode.youtubeId);
+
+                    if (captions && captions.length > 0) {
+                        const raw = captions.map(c => c.text).join(' ');
+                        const timestamped = captions.map(c => `[${Math.floor(c.offset / 1000)}] ${c.text}`).join('\n');
+                        console.log('✅ Retrieved YouTube Captions');
+                        return {
+                            rawTranscript: raw,
+                            timestampedTranscript: timestamped,
+                            fileUri: episode.videoUrl || undefined
+                        };
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch YouTube captions (likely disabled/auto-gen only):', e);
+                    // Fallback to Gemini Video Analysis below
+                }
+            }
+
+            // Priority 3: Generate New Transcript (Deepgram or Gemini)
+            if (episode.feed.type === 'RSS') {
+                // ... Existing Deepgram Logic ...
+                console.log('🎧 using Deepgram for Audio Transcription...');
+                const deepgramApiKey = episode.feed.user?.deepgramApiKey || process.env.DEEPGRAM_API_KEY;
+                if (!deepgramApiKey) throw new Error('No Deepgram API key available');
+
+                const deepgram = createClient(deepgramApiKey);
+                const { result } = await deepgram.listen.prerecorded.transcribeUrl(
+                    { url: episode.audioUrl },
+                    {
+                        model: 'nova-2',
+                        smart_format: true,
+                        punctuate: true,
+                        paragraphs: true,
+                    }
+                );
+
+                if (!result?.results?.channels?.[0]?.alternatives?.[0]) {
+                    throw new Error('No result returned from Deepgram');
+                }
+
+                const alternative = result.results.channels[0].alternatives[0];
+                const rawTranscript = alternative.transcript;
+
+                // Format timestamps
+                const formatTime = (seconds: number) => {
+                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                    return `[${m}:${s}]`;
+                };
+
+                let timestampedTranscript = rawTranscript;
+                if (alternative.paragraphs?.paragraphs) {
+                    timestampedTranscript = alternative.paragraphs.paragraphs.map((p: any) => {
+                        const start = formatTime(p.start);
+                        return `${start} ${p.sentences.map((s: any) => s.text).join(' ')}`;
+                    }).join('\n\n');
+                }
+
+                return { rawTranscript, timestampedTranscript };
+
+            } else if (episode.feed.type === 'YOUTUBE' && episode.videoUrl) {
+                // YouTube Video Processing - Direct URL Method
+                console.log('🎥 Processing YouTube Video via URL (Gemini Native):', episode.videoUrl);
+                // Return empty transcript, let Gemini analyze the video file directly in next step
                 return {
                     rawTranscript: '',
                     timestampedTranscript: '',
-                    fileUri: episode.videoUrl! // Pass the YouTube URL directly
+                    fileUri: episode.videoUrl!
                 };
-            });
-        }
+            }
+
+            throw new Error('Unsupported processing type or missing URL');
+        });
 
         // Step 3: Analyze with Gemini 2.0 Flash (User required newer model)
         const insights = await step.run('analyze-with-ai', async () => {
@@ -259,10 +280,17 @@ export const processEpisode = inngest.createFunction(
         //Step 4: Save insights to database
         await step.run('save-insights', async () => {
             try {
-                await prisma.insight.create({
-                    data: {
+                await prisma.insight.upsert({
+                    where: { episodeId: episode.id },
+                    create: {
                         episodeId: episode.id,
-                        transcript: transcriptData.rawTranscript || '(Video Transcript in process...)', // Keep raw in DB for display? Or timestamped? Let's keep raw for clean reading.
+                        transcript: transcriptData.rawTranscript || '(Video Transcript in process...)',
+                        summary: insights.summary,
+                        keyTakeaways: insights.keyTakeaways || [],
+                        links: insights.links || [],
+                    },
+                    update: {
+                        transcript: transcriptData.rawTranscript || '(Video Transcript in process...)',
                         summary: insights.summary,
                         keyTakeaways: insights.keyTakeaways || [],
                         links: insights.links || [],
