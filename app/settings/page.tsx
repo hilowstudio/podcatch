@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
 import { IntegrationsForm } from '@/components/settings/integrations-form';
+import { prisma } from '@/lib/prisma';
 
 export const metadata = {
     title: 'Settings - Podcatch',
@@ -12,9 +13,22 @@ export const metadata = {
 
 export default async function SettingsPage() {
     const session = await auth();
-    if (!session?.user) redirect('/');
+    if (!session?.user?.id) redirect('/');
 
-    const brandVoice = await getBrandVoice();
+    const [brandVoice, user] = await Promise.all([
+        getBrandVoice(),
+        prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                webhookUrl: true,
+                readwiseApiKey: true,
+                notionAccessToken: true,
+                notionPageId: true,
+                googleDriveRefreshToken: true,
+                openaiApiKey: true,
+            }
+        })
+    ]);
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -27,10 +41,16 @@ export default async function SettingsPage() {
 
                 <div className="grid gap-8 md:grid-cols-2">
                     <section>
-                        <IntegrationsForm />
+                        <IntegrationsForm
+                            initialWebhookUrl={user?.webhookUrl}
+                            initialReadwiseApiKey={user?.readwiseApiKey}
+                            initialNotionAccessToken={user?.notionAccessToken}
+                            initialNotionPageId={user?.notionPageId}
+                            isGoogleDriveConnected={!!user?.googleDriveRefreshToken}
+                        />
                     </section>
                     <section>
-                        <ApiKeysForm />
+                        <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
                     </section>
                 </div>
 
