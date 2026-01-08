@@ -115,9 +115,13 @@ export function AddFeedDialog() {
                 </DialogHeader>
 
                 <Tabs defaultValue="search" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="search">iTunes Search</TabsTrigger>
                         <TabsTrigger value="direct">Direct RSS</TabsTrigger>
+                        <TabsTrigger value="youtube" className="gap-2">
+                            <Youtube className="h-4 w-4" />
+                            YouTube
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="search" className="space-y-4 pt-4">
