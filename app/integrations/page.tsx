@@ -2,7 +2,12 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
 import { ClaudeProjectsForm } from '@/components/settings/claude-projects-form';
-import { IntegrationsForm } from '@/components/settings/integrations-form';
+import {
+    ReadwiseCard,
+    NotionCard,
+    GoogleDriveCard,
+    WebhookCard
+} from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
 
 export const metadata = {
@@ -34,28 +39,50 @@ export default async function IntegrationsPage() {
             <h1 className="text-3xl font-bold tracking-tight mb-8">Integrations</h1>
 
             <div className="space-y-8">
-                <div className="grid gap-8 md:grid-cols-2">
-                    <section className="md:col-span-2">
-                        <ClaudeProjectsForm
-                            userId={session.user.id}
-                            initialSettings={{
-                                claudeApiKey: user?.claudeApiKey || '',
-                                claudeProjectId: user?.claudeProjectId || '',
-                                autoSyncToClaude: user?.autoSyncToClaude || false
-                            }}
-                        />
-                    </section>
+                <div className="space-y-10">
+                    {/* 1. AI & Models */}
                     <section>
-                        <IntegrationsForm
-                            initialWebhookUrl={user?.webhookUrl}
-                            initialReadwiseApiKey={user?.readwiseApiKey}
-                            initialNotionAccessToken={user?.notionAccessToken}
-                            initialNotionPageId={user?.notionPageId}
-                            isGoogleDriveConnected={!!user?.googleDriveRefreshToken}
-                        />
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span className="bg-indigo-100 text-indigo-700 p-1 rounded">🧠</span> AI Brain & Models
+                        </h2>
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <ClaudeProjectsForm
+                                userId={session.user.id}
+                                initialSettings={{
+                                    claudeApiKey: user?.claudeApiKey || '',
+                                    claudeProjectId: user?.claudeProjectId || '',
+                                    autoSyncToClaude: user?.autoSyncToClaude || false
+                                }}
+                            />
+                            <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
+                        </div>
                     </section>
+
+                    {/* 2. Knowledge Base Connections */}
                     <section>
-                        <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span className="bg-yellow-100 text-yellow-700 p-1 rounded">📚</span> Knowledge Base
+                        </h2>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <ReadwiseCard initialValue={user?.readwiseApiKey} />
+                            <NotionCard
+                                initialToken={user?.notionAccessToken}
+                                initialPageId={user?.notionPageId}
+                            />
+                            <GoogleDriveCard
+                                isConnected={!!user?.googleDriveRefreshToken}
+                            />
+                        </div>
+                    </section>
+
+                    {/* 3. Developer / Webhooks */}
+                    <section>
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span className="bg-slate-100 text-slate-700 p-1 rounded">⚙️</span> Developer & Automation
+                        </h2>
+                        <div className="max-w-xl">
+                            <WebhookCard initialValue={user?.webhookUrl} />
+                        </div>
                     </section>
                 </div>
             </div>

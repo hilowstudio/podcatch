@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { updateApiKeys } from '@/actions/user-actions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const schema = z.object({
     openaiApiKey: z.string().optional().or(z.literal('')),
@@ -44,36 +45,49 @@ export function ApiKeysForm({
     }
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="openaiApiKey"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>OpenAI API Key</FormLabel>
-                                <FormControl>
-                                    <Input type="password" placeholder="sk-..." {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                    Required for "Chat with your Podcast" and Vector Store syncing.
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-indigo-500" />
+                    <CardTitle>OpenAI</CardTitle>
                 </div>
+                <CardDescription>
+                    Configure OpenAI for experimental chat features.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="openaiApiKey"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>API Key</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="sk-..." {...field} />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Required for "Chat with your Podcast".
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
-                <div className="flex justify-end">
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Save API Keys
-                    </Button>
-                </div>
-            </form>
-        </Form>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Save Key
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
     );
 }

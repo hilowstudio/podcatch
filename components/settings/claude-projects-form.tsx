@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ExternalLink, Bot } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ClaudeProjectsFormProps = {
     userId: string;
@@ -56,97 +57,108 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
     }
 
     return (
-        <form action={handleSubmit} className="space-y-6">
-            <input type="hidden" name="userId" value={userId} />
-
-            {/* Auto-sync toggle */}
-            <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                    <Label htmlFor="autoSyncToClaude" className="text-base">
-                        Auto-sync to Claude Projects
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                        Automatically add episode transcripts and insights to your Claude Project after processing
-                    </p>
+        <Card className="border-indigo-500/20 shadow-sm">
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-indigo-500" />
+                    <CardTitle>Claude Projects</CardTitle>
                 </div>
-                <Switch
-                    id="autoSyncToClaude"
-                    name="autoSyncToClaude"
-                    checked={autoSync}
-                    onCheckedChange={setAutoSync}
-                />
-            </div>
+                <CardDescription>
+                    Sync episodes to your Anthropic Claude Knowledge Base.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form action={handleSubmit} className="space-y-6">
+                    <input type="hidden" name="userId" value={userId} />
 
-            {/* Claude API Key */}
-            <div className="space-y-2">
-                <Label htmlFor="claudeApiKey">Claude API Key</Label>
-                <div className="relative">
-                    <Input
-                        id="claudeApiKey"
-                        name="claudeApiKey"
-                        type={showApiKey ? 'text' : 'password'}
-                        placeholder="sk-ant-..."
-                        defaultValue={initialSettings.claudeApiKey}
-                        className="pr-10"
-                        autoComplete="off"
-                    />
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                    >
-                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                    Get your key at{' '}
-                    <a
-                        href="https://console.anthropic.com/settings/keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center underline"
-                    >
-                        console.anthropic.com
-                        <ExternalLink className="ml-1 h-3 w-3" />
-                    </a>
-                </p>
-            </div>
+                    {/* Auto-sync toggle */}
+                    <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/20">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="autoSyncToClaude" className="text-base">
+                                Auto-sync Episodes
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Automatically add transcripts upon completion
+                            </p>
+                        </div>
+                        <Switch
+                            id="autoSyncToClaude"
+                            name="autoSyncToClaude"
+                            checked={autoSync}
+                            onCheckedChange={setAutoSync}
+                        />
+                    </div>
 
-            {/* Claude Project ID */}
-            <div className="space-y-2">
-                <Label htmlFor="claudeProjectId">Claude Project ID</Label>
-                <Input
-                    id="claudeProjectId"
-                    name="claudeProjectId"
-                    type="text"
-                    placeholder="Find in your Claude Project URL"
-                    defaultValue={initialSettings.claudeProjectId}
-                />
-                <div className="rounded-md bg-muted p-3 text-xs">
-                    <p className="font-medium mb-1">How to find your Project ID:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                        <li>Go to claude.ai and open your project</li>
-                        <li>The URL will look like: claude.ai/project/<strong>abc123</strong></li>
-                        <li>Copy the ID after "/project/"</li>
-                    </ol>
-                </div>
-            </div>
+                    {/* Claude API Key */}
+                    <div className="space-y-2">
+                        <Label htmlFor="claudeApiKey">Claude API Key</Label>
+                        <div className="relative">
+                            <Input
+                                id="claudeApiKey"
+                                name="claudeApiKey"
+                                type={showApiKey ? 'text' : 'password'}
+                                placeholder="sk-ant-..."
+                                defaultValue={initialSettings.claudeApiKey}
+                                className="pr-10"
+                                autoComplete="off"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => setShowApiKey(!showApiKey)}
+                            >
+                                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                        {/* Link helper */}
+                        <p className="text-xs text-muted-foreground">
+                            Get your key at{' '}
+                            <a
+                                href="https://console.anthropic.com/settings/keys"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center underline hover:text-indigo-500"
+                            >
+                                console.anthropic.com
+                                <ExternalLink className="ml-1 h-3 w-3" />
+                            </a>
+                        </p>
+                    </div>
 
-            {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                    {error}
-                </div>
-            )}
+                    {/* Claude Project ID */}
+                    <div className="space-y-2">
+                        <Label htmlFor="claudeProjectId">Claude Project ID</Label>
+                        <Input
+                            id="claudeProjectId"
+                            name="claudeProjectId"
+                            type="text"
+                            placeholder="e.g. 5d5032c5-..."
+                            defaultValue={initialSettings.claudeProjectId}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            The ID from your Project URL: claude.ai/project/<strong>ID</strong>
+                        </p>
+                    </div>
 
-            {success && (
-                <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                    ✅ Claude settings saved! New episodes will automatically sync to your project.
-                </div>
-            )}
+                    {error && (
+                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                            {error}
+                        </div>
+                    )}
 
-            <SubmitButton />
-        </form>
+                    {success && (
+                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                            ✅ Saved!
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-2">
+                        <SubmitButton />
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
     );
 }
