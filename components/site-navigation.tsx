@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,9 +23,11 @@ interface SiteNavigationProps {
 }
 
 export function SiteNavigation({ user }: SiteNavigationProps) {
+    const [open, setOpen] = useState(false);
+
     return (
         <div className="flex h-16 items-center px-4">
-            <Sheet>
+            <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-10 w-10">
                         <Menu className="h-6 w-6" />
@@ -50,16 +53,28 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                     {/* Navigation Links */}
                     <div className="flex-1 overflow-y-auto py-4">
                         <nav className="flex flex-col space-y-2">
-                            <Link href="/" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
+                            <Link
+                                href="/"
+                                className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                onClick={() => setOpen(false)}
+                            >
                                 Home
                             </Link>
                             {/* Future links: History, Bookmarks, etc. */}
                             {user && (
                                 <>
-                                    <Link href="/integrations" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
+                                    <Link
+                                        href="/integrations"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
                                         Integrations
                                     </Link>
-                                    <Link href="/brand-voice" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
+                                    <Link
+                                        href="/brand-voice"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
                                         Brand Voice
                                     </Link>
                                 </>

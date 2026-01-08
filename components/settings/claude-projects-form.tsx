@@ -59,10 +59,7 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
     return (
         <Card className="border-indigo-500/20 shadow-sm">
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-indigo-500" />
-                    <CardTitle>Claude Projects</CardTitle>
-                </div>
+                <CardTitle>Claude Projects</CardTitle>
                 <CardDescription>
                     Sync episodes to your Anthropic Claude Knowledge Base.
                 </CardDescription>

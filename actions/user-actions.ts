@@ -72,3 +72,62 @@ export async function updateClaudeSettings(formData: FormData) {
         };
     }
 }
+
+export async function updateProfile(formData: FormData) {
+    try {
+        const session = await auth();
+
+        if (!session?.user?.id) {
+            return { success: false, error: 'Unauthorized' };
+        }
+
+        const name = formData.get('name') as string;
+
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+                name: name || undefined,
+            },
+        });
+
+        revalidatePath('/profile');
+        revalidatePath('/'); // Update header
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to update profile',
+        };
+    }
+}
+
+export async function updateGeminiKey(formData: FormData) {
+    try {
+        const session = await auth();
+
+        if (!session?.user?.id) {
+            return { success: false, error: 'Unauthorized' };
+        }
+
+        const geminiApiKey = formData.get('geminiApiKey') as string;
+
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+                geminiApiKey: geminiApiKey || null,
+            },
+        });
+
+        revalidatePath('/integrations');
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating Gemini key:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to update Gemini key',
+        };
+    }
+}

@@ -1,12 +1,15 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
+import { GeminiKeyForm } from '@/components/settings/gemini-key-form';
 import { ClaudeProjectsForm } from '@/components/settings/claude-projects-form';
 import {
     ReadwiseCard,
     NotionCard,
     GoogleDriveCard,
-    WebhookCard
+    WebhookCard,
+    TanaCard,
+    LogseqCard
 } from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
 
@@ -27,7 +30,10 @@ export default async function IntegrationsPage() {
             notionAccessToken: true,
             notionPageId: true,
             googleDriveRefreshToken: true,
+            tanaApiToken: true,
+            logseqGraphName: true,
             openaiApiKey: true,
+            geminiApiKey: true,
             claudeApiKey: true,
             claudeProjectId: true,
             autoSyncToClaude: true,
@@ -42,9 +48,7 @@ export default async function IntegrationsPage() {
                 <div className="space-y-10">
                     {/* 1. AI & Models */}
                     <section>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span className="bg-indigo-100 text-indigo-700 p-1 rounded">🧠</span> AI Brain & Models
-                        </h2>
+                        <h2 className="text-xl font-semibold mb-4">AI Brain & Models</h2>
                         <div className="grid gap-6 md:grid-cols-2">
                             <ClaudeProjectsForm
                                 userId={session.user.id}
@@ -55,14 +59,13 @@ export default async function IntegrationsPage() {
                                 }}
                             />
                             <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
+                            <GeminiKeyForm initialGeminiApiKey={user?.geminiApiKey} />
                         </div>
                     </section>
 
                     {/* 2. Knowledge Base Connections */}
                     <section>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span className="bg-yellow-100 text-yellow-700 p-1 rounded">📚</span> Knowledge Base
-                        </h2>
+                        <h2 className="text-xl font-semibold mb-4">Knowledge Base</h2>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             <ReadwiseCard initialValue={user?.readwiseApiKey} />
                             <NotionCard
@@ -72,14 +75,14 @@ export default async function IntegrationsPage() {
                             <GoogleDriveCard
                                 isConnected={!!user?.googleDriveRefreshToken}
                             />
+                            <TanaCard initialValue={user?.tanaApiToken} />
+                            <LogseqCard initialValue={user?.logseqGraphName} />
                         </div>
                     </section>
 
                     {/* 3. Developer / Webhooks */}
                     <section>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span className="bg-slate-100 text-slate-700 p-1 rounded">⚙️</span> Developer & Automation
-                        </h2>
+                        <h2 className="text-xl font-semibold mb-4">Developer & Automation</h2>
                         <div className="max-w-xl">
                             <WebhookCard initialValue={user?.webhookUrl} />
                         </div>

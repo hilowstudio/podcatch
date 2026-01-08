@@ -1,0 +1,52 @@
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { ProfileForm } from '@/components/profile/profile-form';
+import { ConnectedAccounts } from '@/components/profile/connected-accounts';
+
+export const metadata = {
+    title: 'Profile',
+    description: 'Manage your account settings and connected apps.',
+};
+
+export default async function ProfilePage() {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        redirect('/auth/signin');
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: {
+            accounts: true,
+        },
+    });
+
+    if (!user) {
+        redirect('/auth/signin');
+    }
+
+    return (
+        <div className="container max-w-4xl py-10">
+            <h1 className="text-3xl font-bold tracking-tight mb-8">Profile</h1>
+
+            <div className="grid gap-10">
+                <section>
+                    <h2 className="text-xl font-semibold mb-4">Personal Info</h2>
+                    <ProfileForm user={{ name: user.name, image: user.image }} />
+                </section>
+
+                <section>
+                    <h2 className="text-xl font-semibold mb-4">Connected Accounts</h2>
+                    <p className="text-muted-foreground mb-6">
+                        Connect these accounts to sign in securely.
+                    </p>
+                    <ConnectedAccounts
+                        accounts={user.accounts.map(acc => ({ provider: acc.provider }))}
+                    />
+                </section>
+            </div>
+        </div>
+    );
+}

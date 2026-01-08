@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook } from '@/actions/integrations';
-import { Loader2, Check, Send, BookOpen, Database, Globe, HardDrive } from 'lucide-react';
+import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook, updateTanaToken, updateLogseqGraph } from '@/actions/integrations';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // --- Types ---
@@ -41,10 +42,7 @@ export function WebhookCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-blue-500" />
-                    <CardTitle>Webhook</CardTitle>
-                </div>
+                <CardTitle>Webhook</CardTitle>
                 <CardDescription>Receive JSON events when episodes are processed.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -56,8 +54,8 @@ export function WebhookCard({ initialValue }: IntegrationProps) {
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                         />
-                        <Button variant="outline" size="icon" onClick={handleTest} disabled={isTesting || !url}>
-                            {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        <Button variant="outline" size="sm" onClick={handleTest} disabled={isTesting || !url}>
+                            {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Test'}
                         </Button>
                     </div>
                 </div>
@@ -87,10 +85,7 @@ export function ReadwiseCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-yellow-500" />
-                    <CardTitle>Readwise Reader</CardTitle>
-                </div>
+                <CardTitle>Readwise Reader</CardTitle>
                 <CardDescription>Save full transcripts and summaries to your library.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -133,10 +128,7 @@ export function NotionCard({ initialToken, initialPageId }: { initialToken?: str
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-slate-800 dark:text-slate-200" />
-                    <CardTitle>Notion</CardTitle>
-                </div>
+                <CardTitle>Notion</CardTitle>
                 <CardDescription>Sync episodes to a Notion Database.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -172,10 +164,7 @@ export function GoogleDriveCard({ isConnected }: { isConnected: boolean }) {
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <HardDrive className="h-5 w-5 text-green-600" />
-                    <CardTitle>Google Drive</CardTitle>
-                </div>
+                <CardTitle>Google Drive</CardTitle>
                 <CardDescription>Export deep research docs for NotebookLM.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -183,7 +172,7 @@ export function GoogleDriveCard({ isConnected }: { isConnected: boolean }) {
                     <span className="text-sm font-medium">Connection Status</span>
                     {isConnected ? (
                         <div className="flex items-center text-green-600 text-sm font-medium gap-2">
-                            <Check className="h-4 w-4" /> Connected
+                            Connected
                         </div>
                     ) : (
                         <span className="text-sm text-muted-foreground">Not Connected</span>
@@ -191,13 +180,96 @@ export function GoogleDriveCard({ isConnected }: { isConnected: boolean }) {
                 </div>
             </CardContent>
             <CardFooter className="justify-end border-t pt-4">
-                {isConnected ? (
-                    <Button variant="outline" disabled size="sm">Connected</Button>
-                ) : (
-                    <Button asChild size="sm">
-                        <a href="/api/integrations/google/auth">Connect Drive</a>
-                    </Button>
-                )}
+                <Button
+                    size="sm"
+                    variant={isConnected ? "outline" : "default"}
+                    onClick={() => signIn('google', {
+                        callbackUrl: '/integrations',
+                        scope: 'https://www.googleapis.com/auth/drive.file'
+                    })}
+                >
+                    {isConnected ? 'Reconnect' : 'Connect'}
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
+export function TanaCard({ initialValue }: IntegrationProps) {
+    const [token, setToken] = useState(initialValue || '');
+    const [isLoading, setIsLoading] = useState(false);
+
+    async function handleSave() {
+        setIsLoading(true);
+        const res = await updateTanaToken(token);
+        setIsLoading(false);
+        if (res.success) toast.success('Tana token saved');
+        else toast.error('Failed to save Tana token');
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Tana</CardTitle>
+                <CardDescription>Send nodes to Tana via Input API.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <div className="space-y-1">
+                    <Label>API Token</Label>
+                    <Input
+                        type="password"
+                        placeholder="Tana Input API Token"
+                        value={token}
+                        onChange={(e) => setToken(e.target.value)}
+                    />
+                </div>
+            </CardContent>
+            <CardFooter className="justify-end border-t pt-4">
+                <Button onClick={handleSave} disabled={isLoading} size="sm">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Token
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
+export function LogseqCard({ initialValue }: IntegrationProps) {
+    const [graphName, setGraphName] = useState(initialValue || '');
+    const [isLoading, setIsLoading] = useState(false);
+
+    async function handleSave() {
+        setIsLoading(true);
+        const res = await updateLogseqGraph(graphName);
+        setIsLoading(false);
+        if (res.success) toast.success('Logseq graph saved');
+        else toast.error('Failed to save Logseq graph');
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Logseq</CardTitle>
+                <CardDescription>Configure deep links to your local graph.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <div className="space-y-1">
+                    <Label>Graph Name</Label>
+                    <Input
+                        placeholder="e.g. my-knowledge-base"
+                        value={graphName}
+                        onChange={(e) => setGraphName(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Your local graph name for <code>logseq://graph/NAME</code> links.
+                    </p>
+                </div>
+            </CardContent>
+            <CardFooter className="justify-end border-t pt-4">
+                <Button onClick={handleSave} disabled={isLoading} size="sm">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Graph
+                </Button>
             </CardFooter>
         </Card>
     );

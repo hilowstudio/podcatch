@@ -88,3 +88,37 @@ export async function testWebhook(webhookUrl: string) {
 
     return await dispatchWebhook(webhookUrl, dummyPayload);
 }
+
+export async function updateTanaToken(token: string) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { tanaApiToken: token || null }
+        });
+
+        revalidatePath('/settings');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: 'Failed to update Tana token' };
+    }
+}
+
+export async function updateLogseqGraph(graphName: string) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { logseqGraphName: graphName || null }
+        });
+
+        revalidatePath('/settings');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: 'Failed to update Logseq graph' };
+    }
+}

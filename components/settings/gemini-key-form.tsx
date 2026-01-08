@@ -6,50 +6,50 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { updateApiKeys } from '@/actions/user-actions';
-import { Loader2, Sparkles } from 'lucide-react';
+import { updateGeminiKey } from '@/actions/user-actions';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const schema = z.object({
-    openaiApiKey: z.string().optional().or(z.literal('')),
+    geminiApiKey: z.string().optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-interface ApiKeysFormProps {
-    initialOpenaiApiKey?: string | null;
+interface GeminiKeyFormProps {
+    initialGeminiApiKey?: string | null;
 }
 
-export function ApiKeysForm({
-    initialOpenaiApiKey,
-}: ApiKeysFormProps) {
+export function GeminiKeyForm({
+    initialGeminiApiKey,
+}: GeminiKeyFormProps) {
     const form = useForm<FormValues>({
         resolver: zodResolver(schema),
         defaultValues: {
-            openaiApiKey: initialOpenaiApiKey || '',
+            geminiApiKey: initialGeminiApiKey || '',
         },
     });
 
     async function onSubmit(data: FormValues) {
         const formData = new FormData();
-        formData.append('openaiApiKey', data.openaiApiKey || '');
+        formData.append('geminiApiKey', data.geminiApiKey || '');
 
-        const result = await updateApiKeys(formData);
+        const result = await updateGeminiKey(formData);
 
         if (result.success) {
-            toast.success('API keys updated successfully');
+            toast.success('Gemini API key updated successfully');
         } else {
-            toast.error(result.error || 'Failed to update API keys');
+            toast.error(result.error || 'Failed to update Gemini API key');
         }
     }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>OpenAI</CardTitle>
+                <CardTitle>Gemini</CardTitle>
                 <CardDescription>
-                    Configure OpenAI for experimental chat features.
+                    Configure Google Gemini for AI analysis.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -58,15 +58,15 @@ export function ApiKeysForm({
                         <div className="space-y-4">
                             <FormField
                                 control={form.control}
-                                name="openaiApiKey"
+                                name="geminiApiKey"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>API Key</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="sk-..." {...field} />
+                                            <Input type="password" placeholder="AIzamSy..." {...field} />
                                         </FormControl>
                                         <FormDescription>
-                                            Required for "Chat with your Podcast".
+                                            Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline">Google AI Studio</a>.
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
