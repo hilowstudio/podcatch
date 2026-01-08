@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Save, Sparkles, ArrowRight, ArrowLeft, Wand2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BrandVoiceSettings({ initialVoice }: { initialVoice: string }) {
@@ -256,12 +256,11 @@ Important: Never mention that you are an AI. Stay in character.`;
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-indigo-500" />
                         <CardTitle>{step === 0 ? 'Brand Voice & Style Guide' : getStepTitle(step)}</CardTitle>
                     </div>
                     {step === 0 && (
                         <Button variant="outline" size="sm" onClick={() => setStep(1)} className="gap-2">
-                            <Wand2 className="h-4 w-4" /> Open Wizard
+                            Open Wizard
                         </Button>
                     )}
                 </div>
@@ -284,7 +283,7 @@ Important: Never mention that you are an AI. Stay in character.`;
                         <div className="flex justify-end">
                             <Button onClick={handleSave} disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                <Save className="mr-2 h-4 w-4" /> Save Brand Voice
+                                Save Brand Voice
                             </Button>
                         </div>
                     </div>
@@ -299,16 +298,16 @@ Important: Never mention that you are an AI. Stay in character.`;
             {step > 0 && (
                 <CardFooter className="flex justify-between border-t pt-4">
                     <Button variant="ghost" onClick={() => setStep(step - 1)}>
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                        Back
                     </Button>
 
                     {step < 4 ? (
                         <Button onClick={() => setStep(step + 1)}>
-                            Next <ArrowRight className="ml-2 h-4 w-4" />
+                            Next
                         </Button>
                     ) : (
                         <Button onClick={generateVoice} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            <Wand2 className="mr-2 h-4 w-4" /> Generate Voice
+                            Generate Voice
                         </Button>
                     )}
                 </CardFooter>
