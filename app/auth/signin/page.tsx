@@ -1,4 +1,4 @@
-import { signIn } from '@/auth';
+import { signInWithEmail, signInWithGoogle } from '@/actions/auth-actions';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -28,10 +28,7 @@ export default function SignInPage() {
 
                 <div className="max-w-sm w-full space-y-4">
                     <form
-                        action={async (formData) => {
-                            'use server';
-                            await signIn('resend', { email: formData.get('email'), redirectTo: '/' });
-                        }}
+                        action={signInWithEmail}
                         className="space-y-4"
                     >
                         <div className="space-y-2">
@@ -61,10 +58,7 @@ export default function SignInPage() {
                     </div>
 
                     <form
-                        action={async () => {
-                            'use server';
-                            await signIn('google', { redirectTo: '/' });
-                        }}
+                        action={signInWithGoogle}
                     >
                         <Button
                             type="submit"

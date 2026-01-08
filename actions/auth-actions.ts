@@ -9,7 +9,7 @@ export async function signInWithEmail(formData: FormData) {
     });
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(_formData?: FormData) {
     await signIn('google', {
         redirectTo: '/'
     });

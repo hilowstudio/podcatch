@@ -1,5 +1,3 @@
-import { getBrandVoice } from '@/actions/settings-actions';
-import { BrandVoiceSettings } from '@/components/brand-voice-settings';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
@@ -8,41 +6,34 @@ import { IntegrationsForm } from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
 
 export const metadata = {
-    title: 'Settings - Podcatch',
-    description: 'Manage your global preferences.',
+    title: 'Integrations - Podcatch',
+    description: 'Manage your connected services and API keys.',
 };
 
-export default async function SettingsPage() {
+export default async function IntegrationsPage() {
     const session = await auth();
     if (!session?.user?.id) redirect('/');
 
-    const [brandVoice, user] = await Promise.all([
-        getBrandVoice(),
-        prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: {
-                webhookUrl: true,
-                readwiseApiKey: true,
-                notionAccessToken: true,
-                notionPageId: true,
-                googleDriveRefreshToken: true,
-                openaiApiKey: true,
-                claudeApiKey: true,
-                claudeProjectId: true,
-                autoSyncToClaude: true,
-            }
-        })
-    ]);
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+            webhookUrl: true,
+            readwiseApiKey: true,
+            notionAccessToken: true,
+            notionPageId: true,
+            googleDriveRefreshToken: true,
+            openaiApiKey: true,
+            claudeApiKey: true,
+            claudeProjectId: true,
+            autoSyncToClaude: true,
+        }
+    });
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-8">Integrations</h1>
 
             <div className="space-y-8">
-                <section>
-                    <BrandVoiceSettings initialVoice={brandVoice} />
-                </section>
-
                 <div className="grid gap-8 md:grid-cols-2">
                     <section className="md:col-span-2">
                         <ClaudeProjectsForm
@@ -67,8 +58,6 @@ export default async function SettingsPage() {
                         <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
                     </section>
                 </div>
-
-                {/* Future settings sections can go here */}
             </div>
         </div>
     );

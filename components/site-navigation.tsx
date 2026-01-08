@@ -55,9 +55,14 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                             </Link>
                             {/* Future links: History, Bookmarks, etc. */}
                             {user && (
-                                <Link href="/settings" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
-                                    Settings
-                                </Link>
+                                <>
+                                    <Link href="/integrations" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
+                                        Integrations
+                                    </Link>
+                                    <Link href="/brand-voice" className="px-4 py-2 hover:bg-muted rounded-md font-medium">
+                                        Brand Voice
+                                    </Link>
+                                </>
                             )}
                         </nav>
                     </div>
