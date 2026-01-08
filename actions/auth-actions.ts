@@ -14,3 +14,10 @@ export async function signInWithGoogle(_formData?: FormData) {
         redirectTo: '/'
     });
 }
+
+
+export async function signInWithGitHub(_formData?: FormData) {
+    await signIn('github', {
+        redirectTo: '/'
+    });
+}
