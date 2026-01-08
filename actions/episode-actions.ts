@@ -102,3 +102,34 @@ export async function getEpisodeStatus(episodeId: string) {
         return null;
     }
 }
+
+/**
+ * Get minimal episode details for AudioProvider
+ */
+export async function getEpisodeForPlayer(episodeId: string) {
+    try {
+        const episode = await prisma.episode.findUnique({
+            where: { id: episodeId },
+            include: {
+                feed: {
+                    select: {
+                        image: true,
+                        title: true,
+                    }
+                }
+            }
+        });
+
+        if (!episode) return null;
+
+        return {
+            id: episode.id,
+            title: episode.title,
+            audioUrl: episode.audioUrl,
+            image: episode.feed.image,
+            feedTitle: episode.feed.title,
+        };
+    } catch {
+        return null;
+    }
+}

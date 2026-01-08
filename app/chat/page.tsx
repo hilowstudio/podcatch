@@ -9,18 +9,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, User, Bot, Sparkles, PlayCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-// Helper to parse text with timestamps [MM:SS]
+// Helper to parse text with timestamps [MM:SS] or [MM:SS|id:uuid]
 function MessageContent({ content }: { content: string }) {
     const { seek, play, currentEpisode } = useAudio();
 
-    // Regex for [MM:SS] or [HH:MM:SS]
-    const timestampRegex = /\[(\d{1,2}:)?(\d{1,2}:\d{2})\]/g;
-    const parts = content.split(timestampRegex);
+    // Regex for [MM:SS] or [HH:MM:SS] optionally with |id:uuid
+    // Group 1: Optional hours
+    // Group 2: MM:SS
+    // Group 3: Optional |id:uuid
+    const timestampRegex = /\[(\d{1,2}:)?(\d{1,2}:\d{2})(?:\|id:([a-zA-Z0-9-]+))?\]/g;
 
-    // This splitting logic is complex because Regex.split with capturing groups includes the groups.
-    // Simpler approach: Match all, then map.
-
-    // Let's iterate manually to handle the parts correctly
+    // Manual iteration is better than split for complex regex
     const elements = [];
     let lastIndex = 0;
     let match;
@@ -34,8 +33,11 @@ function MessageContent({ content }: { content: string }) {
             elements.push(<span key={lastIndex}>{content.substring(lastIndex, match.index)}</span>);
         }
 
+        const fullMatch = match[0];
+        const timeString = (match[1] || '') + match[2]; // HH:MM:SS or MM:SS
+        const episodeId = match[3];
+
         // Calculate seconds
-        const timeString = match[0].replace('[', '').replace(']', '');
         const timeParts = timeString.split(':').map(Number);
         let seconds = 0;
         if (timeParts.length === 3) {
@@ -46,24 +48,12 @@ function MessageContent({ content }: { content: string }) {
 
         // Add button
         elements.push(
-            <button
+            <CitationButton
                 key={match.index}
-                onClick={() => {
-                    seek(seconds);
-                    // If no episode is playing, we might need to load one? 
-                    // Current RAG doesn't know WHICH episode the context is from unless we parse citation.
-                    // For now, assume user is manually playing the relevant episode or it's just a seek command if playing.
-                    // Ideally, RAG returns "Source: Episode 1".
-                    // But for "Smart Player" "Citation --> Audio", we need the episode ID.
-                    // Limitation: If context comes from *different* episode than playing, seek works but on WRONG audio.
-                    // Fix: Gemini prompts should include Episode ID in citation? Too complex for this turn.
-                    // Acceptance: Seek works on *currently active* player.
-                }}
-                className="inline-flex items-center gap-1 mx-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
-            >
-                <PlayCircle className="h-3 w-3" />
-                {timeString}
-            </button>
+                seconds={seconds}
+                label={timeString}
+                episodeId={episodeId}
+            />
         );
 
         lastIndex = timestampRegex.lastIndex;
@@ -75,6 +65,53 @@ function MessageContent({ content }: { content: string }) {
     }
 
     return <p className="whitespace-pre-wrap text-sm leading-relaxed">{elements}</p>;
+}
+
+import { getEpisodeForPlayer } from '@/actions/episode-actions';
+import { Loader2 } from 'lucide-react';
+
+function CitationButton({ seconds, label, episodeId }: { seconds: number, label: string, episodeId?: string }) {
+    const { seek, play, currentEpisode } = useAudio();
+    const [isLoading, setIsLoading] = useState(false);
+
+    async function handleClick() {
+        // Check if we need to switch episodes
+        if (episodeId && currentEpisode?.id !== episodeId) {
+            setIsLoading(true);
+            try {
+                const episode = await getEpisodeForPlayer(episodeId);
+                if (episode) {
+                    play({ ...episode, feedTitle: episode.feedTitle || undefined });
+                    // Short delay to allow audio to load slightly? play() handles src setting.
+                    // Seek after loadedmetadata? AudioProvider resets currentTime to 0 on new src.
+                    // We might need to seek *after* play logic finishes.
+                    // AudioProvider's play() is async but fire-and-forget mostly.
+                    // Let's rely on checking if it's the right episode and then seek.
+
+                    // Actually, modifying `play` to accept a `startTime` would be cleaner, but for now:
+                    setTimeout(() => seek(seconds), 500); // Hacky but functional for "Smart Player"
+                }
+            } catch (error) {
+                console.error("Failed to load episode", error);
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            // Same episode or no ID, just seek
+            seek(seconds);
+        }
+    }
+
+    return (
+        <button
+            onClick={handleClick}
+            disabled={isLoading}
+            className="inline-flex items-center gap-1 mx-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 disabled:opacity-50"
+        >
+            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <PlayCircle className="h-3 w-3" />}
+            {label}
+        </button>
+    );
 }
 
 export default function ChatPage() {

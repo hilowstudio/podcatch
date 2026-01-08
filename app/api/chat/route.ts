@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     });
 
     const context = recentEpisodes.map(ep => `
+    [EpisodeID: ${ep.id}]
     [Episode: ${ep.title}]
     [Podcast: ${ep.feed.title}]
     [Date: ${ep.publishedAt.toISOString()}]
@@ -55,7 +56,11 @@ export async function POST(req: Request) {
         
         ${context}
         
-        If the answer is not in the context, say so. Cite the episode title when answering.`,
+        If the answer is not in the context, say so. Cite the episode title when answering.
+        
+        Use citations for timestamps in this format: [MM:SS|id:EPISODE_ID]. 
+        Example: "As mentioned in the intro [02:30|id:123-abc]...".
+        If the Episode ID is not clear, fallback to [MM:SS].`,
     });
 
     return result.toTextStreamResponse();
