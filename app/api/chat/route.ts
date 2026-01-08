@@ -2,6 +2,7 @@
 import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
 export const maxDuration = 30;
 
@@ -13,12 +14,48 @@ export async function POST(req: Request) {
 
     const { messages } = await req.json();
 
+    // Fetch recent episodes with transcripts for context (Limit 5 for speed/relevance in this Demo)
+    // In production, we would use a Vector Store or specialized generic retrieval.
+    const recentEpisodes = await prisma.episode.findMany({
+        where: {
+            feed: {
+                subscriptions: {
+                    some: { userId: session.user.id }
+                }
+            },
+            status: 'COMPLETED',
+            insight: {
+                isNot: null
+            }
+        },
+        include: {
+            insight: true,
+            feed: true
+        },
+        orderBy: {
+            publishedAt: 'desc'
+        },
+        take: 5
+    });
+
+    const context = recentEpisodes.map(ep => `
+    [Episode: ${ep.title}]
+    [Podcast: ${ep.feed.title}]
+    [Date: ${ep.publishedAt.toISOString()}]
+    [Summary: ${ep.insight?.summary}]
+    [Transcript Excerpt: ${ep.insight?.transcript?.slice(0, 50000)}...] 
+    `).join('\n\n');
+
     const result = await streamText({
         model: google('gemini-1.5-pro'),
         messages,
-        system: `You are an intelligent podcast assistant. You have access to the user's library of processed episodes. 
-        Answer questions based on the context provided.
-        (Note: Retrieval is not yet connected in this version, so answer generally or ask for context.)`,
+        system: `You are an intelligent podcast assistant. You have access to the user's recent processed episodes.
+        
+        Answer questions based on the following context:
+        
+        ${context}
+        
+        If the answer is not in the context, say so. Cite the episode title when answering.`,
     });
 
     return result.toTextStreamResponse();

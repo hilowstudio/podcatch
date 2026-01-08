@@ -7,7 +7,8 @@ import { BillingForm } from '@/components/billing-form';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Key } from 'lucide-react';
+import { ApiKeysForm } from '@/components/settings/api-keys-form';
 
 export default async function SettingsPage() {
     const session = await auth();
@@ -30,6 +31,7 @@ export default async function SettingsPage() {
             notionAccessToken: true,
             notionPageId: true,
             googleDriveRefreshToken: true,
+            openaiKey: true,
         },
     });
 
@@ -59,6 +61,24 @@ export default async function SettingsPage() {
 
                 <div className="grid gap-8">
                     <BillingForm subscriptionPlan={subscriptionPlan} />
+
+                    {/* AI Configuration */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Key className="h-5 w-5 text-muted-foreground" />
+                                AI Configuration
+                            </CardTitle>
+                            <CardDescription>
+                                Configure your own API keys for higher limits and custom models.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ApiKeysForm
+                                initialOpenaiApiKey={user.openaiKey}
+                            />
+                        </CardContent>
+                    </Card>
 
                     <div className="relative">
                         {!subscriptionPlan.isPro && (

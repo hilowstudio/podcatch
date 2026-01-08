@@ -7,15 +7,15 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 // Episode processing status
 enum EpisodeStatus {
   DISCOVERED // Episode found in RSS feed
   PROCESSING // Transcription and AI analysis in progress
-  COMPLETED  // All processing complete
-  FAILED     // Processing failed
+  COMPLETED // All processing complete
+  FAILED // Processing failed
 }
 
 // NextAuth User model with API keys
@@ -25,34 +25,38 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  
+
   // User's personal API keys (optional - falls back to system keys)
   // AI & Integrations
-  autoSyncToClaude    Boolean? @default(false)
-  claudeApiKey        String?
-  claudeProjectId     String?
-  geminiApiKey        String?
-  deepgramApiKey      String?
-  openaiApiKey        String? // For future OpenAI support
-  
+  autoSyncToClaude Boolean? @default(false)
+  claudeApiKey     String?
+  claudeProjectId  String?
+  geminiApiKey     String?
+  deepgramApiKey   String?
+  openaiApiKey     String? // For future OpenAI support
+
   // Phase 2 Integrations
   webhookUrl              String? // Generic Webhook
   readwiseApiKey          String? // Readwise Reader
   notionAccessToken       String? // Notion OAuth
   notionPageId            String? // Notion Target Page
   googleDriveRefreshToken String? // Google Drive OAuth
-  
+
   // Stripe Pro Subscription
   stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
   stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
   stripePriceId          String?   @map(name: "stripe_price_id")
   stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   accounts Account[]
   sessions Session[]
+
+  openaiKey           String?
+  openaiAssistantId   String?
+  openaiVectorStoreId String?
 
   // User's API keys and Subscription relations
   subscriptions Subscription[]
@@ -128,15 +132,15 @@ model Feed {
   title         String?
   image         String?
   type          FeedType  @default(RSS)
-  channelId     String?   // For YouTube Channel ID
+  channelId     String? // For YouTube Channel ID
   lastCheckedAt DateTime?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relation removed to fix validation. userId scalar retained.
   // user     User?      @relation(fields: [userId], references: [id])
-  
+
   episodes      Episode[]
   subscriptions Subscription[]
 
@@ -145,19 +149,19 @@ model Feed {
 
 // Podcast Episode model
 model Episode {
-  id          String        @id @default(cuid())
-  title       String
-  description String?       @db.Text
-  audioUrl    String
-  videoUrl    String?       // For YouTube Watch URL
-  youtubeId   String?       // For YouTube Video ID
-  transcriptUrl String?     // Source URL for existing transcript (e.g. from RSS)
-  publishedAt DateTime
-  status      EpisodeStatus @default(DISCOVERED)
-  feedId      String
-  guid        String        @unique // RSS guid for deduplication
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  audioUrl      String
+  videoUrl      String? // For YouTube Watch URL
+  youtubeId     String? // For YouTube Video ID
+  transcriptUrl String? // Source URL for existing transcript (e.g. from RSS)
+  publishedAt   DateTime
+  status        EpisodeStatus @default(DISCOVERED)
+  feedId        String
+  guid          String        @unique // RSS guid for deduplication
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   feed    Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
   insight Insight?
@@ -169,15 +173,15 @@ model Episode {
 
 // AI-generated insights
 model Insight {
-  id           String   @id @default(cuid())
-  episodeId    String   @unique
-  transcript   String   @db.Text
-  summary      String   @db.Text
-  keyTakeaways Json     // Array of 5 bullet points
-  links        Json     // Array of URLs mentioned
+  id            String   @id @default(cuid())
+  episodeId     String   @unique
+  transcript    String   @db.Text
+  summary       String   @db.Text
+  keyTakeaways  Json // Array of 5 bullet points
+  links         Json // Array of URLs mentioned
   geminiFileUri String? // URI of the file uploaded to Gemini for RAG
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 

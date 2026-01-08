@@ -12,16 +12,12 @@ export async function updateApiKeys(formData: FormData) {
             return { success: false, error: 'Unauthorized' };
         }
 
-        const geminiApiKey = formData.get('geminiApiKey') as string;
-        const deepgramApiKey = formData.get('deepgramApiKey') as string;
         const openaiApiKey = formData.get('openaiApiKey') as string;
 
         await prisma.user.update({
             where: { id: session.user.id },
             data: {
-                geminiApiKey: geminiApiKey || null,
-                deepgramApiKey: deepgramApiKey || null,
-                openaiApiKey: openaiApiKey || null,
+                openaiKey: openaiApiKey || null,
             },
         });
 

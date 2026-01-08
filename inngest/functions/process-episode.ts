@@ -52,6 +52,9 @@ export const processEpisode = inngest.createFunction(
                                             notionAccessToken: true, // Used in step 8
                                             notionPageId: true, // Used in step 8
                                             googleDriveRefreshToken: true, // Used in step 9
+                                            openaiKey: true,
+                                            openaiAssistantId: true,
+                                            openaiVectorStoreId: true,
                                         },
                                     },
                                 },
@@ -180,6 +183,7 @@ export const processEpisode = inngest.createFunction(
                         smart_format: true,
                         punctuate: true,
                         paragraphs: true,
+                        diarize: true,
                     }
                 );
 
@@ -244,7 +248,14 @@ export const processEpisode = inngest.createFunction(
                 if (transcriptData.rawTranscript) {
                     messages.push({
                         role: 'user',
-                        content: `You are analyzing a podcast/video transcript. Extract insights. Transcript: ${transcriptData.rawTranscript}`
+                        content: `You are analyzing a podcast/video transcript. Extract insights. 
+                        
+                        - Summary: Concise 2-3 sentences.
+                        - Key Takeaways: Exactly 5 bullet points.
+                        - Links: Extract all external URLs mentioned.
+                        - Books: Extract all books mentioned with title and author.
+
+                        Transcript: ${transcriptData.rawTranscript}`
                     });
                 } else if (transcriptData.fileUri) {
                     // Video fallback: Pass URL in text (schema validation workaround for 'file' part)
@@ -511,6 +522,43 @@ ${transcriptData.timestampedTranscript}
                 console.error('Error in Gemini Store step:', e);
             }
         });
+
+        // Step 11: Sync to OpenAI (User "Assistant" Claim)
+        if (episode.feed.user?.openaiKey) {
+            await step.run('sync-to-openai', async () => {
+                try {
+                    const { syncToOpenAI } = await import('@/lib/openai');
+                    console.log('Syncing to OpenAI Vector Store...');
+
+                    const result = await syncToOpenAI({
+                        apiKey: episode.feed.user?.openaiKey!,
+                        assistantId: episode.feed.user?.openaiAssistantId || undefined,
+                        vectorStoreId: episode.feed.user?.openaiVectorStoreId || undefined,
+                        transcript: transcriptData.timestampedTranscript || transcriptData.rawTranscript || '',
+                        title: episode.title,
+                        episodeId: episode.id
+                    });
+
+                    if (result.success) {
+                        console.log('✅ Synced to OpenAI!');
+                        // Save IDs if new
+                        if (result.assistantId || result.vectorStoreId) {
+                            await prisma.user.update({
+                                where: { id: episode.feed.user!.id },
+                                data: {
+                                    openaiAssistantId: result.assistantId,
+                                    openaiVectorStoreId: result.vectorStoreId
+                                }
+                            });
+                        }
+                    } else {
+                        console.error('Failed to sync to OpenAI:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error in OpenAI sync step:', error);
+                }
+            });
+        }
 
         return { success: true, episodeId: episode.id };
     }
