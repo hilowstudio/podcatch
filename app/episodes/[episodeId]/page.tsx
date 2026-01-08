@@ -5,10 +5,15 @@ import { getEpisodeWithInsight } from '@/actions/episode-actions';
 import { ClaudeSyncButton } from '@/components/claude-sync-button';
 import { MarkdownCopyButton } from '@/components/markdown-copy-button';
 import { ProcessEpisodeButton } from '@/components/process-episode-button';
+import { AddToCollectionButton } from '@/components/add-to-collection-button';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2 } from 'lucide-react';
+import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors } from 'lucide-react';
+import { TranscriptViewer } from '@/components/transcript-viewer';
+import { ClipEditor } from '@/components/clip-editor';
+import { CustomPromptRunner } from '@/components/custom-prompt-runner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow, format } from 'date-fns';
 
 type PageProps = {
@@ -125,6 +130,7 @@ export default async function EpisodePage({ params }: PageProps) {
                                 {isDiscovered && (
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
+                                <AddToCollectionButton episodeId={episode.id} />
                                 <ClaudeSyncButton episodeId={episode.id} />
                                 {hasInsights && (
                                     <MarkdownCopyButton
@@ -259,20 +265,203 @@ ${episode.insight?.transcript}
                                     </Card>
                                 )}
 
-                                {/* Full Transcript */}
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-5 w-5 text-primary" />
-                                            <CardTitle>Full Transcript</CardTitle>
+                                {/* Creator Studio */}
+                                {(episode.insight.socialContent as any) && (
+                                    <Card className="border-purple-500/20 bg-purple-500/5">
+                                        <CardHeader>
+                                            <div className="flex items-center gap-2">
+                                                <Sparkles className="h-5 w-5 text-purple-600" />
+                                                <CardTitle>Creator Studio</CardTitle>
+                                            </div>
+                                            <CardDescription>AI-generated assets ready for social sharing</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="grid gap-4">
+                                            {(episode.insight.socialContent as any).tweet && (
+                                                <div className="rounded-lg border bg-background p-4">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-sky-500">
+                                                        <Share2 className="h-4 w-4" /> Viral Tweet
+                                                    </h4>
+                                                    <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).tweet}</p>
+                                                </div>
+                                            )}
+                                            {(episode.insight.socialContent as any).linkedin && (
+                                                <div className="rounded-lg border bg-background p-4">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-blue-700">
+                                                        <Share2 className="h-4 w-4" /> LinkedIn Post
+                                                    </h4>
+                                                    <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).linkedin}</p>
+                                                </div>
+                                            )}
+                                            {(episode.insight.socialContent as any).blogTitle && (
+                                                <div className="rounded-lg border bg-background p-4">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-orange-600">
+                                                        <FileText className="h-4 w-4" /> Blog Title Idea
+                                                    </h4>
+                                                    <p className="font-medium">{(episode.insight.socialContent as any).blogTitle}</p>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                )}
+
+
+                                {/* Mentions: Knowledge Graph */}
+                                {episode.entities && episode.entities.length > 0 && (
+                                    <Card className="border-indigo-500/20 bg-indigo-500/5">
+                                        <CardHeader>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-5 w-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-white">#</span>
+                                                </div>
+                                                <CardTitle>Mentions</CardTitle>
+                                            </div>
+                                            <CardDescription>People, books, and concepts discussed in this episode</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-4">
+                                                {/* People */}
+                                                {episode.entities.filter(e => e.type === 'PERSON').length > 0 && (
+                                                    <div>
+                                                        <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                                                            People
+                                                        </h4>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {episode.entities.filter(e => e.type === 'PERSON').map(person => (
+                                                                <Link href={`/search?q=${encodeURIComponent(person.name)}`} key={person.id}>
+                                                                    <Badge variant="outline" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer pl-1 gap-1.5 py-1">
+                                                                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                                                            {/* Placeholder Avatar */}
+                                                                            <span className="text-[10px] font-bold">{person.name[0]}</span>
+                                                                        </div>
+                                                                        {person.name}
+                                                                    </Badge>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Books */}
+                                                {episode.entities.filter(e => e.type === 'BOOK').length > 0 && (
+                                                    <div>
+                                                        <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                                                            Books
+                                                        </h4>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {episode.entities.filter(e => e.type === 'BOOK').map(book => (
+                                                                <Link href={`/search?q=${encodeURIComponent(book.name)}`} key={book.id}>
+                                                                    <Badge variant="secondary" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer gap-1 py-1">
+                                                                        📚 {book.name}
+                                                                    </Badge>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Concepts */}
+                                                {episode.entities.filter(e => e.type === 'CONCEPT').length > 0 && (
+                                                    <div>
+                                                        <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                                                            Concepts
+                                                        </h4>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {episode.entities.filter(e => e.type === 'CONCEPT').map(concept => (
+                                                                <Link href={`/search?q=${encodeURIComponent(concept.name)}`} key={concept.id}>
+                                                                    <Badge variant="outline" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer border-dashed">
+                                                                        💡 {concept.name}
+                                                                    </Badge>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
+
+                                {/* Chapters */}
+                                {/* Tabs Interface */}
+                                <Tabs defaultValue="transcript" className="w-full">
+                                    <TabsList className="w-full justify-start mb-4">
+                                        <TabsTrigger value="transcript">Transcript</TabsTrigger>
+                                        <TabsTrigger value="chapters">Chapters</TabsTrigger>
+                                        <TabsTrigger value="studio">Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge></TabsTrigger>
+                                    </TabsList>
+
+                                    {/* Transcript Tab */}
+                                    <TabsContent value="transcript">
+                                        <Card>
+                                            <CardHeader>
+                                                <div className="flex items-center gap-2">
+                                                    <FileText className="h-5 w-5 text-primary" />
+                                                    <CardTitle>Full Transcript</CardTitle>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="p-0 sm:p-6">
+                                                <TranscriptViewer transcript={episode.insight.transcript} className="max-h-[800px] border rounded-md" />
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+
+                                    {/* Chapters Tab */}
+                                    <TabsContent value="chapters">
+                                        <Card>
+                                            <CardHeader>
+                                                <div className="flex items-center gap-2">
+                                                    <PlayCircle className="h-5 w-5 text-primary" />
+                                                    <CardTitle>Chapters</CardTitle>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid gap-2">
+                                                    {(episode.insight.chapters as any[]).map((chapter, i) => (
+                                                        <div key={i} className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer group">
+                                                            <span className="font-mono text-sm text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                                                {chapter.start}
+                                                            </span>
+                                                            <div>
+                                                                <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                                                                    {chapter.title}
+                                                                </p>
+                                                                {chapter.reason && <p className="text-xs text-muted-foreground">{chapter.reason}</p>}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+
+                                    {/* Studio Tab */}
+                                    <TabsContent value="studio" className="space-y-6">
+                                        <div className="grid gap-6">
+                                            {episode.audioUrl && (
+                                                <section>
+                                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                                        <Scissors className="h-4 w-4" /> Clip Editor
+                                                    </h3>
+                                                    <ClipEditor episodeId={episode.id} audioUrl={episode.audioUrl} />
+                                                </section>
+                                            )}
+
+                                            <section>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                                                        <Sparkles className="h-4 w-4" /> Custom Prompts
+                                                    </h3>
+                                                    <Link href="/settings/prompts">
+                                                        <Badge variant="outline" className="hover:bg-muted cursor-pointer">Manage Prompts</Badge>
+                                                    </Link>
+                                                </div>
+                                                <CustomPromptRunner episodeId={episode.id} />
+                                            </section>
                                         </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="prose prose-neutral dark:prose-invert max-w-none">
-                                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{episode.insight.transcript}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                    </TabsContent>
+                                </Tabs>
+
+
                             </>
                         )}
                     </div>

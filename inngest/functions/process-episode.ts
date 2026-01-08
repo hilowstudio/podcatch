@@ -22,6 +22,7 @@ export const processEpisode = inngest.createFunction(
 
         // Step 1: Fetch episode with feed and user details
         const episode = await step.run('fetch-episode', async () => {
+
             console.log('🚀 Starting process-episode-shared (New Function ID)');
             // Removed DMMF debugging
 
@@ -55,6 +56,7 @@ export const processEpisode = inngest.createFunction(
                                             openaiKey: true,
                                             openaiAssistantId: true,
                                             openaiVectorStoreId: true,
+                                            brandVoice: true, // Used in step 3
                                         },
                                     },
                                 },
@@ -74,14 +76,14 @@ export const processEpisode = inngest.createFunction(
             const now = Date.now();
 
             console.log(`Checking ${ep.feed.subscriptions.length} subscribers for Pro status...`);
-            ep.feed.subscriptions.forEach(s => {
+            ep.feed.subscriptions.forEach((s: any) => {
                 const u = s.user;
                 const end = u?.stripeCurrentPeriodEnd?.getTime() ?? 0;
                 const active = end + DAY_IN_MS > now;
                 console.log(`- User ${u?.id?.slice(0, 8)}: Price=${u?.stripePriceId ?? 'None'}, Ends=${u?.stripeCurrentPeriodEnd?.toISOString() ?? 'N/A'}, Active=${active}`);
             });
 
-            const fundingUser = ep.feed.subscriptions.map(s => s.user).find(u => {
+            const fundingUser = ep.feed.subscriptions.map((s: any) => s.user).find((u: any) => {
                 return !!u?.stripePriceId &&
                     (u.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > now;
             });
@@ -111,7 +113,7 @@ export const processEpisode = inngest.createFunction(
                     user: fundingUser
                 }
             };
-        });
+        }) as any;
 
         if ((episode as any).skipped) {
             return { skipped: true, reason: 'Upgrade to Pro to process episodes' };
@@ -244,6 +246,14 @@ export const processEpisode = inngest.createFunction(
 
                 const messages: any[] = [];
 
+                // Inject Brand Voice
+                if (episode.feed.user?.brandVoice) {
+                    messages.push({
+                        role: 'system',
+                        content: `You are a helpful AI assistant. Always adhere to the following Brand Voice/Style Guide:\n${episode.feed.user.brandVoice}`
+                    });
+                }
+
                 // Prioritize raw transcript (works for RSS and YouTube Captions)
                 if (transcriptData.rawTranscript) {
                     messages.push({
@@ -254,8 +264,11 @@ export const processEpisode = inngest.createFunction(
                         - Key Takeaways: Exactly 5 bullet points.
                         - Links: Extract all external URLs mentioned.
                         - Books: Extract all books mentioned with title and author.
+                        - Social Content: Draft a viral tweet, a LinkedIn post, and a blog title.
+                        - Chapters: Identify 5-10 key chapters with titles and [MM:SS] timestamps.
+                        - Entities: Extract key People, Books, and Concepts discussed.
 
-                        Transcript: ${transcriptData.rawTranscript}`
+                        Transcript: ${transcriptData.timestampedTranscript || transcriptData.rawTranscript}`
                     });
                 } else if (transcriptData.fileUri) {
                     // Video fallback: Pass URL in text (schema validation workaround for 'file' part)
@@ -296,16 +309,20 @@ export const processEpisode = inngest.createFunction(
                     where: { episodeId: episode.id },
                     create: {
                         episodeId: episode.id,
-                        transcript: transcriptData.rawTranscript || '(Video Transcript in process...)',
+                        transcript: transcriptData.timestampedTranscript || transcriptData.rawTranscript || '(Video Transcript in process...)',
                         summary: insights.summary,
                         keyTakeaways: insights.keyTakeaways || [],
                         links: insights.links || [],
+                        socialContent: insights.socialContent || {},
+                        chapters: insights.chapters || [],
                     },
                     update: {
-                        transcript: transcriptData.rawTranscript || '(Video Transcript in process...)',
+                        transcript: transcriptData.timestampedTranscript || transcriptData.rawTranscript || '(Video Transcript in process...)',
                         summary: insights.summary,
                         keyTakeaways: insights.keyTakeaways || [],
                         links: insights.links || [],
+                        socialContent: insights.socialContent || {},
+                        chapters: insights.chapters || [],
                     },
                 });
 
@@ -314,6 +331,42 @@ export const processEpisode = inngest.createFunction(
                     where: { id: episode.id },
                     data: { status: 'COMPLETED' },
                 });
+
+                // Upsert Entities (Knowledge Graph)
+                if (insights.entities && insights.entities.length > 0) {
+                    console.log(`Processing ${insights.entities.length} entities...`);
+
+                    // We do this sequentially to ensure we can connect them properly
+                    for (const entity of insights.entities) {
+                        // clean name
+                        const name = entity.name.trim();
+                        if (name.length < 2) continue;
+
+                        // Upsert Entity
+                        const dbEntity = await prisma.entity.upsert({
+                            where: { name: name },
+                            create: {
+                                name: name,
+                                type: entity.type,
+                                description: entity.description
+                            },
+                            update: {
+                                // Optional: Update description if new one is better?
+                                // For now, keep original to avoid thrashing
+                            }
+                        });
+
+                        // Connect to Episode
+                        await prisma.episode.update({
+                            where: { id: episode.id },
+                            data: {
+                                entities: {
+                                    connect: { id: dbEntity.id }
+                                }
+                            }
+                        });
+                    }
+                }
 
                 console.log('Insights saved successfully');
             } catch (error) {
@@ -520,6 +573,64 @@ ${transcriptData.timestampedTranscript}
                 }
             } catch (e) {
                 console.error('Error in Gemini Store step:', e);
+            }
+        });
+
+        // Step 12: Generate Embeddings (Phase 2)
+        await step.run('generate-embeddings', async () => {
+            // Only proceed if we have text content
+            const textToEmbed: { type: string, content: string }[] = [];
+
+            if (insights.summary) textToEmbed.push({ type: 'summary', content: `Summary: ${insights.summary}` });
+            if (insights.keyTakeaways) textToEmbed.push({ type: 'takeaways', content: `Takeaways: ${(insights.keyTakeaways as string[]).join(' ')}` });
+
+            // Chunk Transcript
+            if (transcriptData.timestampedTranscript || transcriptData.rawTranscript) {
+                const text = transcriptData.timestampedTranscript || transcriptData.rawTranscript;
+                const words = text.split(/\s+/);
+                const chunkSize = 300; // Words
+                const overlap = 50;
+
+                for (let i = 0; i < words.length; i += (chunkSize - overlap)) {
+                    const chunk = words.slice(i, i + chunkSize).join(' ');
+                    if (chunk.length > 50) { // filter tiny chunks
+                        textToEmbed.push({ type: 'transcript_chunk', content: chunk });
+                    }
+                }
+            }
+
+            if (textToEmbed.length === 0) return;
+
+            console.log(`Generating embeddings for ${textToEmbed.length} chunks...`);
+            const { generateEmbeddings } = await import('@/lib/ai/embedding');
+
+            // Batch generation (Gemini handles batching, but let's be safe)
+            const texts = textToEmbed.map(t => t.content);
+            try {
+                const vectors = await generateEmbeddings(texts);
+
+                // Save to DB using raw SQL (Prisma doesn't support vector writes natively yet)
+                // We execute sequentially to avoid connection pool exhaustion
+                for (let i = 0; i < vectors.length; i++) {
+                    const vector = vectors[i];
+                    const content = textToEmbed[i].content;
+
+                    // Format vector as string "[0.1, 0.2, ...]"
+                    const vectorString = `[${vector.join(',')}]`;
+
+                    await prisma.$executeRawUnsafe(
+                        `INSERT INTO "EpisodeEmbedding" ("id", "episodeId", "content", "vector", "createdAt") 
+                         VALUES (gen_random_uuid(), $1, $2, $3::vector, NOW())`,
+                        episode.id,
+                        content,
+                        vectorString
+                    );
+                }
+                console.log(`✅ Saved ${vectors.length} embeddings.`);
+
+            } catch (e) {
+                console.error('Failed to generate/save embeddings:', e);
+                // Don't fail the whole job
             }
         });
 

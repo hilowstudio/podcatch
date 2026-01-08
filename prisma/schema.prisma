@@ -4,10 +4,12 @@
 generator client {
   provider = "prisma-client"
   output   = "./generated_new"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 // Episode processing status
@@ -61,6 +63,10 @@ model User {
   // User's API keys and Subscription relations
   subscriptions Subscription[]
   notifications Notification[]
+  snips         Snip[]
+  collections   Collection[]
+  customPrompts CustomPrompt[]
+  brandVoice    String?        @db.Text
 }
 
 model Account {
@@ -167,10 +173,68 @@ model Episode {
 
   feed    Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
   insight Insight?
+  snips   Snip[]
+  embeddings EpisodeEmbedding[]
+  entities Entity[]
+  collections Collection[]
 
   @@index([feedId])
   @@index([status])
   @@index([publishedAt])
+}
+
+// Collections (Phase 3)
+model Collection {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episodes Episode[] // Many-to-many
+  insights CollectionInsight[]
+  
+  @@index([userId])
+}
+
+model CollectionInsight {
+    id String @id @default(cuid())
+    collectionId String
+    synthesis String @db.Text // The meta-summary
+    createdAt DateTime @default(now())
+    
+    collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+    
+    @@index([collectionId])
+}
+
+// Custom Prompts (Phase 3)
+model CustomPrompt {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  prompt    String   @db.Text // Template with {{transcript}} placeholder
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Entities (Knowledge Graph)
+model Entity {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   // PERSON, BOOK, CONCEPT
+  description String?  @db.Text
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  episodes Episode[]
 }
 
 // AI-generated insights
@@ -181,6 +245,8 @@ model Insight {
   summary       String   @db.Text
   keyTakeaways  Json // Array of 5 bullet points
   links         Json // Array of URLs mentioned
+  socialContent Json? // { tweet, linkedin, blogTitle }
+  chapters      Json? // [{ title, start, end }]
   geminiFileUri String? // URI of the file uploaded to Gemini for RAG
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -207,3 +273,36 @@ model Notification {
   @@index([userId])
   @@index([read])
 }
+
+// User Snips (Highlights)
+model Snip {
+  id        String   @id @default(cuid())
+  userId    String
+  episodeId String
+  startTime Int // Seconds
+  endTime   Int // Seconds
+  content   String? @db.Text
+  note      String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([episodeId])
+}
+
+// Vector Embeddings for RAG
+model EpisodeEmbedding {
+  id        String   @id @default(cuid())
+  episodeId String
+  content   String   @db.Text // The chunk text
+  vector    Unsupported("vector(768)") // Gemini text-embedding-004 is 768 dim
+  createdAt DateTime @default(now())
+  
+  episode   Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([episodeId])
+}
+

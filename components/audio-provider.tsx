@@ -50,6 +50,41 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
+    useEffect(() => {
+        if ('mediaSession' in navigator && currentEpisode) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: currentEpisode.title,
+                artist: currentEpisode.feedTitle || 'Podcatch',
+                artwork: currentEpisode.image ? [{ src: currentEpisode.image, sizes: '512x512', type: 'image/jpeg' }] : []
+            });
+        }
+    }, [currentEpisode]);
+
+    useEffect(() => {
+        if ('mediaSession' in navigator) {
+            const audio = audioRef.current;
+
+            navigator.mediaSession.setActionHandler('play', () => {
+                audio?.play().then(() => setIsPlaying(true)).catch(e => console.error(e));
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
+                audio?.pause();
+                setIsPlaying(false);
+            });
+            navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                seek((audio?.currentTime || 0) - (details.seekOffset || 15));
+            });
+            navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                seek((audio?.currentTime || 0) + (details.seekOffset || 15));
+            });
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+                if (details.seekTime !== undefined) {
+                    seek(details.seekTime);
+                }
+            });
+        }
+    }, [currentEpisode]); // Re-bind if episode changes to ensure closure scope is correct
+
     const play = (episode: Episode) => {
         const audio = audioRef.current;
         if (!audio) return;

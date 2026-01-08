@@ -43,6 +43,7 @@ export async function getEpisodeWithInsight(episodeId: string) {
                     },
                 },
                 insight: true,
+                entities: true,
             },
         });
 

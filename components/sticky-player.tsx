@@ -1,12 +1,14 @@
-'use client';
-
+import { createSnip } from '@/actions/snip-actions';
 import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, X, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, X, SkipBack, SkipForward, Scissors } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export function StickyPlayer() {
     const { currentEpisode, isPlaying, toggle, currentTime, duration, seek, close } = useAudio();
+    const [isSnipping, setIsSnipping] = useState(false);
 
     if (!currentEpisode) return null;
 
@@ -14,6 +16,23 @@ export function StickyPlayer() {
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const handleSnip = async () => {
+        if (!currentEpisode) return;
+        setIsSnipping(true);
+        try {
+            const result = await createSnip(currentEpisode.id, currentTime);
+            if (result.success) {
+                toast.success('Snip saved!');
+            } else {
+                toast.error('Failed to save snip.');
+            }
+        } catch (error) {
+            toast.error('Error creating snip');
+        } finally {
+            setIsSnipping(false);
+        }
     };
 
     return (
@@ -68,6 +87,16 @@ export function StickyPlayer() {
 
                 {/* Extra Actions */}
                 <div className="flex items-center justify-end w-1/4 gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 hidden sm:flex"
+                        onClick={handleSnip}
+                        disabled={isSnipping}
+                    >
+                        <Scissors className="h-4 w-4" />
+                        {isSnipping ? 'Saving...' : 'Snip'}
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={close}>
                         <X className="h-4 w-4" />
                     </Button>
