@@ -4,9 +4,11 @@ import Image from 'next/image';
 import { getEpisodeWithInsight } from '@/actions/episode-actions';
 import { ClaudeSyncButton } from '@/components/claude-sync-button';
 import { MarkdownCopyButton } from '@/components/markdown-copy-button';
+import { ProcessEpisodeButton } from '@/components/process-episode-button';
+import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2 } from 'lucide-react';
+import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
 type PageProps = {
@@ -22,7 +24,8 @@ export default async function EpisodePage({ params }: PageProps) {
         notFound();
     }
 
-    const isProcessing = episode.status === 'PROCESSING' || episode.status === 'DISCOVERED';
+    const isProcessing = episode.status === 'PROCESSING';
+    const isDiscovered = episode.status === 'DISCOVERED';
     const isFailed = episode.status === 'FAILED';
     const hasInsights = episode.insight && episode.status === 'COMPLETED';
 
@@ -119,6 +122,9 @@ export default async function EpisodePage({ params }: PageProps) {
 
                             {/* Actions */}
                             <div className="flex items-center gap-4 pt-4">
+                                {isDiscovered && (
+                                    <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
+                                )}
                                 <ClaudeSyncButton episodeId={episode.id} />
                                 {hasInsights && (
                                     <MarkdownCopyButton
@@ -158,6 +164,21 @@ ${episode.insight?.transcript}
                             </Card>
                         )}
 
+                        {/* Discovered (Ready) State - Optional Hint */}
+                        {isDiscovered && !isProcessing && (
+                            <Card className="border-blue-500/50 bg-blue-500/5">
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <PlayCircle className="h-5 w-5 text-blue-600" />
+                                        <CardTitle>Ready to Process</CardTitle>
+                                    </div>
+                                    <CardDescription>
+                                        This episode has been discovered. Click "Process Episode" above to generate a transcript and AI insights.
+                                    </CardDescription>
+                                </CardHeader>
+                            </Card>
+                        )}
+
                         {/* Failed State */}
                         {isFailed && (
                             <Card className="border-red-500/50 bg-red-500/5">
@@ -165,13 +186,13 @@ ${episode.insight?.transcript}
                                     <CardTitle className="text-red-600">Processing Failed</CardTitle>
                                     <CardDescription>
                                         We were unable to process this episode. This could be due to an invalid audio URL, network issues,
-                                        or API failures. The episode will be retried automatically.
+                                        or API failures.
                                     </CardDescription>
                                 </CardHeader>
                             </Card>
                         )}
 
-                        {/* AI Insights */}
+                        {/* AI Insights (Summary, Key Takeaways, etc.) */}
                         {hasInsights && episode.insight && (
                             <>
                                 {/* Summary */}
@@ -257,6 +278,7 @@ ${episode.insight?.transcript}
                     </div>
                 </div>
             </main>
+            <EpisodeStatusPoller episodeId={episode.id} initialStatus={episode.status} />
         </div>
     );
 }

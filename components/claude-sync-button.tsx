@@ -36,11 +36,16 @@ export function ClaudeSyncButton({ episodeId }: { episodeId: string }) {
             className="gap-2"
         >
             {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Authentication...
+                </>
             ) : (
-                <BrainCircuit className="h-4 w-4 text-orange-600" />
+                <>
+                    <BrainCircuit className="h-4 w-4 text-orange-600" />
+                    Send to Claude
+                </>
             )}
-            Send to Claude
         </Button>
     );
 }

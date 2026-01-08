@@ -86,3 +86,18 @@ export async function getRecentEpisodes(limit: number = 10) {
         return [];
     }
 }
+
+/**
+ * Get simple episode status (for polling)
+ */
+export async function getEpisodeStatus(episodeId: string) {
+    try {
+        const episode = await prisma.episode.findUnique({
+            where: { id: episodeId },
+            select: { status: true },
+        });
+        return episode?.status;
+    } catch {
+        return null;
+    }
+}

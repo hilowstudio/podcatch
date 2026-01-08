@@ -63,13 +63,51 @@ export async function addFeed(formData: FormData) {
                 },
             });
         } else {
+            // Parse feed metadata synchronously for immediate UI feedback
+            let feedTitle = null;
+            let feedImage = null;
+            let finalUrl = url;
+
+            try {
+                // Handle Apple Podcast URLs
+                if (url.includes('podcasts.apple.com')) {
+                    const match = url.match(/id(\d+)/);
+                    if (match) {
+                        const itunesId = match[1];
+                        console.log(`Detected Apple Podcast URL, looking up ID: ${itunesId}`);
+                        const response = await fetch(`https://itunes.apple.com/lookup?id=${itunesId}&entity=podcast`);
+                        const data = await response.json();
+                        if (data.results && data.results.length > 0 && data.results[0].feedUrl) {
+                            finalUrl = data.results[0].feedUrl;
+                            console.log(`Resolved Apple URL to RSS: ${finalUrl}`);
+                        }
+                    }
+                }
+
+                // Parse the feed
+                const Parser = (await import('rss-parser')).default;
+                const parser = new Parser({
+                    customFields: {
+                        item: [['podcast:transcript', 'transcript']],
+                    }
+                });
+                const feedData = await parser.parseURL(finalUrl);
+
+                feedTitle = feedData.title || null;
+                feedImage = feedData.image?.url || feedData.itunes?.image || null;
+                console.log(`Parsed feed metadata: ${feedTitle}`);
+
+            } catch (err) {
+                console.error('Error parsing feed metadata during add:', err);
+                // Continue creating feed even if parsing fails (Inngest will retry)
+            }
+
             // Create new feed AND subscription
             feed = await prisma.feed.create({
                 data: {
-                    url,
-                    title: null,
-                    image: null,
-                    // userId: session.user.id, // Deprecated, but create subscription below
+                    url: finalUrl,
+                    title: feedTitle,
+                    image: feedImage,
                     subscriptions: {
                         create: {
                             userId: session.user.id
@@ -78,7 +116,7 @@ export async function addFeed(formData: FormData) {
                 },
             });
 
-            // Trigger Inngest only for new feeds (or we could trigger refresh)
+            // Trigger Inngest
             await inngest.send({
                 name: 'feed/check.requested',
                 data: {

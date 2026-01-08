@@ -40,7 +40,7 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
             {isProcessing ? (
                 <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Starting...
+                    Queuing...
                 </>
             ) : (
                 <>
