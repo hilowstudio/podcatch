@@ -2,11 +2,6 @@ import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import Parser from 'rss-parser';
 
-const rssParser = new Parser({
-    customFields: {
-        item: [['podcast:transcript', 'transcript']],
-    },
-});
 
 export const checkFeeds = inngest.createFunction(
     {
@@ -39,6 +34,16 @@ export const checkFeeds = inngest.createFunction(
         for (const feed of feeds) {
             await step.run(`process-feed-${feed.id}`, async () => {
                 try {
+                    // Instantiate parser inside handler to ensure options are fresh
+                    const rssParser = new Parser({
+                        customFields: {
+                            item: [['podcast:transcript', 'transcript']],
+                        },
+                        xml2js: {
+                            strict: false,
+                        }
+                    });
+
                     // Parse the RSS feed
                     const rssFeed = await rssParser.parseURL(feed.url);
 
