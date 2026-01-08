@@ -69,9 +69,6 @@ export const checkFeeds = inngest.createFunction(
                         customFields: {
                             item: [['podcast:transcript', 'transcript']],
                         },
-                        xml2js: {
-                            strict: false,
-                        }
                     });
 
                     // Parse the RSS feed
