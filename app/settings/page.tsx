@@ -3,6 +3,7 @@ import { BrandVoiceSettings } from '@/components/brand-voice-settings';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
+import { ClaudeProjectsForm } from '@/components/settings/claude-projects-form';
 import { IntegrationsForm } from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
 
@@ -26,6 +27,9 @@ export default async function SettingsPage() {
                 notionPageId: true,
                 googleDriveRefreshToken: true,
                 openaiApiKey: true,
+                claudeApiKey: true,
+                claudeProjectId: true,
+                autoSyncToClaude: true,
             }
         })
     ]);
@@ -40,6 +44,16 @@ export default async function SettingsPage() {
                 </section>
 
                 <div className="grid gap-8 md:grid-cols-2">
+                    <section className="md:col-span-2">
+                        <ClaudeProjectsForm
+                            userId={session.user.id}
+                            initialSettings={{
+                                claudeApiKey: user?.claudeApiKey || '',
+                                claudeProjectId: user?.claudeProjectId || '',
+                                autoSyncToClaude: user?.autoSyncToClaude || false
+                            }}
+                        />
+                    </section>
                     <section>
                         <IntegrationsForm
                             initialWebhookUrl={user?.webhookUrl}
