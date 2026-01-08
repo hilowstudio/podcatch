@@ -239,20 +239,21 @@ export const processEpisode = inngest.createFunction(
                 const modelName = 'gemini-2.0-flash';
 
                 const messages: any[] = [];
-                if (episode.feed.type === 'RSS') {
+
+                // Prioritize raw transcript (works for RSS and YouTube Captions)
+                if (transcriptData.rawTranscript) {
                     messages.push({
                         role: 'user',
-                        content: `You are analyzing a podcast episode transcript. Extract insights. Transcript: ${transcriptData.rawTranscript}`
+                        content: `You are analyzing a podcast/video transcript. Extract insights. Transcript: ${transcriptData.rawTranscript}`
+                    });
+                } else if (transcriptData.fileUri) {
+                    // Video fallback: Pass URL in text (schema validation workaround for 'file' part)
+                    messages.push({
+                        role: 'user',
+                        content: `Watch this video: ${transcriptData.fileUri}\n\nProvide a detailed summary, key takeaways, and a list of links mentioned.`
                     });
                 } else {
-                    // Video
-                    messages.push({
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: "Watch this video. Provide a detailed summary, key takeaways, and a list of links mentioned." },
-                            { type: 'file', data: transcriptData.fileUri, mimeType: 'video/mp4' }
-                        ]
-                    });
+                    throw new Error('No transcript or video URL available for analysis');
                 }
 
                 const { object } = await generateObject({
