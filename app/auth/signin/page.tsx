@@ -122,10 +122,20 @@ export default function SignInPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-zinc-900/20" />
                 <div className="absolute bottom-16 left-12 right-12 z-10 text-white">
-                    <h2 className="text-3xl font-bold mb-4">Capture every insight.</h2>
-                    <blockquote className="border-l-2 border-indigo-500 pl-4 text-lg text-zinc-300 italic">
-                        &quot;The most efficient way to turn passive listening into active knowledge.&quot;
-                    </blockquote>
+                    <div className="space-y-6">
+                        <blockquote className="border-l-2 border-indigo-500 pl-4 text-zinc-300">
+                            <p className="italic text-lg mb-2">&quot;If you knew what I used to do just to get half this functionality before, you'd have built this a long time ago. Take my money.&quot;</p>
+                            <footer className="text-sm font-semibold text-white">— Reuben C.</footer>
+                        </blockquote>
+                        <blockquote className="border-l-2 border-indigo-500 pl-4 text-zinc-300">
+                            <p className="italic text-lg mb-2">&quot;Yeah. This is gonna be a hit.&quot;</p>
+                            <footer className="text-sm font-semibold text-white">— James S.</footer>
+                        </blockquote>
+                        <blockquote className="border-l-2 border-indigo-500 pl-4 text-zinc-300">
+                            <p className="italic text-lg mb-2">&quot;I can literally stop using like five tools. LOVE THIS.&quot;</p>
+                            <footer className="text-sm font-semibold text-white">— Chloe M.</footer>
+                        </blockquote>
+                    </div>
                 </div>
             </div>
         </div>
