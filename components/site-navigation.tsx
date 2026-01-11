@@ -64,6 +64,13 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                             {user && (
                                 <>
                                     <Link
+                                        href="/collections"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Collections
+                                    </Link>
+                                    <Link
                                         href="/integrations"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
                                         onClick={() => setOpen(false)}
