@@ -1,5 +1,5 @@
 import { getFeeds } from '@/actions/feed-actions';
-import { FeedCard } from '@/components/feed-card';
+import { FeedGrid } from '@/components/feed-grid';
 import { AddFeedDialog } from '@/components/add-feed-dialog';
 import { Rss } from 'lucide-react';
 
@@ -21,26 +21,6 @@ export async function FeedList({ userId }: { userId: string }) {
         );
     }
 
-    return (
-        <>
-            <div className="mb-6">
-                <p className="text-muted-foreground">
-                    {feeds.length} {feeds.length === 1 ? 'feed' : 'feeds'} • Automated intelligence extraction
-                </p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {feeds.map((feed) => (
-                    <FeedCard
-                        key={feed.id}
-                        id={feed.id}
-                        title={feed.title}
-                        image={feed.image}
-                        url={feed.url}
-                        episodeCount={feed._count.episodes}
-                        lastEpisodeDate={feed.episodes[0]?.publishedAt || null}
-                    />
-                ))}
-            </div>
-        </>
-    );
+    return <FeedGrid feeds={feeds} />;
 }
+
