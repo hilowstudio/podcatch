@@ -6,15 +6,19 @@ import { ClaudeSyncButton } from '@/components/claude-sync-button';
 import { MarkdownCopyButton } from '@/components/markdown-copy-button';
 import { ProcessEpisodeButton } from '@/components/process-episode-button';
 import { AddToCollectionButton } from '@/components/add-to-collection-button';
+import { EpisodePlayerButton } from '@/components/episode-player-button';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors } from 'lucide-react';
 import { TranscriptViewer } from '@/components/transcript-viewer';
+import { ChapterList } from '@/components/chapter-list';
 import { ClipEditor } from '@/components/clip-editor';
 import { CustomPromptRunner } from '@/components/custom-prompt-runner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow, format } from 'date-fns';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
 type PageProps = {
     params: { episodeId: string };
@@ -23,10 +27,23 @@ type PageProps = {
 export default async function EpisodePage({ params }: PageProps) {
     const { episodeId } = await params;
 
-    const episode = await getEpisodeWithInsight(episodeId);
+    const [episode, session] = await Promise.all([
+        getEpisodeWithInsight(episodeId),
+        auth()
+    ]);
 
     if (!episode) {
         notFound();
+    }
+
+    // Check if user has Claude configured
+    let isClaudeConfigured = false;
+    if (session?.user?.id) {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { claudeApiKey: true, claudeProjectId: true }
+        });
+        isClaudeConfigured = !!(user?.claudeApiKey && user?.claudeProjectId);
     }
 
     const isProcessing = episode.status === 'PROCESSING';
@@ -68,10 +85,19 @@ export default async function EpisodePage({ params }: PageProps) {
                                         <CardTitle className="text-lg">Listen</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <audio controls className="w-full" preload="metadata">
-                                            <source src={episode.audioUrl} type="audio/mpeg" />
-                                            Your browser does not support the audio element.
-                                        </audio>
+                                        <EpisodePlayerButton
+                                            episode={{
+                                                id: episode.id,
+                                                title: episode.title,
+                                                audioUrl: episode.audioUrl,
+                                                image: episode.feed.image ?? undefined,
+                                                feedTitle: episode.feed.title ?? undefined
+                                            }}
+                                            className="w-full"
+                                        />
+                                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                                            Use the player bar at the bottom to control playback
+                                        </p>
                                     </CardContent>
                                 </Card>
                             )}
@@ -131,7 +157,7 @@ export default async function EpisodePage({ params }: PageProps) {
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />
-                                <ClaudeSyncButton episodeId={episode.id} />
+                                <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
                                 {hasInsights && (
                                     <MarkdownCopyButton
                                         markdown={`# ${episode.title}
@@ -413,23 +439,21 @@ ${episode.insight?.transcript}
                                                     <PlayCircle className="h-5 w-5 text-primary" />
                                                     <CardTitle>Chapters</CardTitle>
                                                 </div>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Click a chapter to jump to that section
+                                                </p>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="grid gap-2">
-                                                    {(episode.insight.chapters as any[]).map((chapter, i) => (
-                                                        <div key={i} className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer group">
-                                                            <span className="font-mono text-sm text-primary bg-primary/10 px-2 py-0.5 rounded">
-                                                                {chapter.start}
-                                                            </span>
-                                                            <div>
-                                                                <p className="font-medium text-sm group-hover:text-primary transition-colors">
-                                                                    {chapter.title}
-                                                                </p>
-                                                                {chapter.reason && <p className="text-xs text-muted-foreground">{chapter.reason}</p>}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                <ChapterList
+                                                    chapters={episode.insight.chapters as { start: string; title: string; reason?: string }[]}
+                                                    episode={{
+                                                        id: episode.id,
+                                                        title: episode.title,
+                                                        audioUrl: episode.audioUrl,
+                                                        image: episode.feed.image ?? undefined,
+                                                        feedTitle: episode.feed.title ?? undefined
+                                                    }}
+                                                />
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
