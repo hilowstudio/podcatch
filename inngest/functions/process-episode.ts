@@ -295,6 +295,18 @@ export const processEpisode = inngest.createFunction(
                 // A better approach: Two calls. 1. Generate text (transcript). 2. Key takeaways.
                 // Or just assume Summary is enough for now.
 
+                // Normalize links: Ensure all links start with http:// or https://
+                if (object.links && Array.isArray(object.links)) {
+                    object.links = object.links.map(link => {
+                        const trimmed = link.trim();
+                        if (!trimmed) return trimmed;
+                        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+                            return trimmed;
+                        }
+                        return `https://${trimmed}`;
+                    });
+                }
+
                 return object;
             } catch (error) {
                 console.error('AI analysis error:', error);
