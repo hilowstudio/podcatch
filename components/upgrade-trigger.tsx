@@ -65,7 +65,7 @@ export function UpgradeTrigger({ isUnlocked, requiredTier, children, className }
                             Upgrade now to access it instantly.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="flex-col sm:justify-center gap-2 mt-4">
+                    <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 mt-4">
                         <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0" onClick={handleUpgrade}>
                             Start 3-Day Free Trial
                         </Button>
