@@ -160,34 +160,53 @@ export default function SignInPage() {
                 <div className="absolute bottom-40 right-40 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl animate-float-delayed" />
 
                 <div
-                    className={`absolute bottom-16 left-12 right-12 z-10 text-white transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    className={`absolute bottom-12 left-8 right-8 z-10 text-white transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                         }`}
                 >
-                    {/* Rotating testimonials */}
-                    <div className="relative h-32">
+                    {/* Rotating testimonials with glass card design */}
+                    <div className="relative h-44">
                         {testimonials.map((t, i) => (
-                            <blockquote
+                            <div
                                 key={i}
-                                className={`absolute inset-0 border-l-2 border-indigo-500 pl-4 text-zinc-300 transition-all duration-500 ${i === activeTestimonial
-                                    ? 'opacity-100 translate-x-0'
-                                    : 'opacity-0 -translate-x-4'
+                                className={`absolute inset-0 transition-all duration-700 ${i === activeTestimonial
+                                    ? 'opacity-100 translate-y-0 scale-100'
+                                    : 'opacity-0 translate-y-4 scale-95'
                                     }`}
                             >
-                                <p className="italic text-lg mb-2">&quot;{t.quote}&quot;</p>
-                                <footer className="text-sm font-semibold text-white">— {t.author}</footer>
-                            </blockquote>
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-2xl">
+                                    {/* Quote icon */}
+                                    <svg
+                                        className="h-8 w-8 text-indigo-400 mb-3 opacity-80"
+                                        fill="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                                    </svg>
+                                    <blockquote>
+                                        <p className="text-lg md:text-xl font-medium text-white leading-relaxed mb-4">
+                                            {t.quote}
+                                        </p>
+                                        <footer className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                                {t.author.charAt(0)}
+                                            </div>
+                                            <span className="font-semibold text-white">{t.author}</span>
+                                        </footer>
+                                    </blockquote>
+                                </div>
+                            </div>
                         ))}
                     </div>
 
                     {/* Indicator dots */}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex justify-center gap-2 mt-4">
                         {testimonials.map((_, i) => (
                             <button
                                 key={i}
                                 onClick={() => setActiveTestimonial(i)}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${i === activeTestimonial
-                                    ? 'w-6 bg-indigo-500'
-                                    : 'w-1.5 bg-zinc-600 hover:bg-zinc-500'
+                                className={`h-2 rounded-full transition-all duration-300 ${i === activeTestimonial
+                                    ? 'w-8 bg-indigo-500'
+                                    : 'w-2 bg-white/30 hover:bg-white/50'
                                     }`}
                             />
                         ))}
