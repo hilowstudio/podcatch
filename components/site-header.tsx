@@ -1,8 +1,17 @@
 import { auth } from '@/auth';
+import { headers } from 'next/headers';
 import { SiteNavigation } from '@/components/site-navigation';
 import { NotificationBell } from '@/components/notification-bell';
 
 export async function SiteHeader() {
+    const headersList = await headers();
+    const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
+
+    // Hide header on auth pages
+    if (pathname.startsWith('/auth')) {
+        return null;
+    }
+
     const session = await auth();
 
     return (
@@ -14,3 +23,4 @@ export async function SiteHeader() {
         </header>
     );
 }
+
