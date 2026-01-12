@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, User, Bot, Sparkles, PlayCircle, ArrowLeft } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 
 // Helper to parse text with timestamps [MM:SS] or [MM:SS|id:uuid]
@@ -116,7 +116,7 @@ function CitationButton({ seconds, label, episodeId }: { seconds: number, label:
     );
 }
 
-export default function ChatPage() {
+function ChatContent() {
     const searchParams = useSearchParams();
     const episodeId = searchParams.get('episode');
     const episodeTitle = searchParams.get('title');
@@ -243,5 +243,17 @@ export default function ChatPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+                <div className="animate-pulse text-muted-foreground">Loading chat...</div>
+            </div>
+        }>
+            <ChatContent />
+        </Suspense>
     );
 }
