@@ -28,7 +28,7 @@ export default function SignInPage() {
     return (
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
             {/* Left Column: Branding & Sign In */}
-            <div className="flex flex-col justify-center px-8 md:px-16 lg:px-24 bg-white text-black">
+            <div className="flex flex-col items-center justify-center px-8 md:px-16 lg:px-24 bg-white text-black text-center">
                 <div
                     className={`mb-12 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
@@ -138,7 +138,7 @@ export default function SignInPage() {
             </div>
 
             {/* Right Column: Visual */}
-            <div className="hidden md:block relative h-full w-full bg-zinc-900 overflow-hidden">
+            <div className="hidden md:flex relative min-h-screen bg-zinc-900 overflow-hidden">
                 {/* Animated gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-purple-900/20 animate-gradient-shift" />
 
