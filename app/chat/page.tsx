@@ -1,13 +1,15 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useSearchParams } from 'next/navigation';
 import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, User, Bot, Sparkles, PlayCircle } from 'lucide-react';
+import { Send, User, Bot, Sparkles, PlayCircle, ArrowLeft } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 // Helper to parse text with timestamps [MM:SS] or [MM:SS|id:uuid]
 function MessageContent({ content }: { content: string }) {
@@ -115,7 +117,11 @@ function CitationButton({ seconds, label, episodeId }: { seconds: number, label:
 }
 
 export default function ChatPage() {
-    // @ai-sdk/react useChat returns { messages, sendMessage, status, ... }
+    const searchParams = useSearchParams();
+    const episodeId = searchParams.get('episode');
+    const episodeTitle = searchParams.get('title');
+
+    // @ai-sdk/react useChat
     const { messages, sendMessage, status } = useChat();
 
     const isLoading = status === 'submitted' || status === 'streaming';
@@ -132,15 +138,12 @@ export default function ChatPage() {
         if (!input.trim() || isLoading) return;
 
         const userMessage = { role: 'user', content: input };
-        // Clear input immediately?
         setInput('');
 
-        // Send message
-        // Note: sendMessage usually appends the user message and sends request.
-        // Typescript will validate if sendMessage accepts this object.
-        // If sendMessage is not available, we might need 'append'.
-        // But 'UseChatHelpers' picked 'sendMessage'.
-        await sendMessage(userMessage as any);
+        // Send message with optional episodeId for episode-specific context
+        await sendMessage(userMessage as any, {
+            body: episodeId ? { episodeId } : undefined,
+        } as any);
     };
 
     useEffect(() => {
@@ -152,12 +155,21 @@ export default function ChatPage() {
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto p-4 mb-20"> {/* Adjusted height for sticky player */}
             <div className="mb-4">
+                {episodeId && (
+                    <Link href={`/episodes/${episodeId}`} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2">
+                        <ArrowLeft className="h-3 w-3" />
+                        Back to episode
+                    </Link>
+                )}
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-purple-500" />
-                    Chat with your Library
+                    <Sparkles className="h-6 w-6 text-zinc-500" />
+                    {episodeTitle ? `Chat about: ${episodeTitle}` : 'Chat with your Library'}
                 </h1>
                 <p className="text-muted-foreground">
-                    Ask questions about any episode. Click timestamps (e.g. [12:30]) to jump to audio.
+                    {episodeTitle
+                        ? 'Ask questions about this episode. Click timestamps to jump to audio.'
+                        : 'Ask questions about any episode. Click timestamps (e.g. [12:30]) to jump to audio.'
+                    }
                 </p>
             </div>
 

@@ -78,6 +78,20 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                                         Deep Discovery
                                     </Link>
                                     <Link
+                                        href="/chat"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Chat with Library
+                                    </Link>
+                                    <Link
+                                        href="/graph"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Knowledge Graph
+                                    </Link>
+                                    <Link
                                         href="/integrations"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
                                         onClick={() => setOpen(false)}

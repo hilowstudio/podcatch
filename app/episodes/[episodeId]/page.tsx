@@ -6,6 +6,7 @@ import { ClaudeSyncButton } from '@/components/claude-sync-button';
 import { MarkdownCopyButton } from '@/components/markdown-copy-button';
 import { ProcessEpisodeButton } from '@/components/process-episode-button';
 import { AddToCollectionButton } from '@/components/add-to-collection-button';
+import { EpisodeChatButton } from '@/components/episode-chat-button';
 import { EpisodePlayerButton } from '@/components/episode-player-button';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,6 +171,7 @@ export default async function EpisodePage({ params }: PageProps) {
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />
+                                <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
                                 <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
                                 {hasInsights && (
                                     <MarkdownCopyButton
