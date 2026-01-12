@@ -140,7 +140,7 @@ export default function SignInPage() {
             {/* Right Column: Visual */}
             <div className="hidden md:flex relative min-h-screen bg-zinc-900 overflow-hidden">
                 {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-purple-900/20 animate-gradient-shift" />
+                <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/20 via-transparent to-zinc-700/20 animate-gradient-shift" />
 
                 <Image
                     src="/podcast.png"
@@ -156,8 +156,8 @@ export default function SignInPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/30 to-transparent" />
 
                 {/* Floating accent shapes */}
-                <div className="absolute top-20 right-20 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl animate-float" />
-                <div className="absolute bottom-40 right-40 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl animate-float-delayed" />
+                <div className="absolute top-20 right-20 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-float" />
+                <div className="absolute bottom-40 right-40 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float-delayed" />
 
                 <div
                     className={`absolute bottom-12 left-8 right-8 z-10 text-white transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -174,9 +174,8 @@ export default function SignInPage() {
                                     }`}
                             >
                                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-2xl">
-                                    {/* Quote icon */}
                                     <svg
-                                        className="h-8 w-8 text-indigo-400 mb-3 opacity-80"
+                                        className="h-8 w-8 text-white/60 mb-3"
                                         fill="currentColor"
                                         viewBox="0 0 24 24"
                                     >
@@ -187,7 +186,7 @@ export default function SignInPage() {
                                             {t.quote}
                                         </p>
                                         <footer className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                            <div className="h-10 w-10 rounded-full bg-zinc-700 flex items-center justify-center text-white font-bold text-sm">
                                                 {t.author.charAt(0)}
                                             </div>
                                             <span className="font-semibold text-white">{t.author}</span>
@@ -205,7 +204,7 @@ export default function SignInPage() {
                                 key={i}
                                 onClick={() => setActiveTestimonial(i)}
                                 className={`h-2 rounded-full transition-all duration-300 ${i === activeTestimonial
-                                    ? 'w-8 bg-indigo-500'
+                                    ? 'w-8 bg-white'
                                     : 'w-2 bg-white/30 hover:bg-white/50'
                                     }`}
                             />
