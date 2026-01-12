@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sheet';
 import { UserMenu } from '@/components/auth/user-menu';
 import { SubscriptionPlan } from '@/lib/subscription';
+import { UpgradeTrigger } from '@/components/upgrade-trigger';
 
 interface SiteNavigationProps {
     user?: {
@@ -79,24 +80,32 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                                     >
                                         Deep Discovery
                                     </Link>
-                                    {subscriptionPlan?.canChatWithLibrary && (
-                                        <Link
-                                            href="/chat"
-                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                            onClick={() => setOpen(false)}
-                                        >
-                                            Chat with Library
-                                        </Link>
-                                    )}
-                                    {subscriptionPlan?.canUseKnowledgeGraph && (
-                                        <Link
-                                            href="/graph"
-                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                            onClick={() => setOpen(false)}
-                                        >
-                                            Knowledge Graph
-                                        </Link>
-                                    )}
+                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canChatWithLibrary} requiredTier="PRO">
+                                        <div className={!!subscriptionPlan?.canChatWithLibrary ? "" : "pointer-events-none"}>
+                                            <Link
+                                                href="/chat"
+                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
+                                                onClick={() => setOpen(false)}
+                                                tabIndex={!!subscriptionPlan?.canChatWithLibrary ? 0 : -1}
+                                            >
+                                                Chat with Library
+                                            </Link>
+                                        </div>
+                                    </UpgradeTrigger>
+
+                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseKnowledgeGraph} requiredTier="BASIC">
+                                        <div className={!!subscriptionPlan?.canUseKnowledgeGraph ? "" : "pointer-events-none"}>
+                                            <Link
+                                                href="/graph"
+                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
+                                                onClick={() => setOpen(false)}
+                                                tabIndex={!!subscriptionPlan?.canUseKnowledgeGraph ? 0 : -1}
+                                            >
+                                                Knowledge Graph
+                                            </Link>
+                                        </div>
+                                    </UpgradeTrigger>
+
                                     <Link
                                         href="/pricing"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
@@ -104,24 +113,32 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                                     >
                                         Pricing
                                     </Link>
-                                    {subscriptionPlan?.canUseIntegrations && (
-                                        <Link
-                                            href="/integrations"
-                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                            onClick={() => setOpen(false)}
-                                        >
-                                            Integrations
-                                        </Link>
-                                    )}
-                                    {subscriptionPlan?.canUseBrandVoice && (
-                                        <Link
-                                            href="/brand-voice"
-                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                            onClick={() => setOpen(false)}
-                                        >
-                                            Brand Voice
-                                        </Link>
-                                    )}
+
+                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseIntegrations} requiredTier="BASIC">
+                                        <div className={!!subscriptionPlan?.canUseIntegrations ? "" : "pointer-events-none"}>
+                                            <Link
+                                                href="/integrations"
+                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
+                                                onClick={() => setOpen(false)}
+                                                tabIndex={!!subscriptionPlan?.canUseIntegrations ? 0 : -1}
+                                            >
+                                                Integrations
+                                            </Link>
+                                        </div>
+                                    </UpgradeTrigger>
+
+                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseBrandVoice} requiredTier="BASIC">
+                                        <div className={!!subscriptionPlan?.canUseBrandVoice ? "" : "pointer-events-none"}>
+                                            <Link
+                                                href="/brand-voice"
+                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
+                                                onClick={() => setOpen(false)}
+                                                tabIndex={!!subscriptionPlan?.canUseBrandVoice ? 0 : -1}
+                                            >
+                                                Brand Voice
+                                            </Link>
+                                        </div>
+                                    </UpgradeTrigger>
                                 </>
                             )}
                         </nav>

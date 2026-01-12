@@ -23,6 +23,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { Button } from '@/components/ui/button';
+import { UpgradeTrigger } from '@/components/upgrade-trigger';
 
 type PageProps = {
     params: { episodeId: string };
@@ -174,12 +175,19 @@ export default async function EpisodePage({ params }: PageProps) {
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />
-                                {plan.canChatAboutEpisode && (
-                                    <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
-                                )}
-                                {plan.canSendToClaude && (
-                                    <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
-                                )}
+                                {/* Episode Chat: Basic Feature */}
+                                <UpgradeTrigger isUnlocked={!!plan.canChatAboutEpisode} requiredTier="PRO" className="inline-flex">
+                                    <div className={!!plan.canChatAboutEpisode ? "" : "pointer-events-none"}>
+                                        <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
+                                    </div>
+                                </UpgradeTrigger>
+
+                                {/* Claude Sync: Basic Feature */}
+                                <UpgradeTrigger isUnlocked={!!plan.canSendToClaude} requiredTier="BASIC" className="inline-flex">
+                                    <div className={!!plan.canSendToClaude ? "" : "pointer-events-none"}>
+                                        <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
+                                    </div>
+                                </UpgradeTrigger>
                                 {hasInsights && (
                                     <MarkdownCopyButton
                                         markdown={`# ${episode.title}
@@ -435,9 +443,14 @@ ${episode.insight?.transcript}
                                     <TabsList className="w-full justify-start mb-4">
                                         <TabsTrigger value="transcript">Transcript</TabsTrigger>
                                         <TabsTrigger value="chapters">Chapters</TabsTrigger>
-                                        {plan.canUseStudio && (
-                                            <TabsTrigger value="studio">Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge></TabsTrigger>
-                                        )}
+
+                                        <UpgradeTrigger isUnlocked={!!plan.canUseStudio} requiredTier="BASIC" className="inline-flex">
+                                            <div className={!!plan.canUseStudio ? "" : "pointer-events-none"}>
+                                                <TabsTrigger value="studio" disabled={!plan.canUseStudio} className="data-[state=active]:bg-background">
+                                                    Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge>
+                                                </TabsTrigger>
+                                            </div>
+                                        </UpgradeTrigger>
                                     </TabsList>
 
                                     {/* Transcript Tab */}
