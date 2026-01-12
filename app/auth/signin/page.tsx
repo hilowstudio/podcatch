@@ -146,7 +146,7 @@ export default function SignInPage() {
                     src="/podcast.png"
                     alt="Podcast listening experience"
                     fill
-                    className={`object-cover transition-all duration-1000 ${mounted ? 'opacity-60 scale-100' : 'opacity-0 scale-105'
+                    className={`object-cover object-top transition-all duration-1000 ${mounted ? 'opacity-60 scale-100' : 'opacity-0 scale-105'
                         }`}
                     priority
                 />
