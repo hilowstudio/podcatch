@@ -13,12 +13,12 @@ export const PLANS = {
         monthly: {
             priceId: 'price_1Sooj4ICURxkmpIC3UUNol3d',
             productId: 'prod_TmNUFfU80Fft29',
-            amount: 9,
+            amount: 12,
         },
         annual: {
             priceId: 'price_1SookNICURxkmpICMltKy12s',
             productId: 'prod_TmNVxilCkGOuEo',
-            amount: 99,
+            amount: 120,
         },
         marketingFeatures: ['10 Episodes/mo', 'Deep Discovery', 'Email Support']
     },
@@ -28,12 +28,12 @@ export const PLANS = {
         monthly: {
             priceId: 'price_1SoojiICURxkmpIC4Zi7i5tp',
             productId: 'prod_TmNUKvZMhGcGJ3',
-            amount: 19,
+            amount: 29,
         },
         annual: {
             priceId: 'price_1SoolAICURxkmpIC8CYTE57A',
             productId: 'prod_TmNW2KWFOI84Ec',
-            amount: 199,
+            amount: 290,
         },
         marketingFeatures: ['Unlimited Episodes', 'Priority AI Processing', 'Integration Sync (Notion/Claude)']
     }

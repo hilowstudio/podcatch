@@ -4,6 +4,9 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { AudioProvider } from "@/components/audio-provider";
 import { StickyPlayer } from "@/components/sticky-player";
+import { getUserSubscriptionPlan } from "@/lib/subscription";
+import { OnboardingGuard } from "@/components/onboarding-guard";
+import { auth } from "@/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,17 +27,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+  const subscriptionPlan = await getUserSubscriptionPlan();
+
+  // If user is logged in BUT has no stripePriceId (and getUserSubscriptionPlan returns falsy for it), they need onboarding.
+  // Note: getUserSubscriptionPlan returns a default object if no user, so we must check session.user too.
+  const needsOnboarding = !!session?.user && !subscriptionPlan.stripePriceId;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <AudioProvider>
+          <OnboardingGuard shouldOnboard={needsOnboarding} />
           <SiteHeader />
           <div className="flex-1 mb-20 pt-12"> {/* Add margin for sticky player and padded top for header spacing */}
             {children}

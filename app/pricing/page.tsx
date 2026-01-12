@@ -1,19 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { PLANS } from '@/lib/stripe-config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useSearchParams } from 'next/navigation';
 
 // Helper to format currency
 const formatPrice = (amount: number) => `$${amount}`;
 
 export default function PricingPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <PricingContent />
+        </Suspense>
+    );
+}
+
+function PricingContent() {
     const [isAnnual, setIsAnnual] = useState(false);
     const [isLoading, setIsLoading] = useState<string | null>(null);
+
+    const searchParams = useSearchParams();
+    const isOnboarding = searchParams.get('onboarding') === 'true';
 
     const handleCheckout = async (priceId: string) => {
         setIsLoading(priceId);
@@ -41,12 +53,26 @@ export default function PricingPage() {
     return (
         <div className="container max-w-6xl mx-auto py-20 px-4">
             <div className="text-center mb-16">
-                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
-                    Simple, Transparent Pricing
-                </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Choose the plan that fits your listening habits. Upgrade or cancel anytime.
-                </p>
+                {isOnboarding ? (
+                    <div className="mb-6">
+                        <Badge variant="outline" className="mb-4 py-1 px-4 text-sm border-primary text-primary">Step 2 of 2</Badge>
+                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
+                            Welcome to Podcatch
+                        </h1>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                            Select a plan to complete your account setup. No credit card required for Free tier.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
+                            Simple, Transparent Pricing
+                        </h1>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                            Choose the plan that fits your listening habits. Upgrade or cancel anytime.
+                        </p>
+                    </>
+                )}
 
                 {/* Billing Toggle */}
                 <div className="flex items-center justify-center mt-8 gap-4">
@@ -86,9 +112,14 @@ export default function PricingPage() {
                         </ul>
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full" variant="outline" onClick={() => handleCheckout(PLANS.free.priceId)} disabled={isLoading === PLANS.free.priceId}>
+                        <Button
+                            className="w-full"
+                            variant="outline"
+                            onClick={() => handleCheckout(PLANS.free.priceId)}
+                            disabled={isLoading === PLANS.free.priceId}
+                        >
                             {isLoading === PLANS.free.priceId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Get Started
+                            {isOnboarding ? 'Select Free Plan' : 'Get Started'}
                         </Button>
                     </CardFooter>
                 </Card>
