@@ -15,6 +15,7 @@ import { TranscriptViewer } from '@/components/transcript-viewer';
 import { ChapterList } from '@/components/chapter-list';
 import { ClipEditor } from '@/components/clip-editor';
 import { CustomPromptRunner } from '@/components/custom-prompt-runner';
+import { AutoSeek } from '@/components/auto-seek';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow, format } from 'date-fns';
 import { auth } from '@/auth';
@@ -53,6 +54,18 @@ export default async function EpisodePage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+            {/* Auto-seek from URL timestamp param */}
+            {episode.audioUrl && (
+                <AutoSeek
+                    episode={{
+                        id: episode.id,
+                        title: episode.title,
+                        audioUrl: episode.audioUrl,
+                        image: episode.feed.image ?? undefined,
+                        feedTitle: episode.feed.title ?? undefined
+                    }}
+                />
+            )}
             {/* Header */}
             <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container mx-auto flex h-16 items-center px-4">

@@ -71,6 +71,13 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                                         Collections
                                     </Link>
                                     <Link
+                                        href="/search"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Deep Discovery
+                                    </Link>
+                                    <Link
                                         href="/integrations"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
                                         onClick={() => setOpen(false)}
