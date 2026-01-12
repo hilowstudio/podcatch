@@ -2,7 +2,7 @@ export const PLANS = {
     free: {
         name: 'Free',
         label: 'Free',
-        priceId: 'price_1SoohoICURxkmpIC1V58Tfuq', // Monthly (Free doesn't strictly need intervals but good for schema)
+        priceId: 'price_1SorsuICURxkmpICuXXJgIBC', // Monthly (Free doesn't strictly need intervals but good for schema)
         productId: 'prod_TmNSuTaiiK90ZS',
         amount: 0,
         marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Web Access']

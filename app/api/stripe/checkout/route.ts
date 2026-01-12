@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         }
 
         // Get priceId from body if available
-        let priceId = PLANS.basic.monthly.priceId; // Default to Basic Monthly
+        let priceId: string = PLANS.basic.monthly.priceId; // Default to Basic Monthly
         try {
             const body = await req.json();
 
@@ -93,11 +93,13 @@ export async function POST(req: Request) {
             });
         }
 
+        const isFree = priceId === PLANS.free.priceId;
+
         const stripeSession = await stripe.checkout.sessions.create({
             success_url: settingsUrl,
             cancel_url: settingsUrl,
             payment_method_types: ['card'],
-            mode: 'subscription',
+            mode: isFree ? 'payment' : 'subscription',
             billing_address_collection: 'auto',
             customer: customerId,
             line_items: [
@@ -107,7 +109,7 @@ export async function POST(req: Request) {
                 },
             ],
             allow_promotion_codes: true,
-            subscription_data: {
+            subscription_data: isFree ? undefined : {
                 trial_period_days: TRIAL_DAYS,
             },
             metadata: {
