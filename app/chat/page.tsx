@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, User, Bot, Sparkles, PlayCircle, ArrowLeft } from 'lucide-react';
+import { Send, User, Bot, PlayCircle, ArrowLeft } from 'lucide-react';
 import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 
@@ -162,7 +162,6 @@ function ChatContent() {
                     </Link>
                 )}
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-zinc-500" />
                     {episodeTitle ? `Chat about: ${episodeTitle}` : 'Chat with your Library'}
                 </h1>
                 <p className="text-muted-foreground">
@@ -179,7 +178,7 @@ function ChatContent() {
                         <div className="space-y-6">
                             {messages.length === 0 && (
                                 <div className="text-center text-muted-foreground mt-20">
-                                    <p>Try asking "What was the main takeaway from the last episode?"</p>
+                                    <p>Try asking "Can you remind me what they were saying about growth?"</p>
                                 </div>
                             )}
                             {messages.map((m: any) => (

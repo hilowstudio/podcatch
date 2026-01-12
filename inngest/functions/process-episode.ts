@@ -242,7 +242,7 @@ export const processEpisode = inngest.createFunction(
                 });
 
                 // Select Model - Gemini 2.0 Flash supports YouTube URLs directly
-                const modelName = 'gemini-2.0-flash';
+                const modelName = 'gemini-3-pro-preview';
 
                 const messages: any[] = [];
 
