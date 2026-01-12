@@ -33,7 +33,7 @@ export default function SignInPage() {
                     className={`mb-12 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
                 >
-                    <div className="relative h-24 w-24 mb-6 transition-transform duration-300 hover:scale-105">
+                    <div className="relative h-48 w-48 mb-8 transition-transform duration-300 hover:scale-105">
                         <Image
                             src="/podcatch.png"
                             alt="Podcatch Logo"
@@ -169,8 +169,8 @@ export default function SignInPage() {
                             <blockquote
                                 key={i}
                                 className={`absolute inset-0 border-l-2 border-indigo-500 pl-4 text-zinc-300 transition-all duration-500 ${i === activeTestimonial
-                                        ? 'opacity-100 translate-x-0'
-                                        : 'opacity-0 -translate-x-4'
+                                    ? 'opacity-100 translate-x-0'
+                                    : 'opacity-0 -translate-x-4'
                                     }`}
                             >
                                 <p className="italic text-lg mb-2">&quot;{t.quote}&quot;</p>
@@ -186,8 +186,8 @@ export default function SignInPage() {
                                 key={i}
                                 onClick={() => setActiveTestimonial(i)}
                                 className={`h-1.5 rounded-full transition-all duration-300 ${i === activeTestimonial
-                                        ? 'w-6 bg-indigo-500'
-                                        : 'w-1.5 bg-zinc-600 hover:bg-zinc-500'
+                                    ? 'w-6 bg-indigo-500'
+                                    : 'w-1.5 bg-zinc-600 hover:bg-zinc-500'
                                     }`}
                             />
                         ))}
