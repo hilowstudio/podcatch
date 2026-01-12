@@ -1,17 +1,41 @@
 export const PLANS = {
-    monthly: {
-        name: 'Monthly',
-        priceId: 'price_1Smd4XICURxkmpICcEwPSOlr',
-        amount: 49,
-        interval: 'month',
-        label: '$49/month'
+    free: {
+        name: 'Free',
+        label: 'Free',
+        priceId: 'price_1SoohoICURxkmpIC1V58Tfuq', // Monthly (Free doesn't strictly need intervals but good for schema)
+        productId: 'prod_TmNSuTaiiK90ZS',
+        amount: 0,
+        marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Web Access']
     },
-    annual: {
-        name: 'Annual',
-        priceId: 'price_1Smd5KICURxkmpICLbi7p5hq',
-        amount: 499,
-        interval: 'year',
-        label: '$499/year (Save ~15%)'
+    basic: {
+        name: 'Basic',
+        label: 'Basic',
+        monthly: {
+            priceId: 'price_1Sooj4ICURxkmpIC3UUNol3d',
+            productId: 'prod_TmNUFfU80Fft29',
+            amount: 9,
+        },
+        annual: {
+            priceId: 'price_1SookNICURxkmpICMltKy12s',
+            productId: 'prod_TmNVxilCkGOuEo',
+            amount: 99,
+        },
+        marketingFeatures: ['10 Episodes/mo', 'Deep Discovery', 'Email Support']
+    },
+    pro: {
+        name: 'Pro',
+        label: 'Pro',
+        monthly: {
+            priceId: 'price_1SoojiICURxkmpIC4Zi7i5tp',
+            productId: 'prod_TmNUKvZMhGcGJ3',
+            amount: 19,
+        },
+        annual: {
+            priceId: 'price_1SoolAICURxkmpIC8CYTE57A',
+            productId: 'prod_TmNW2KWFOI84Ec',
+            amount: 199,
+        },
+        marketingFeatures: ['Unlimited Episodes', 'Priority AI Processing', 'Integration Sync (Notion/Claude)']
     }
 } as const;
 

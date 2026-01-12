@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { SubscriptionPlan } from '@/lib/subscription';
 
 type UserMenuProps = {
     user: {
@@ -20,9 +21,10 @@ type UserMenuProps = {
         email?: string | null;
         image?: string | null;
     };
+    subscriptionPlan?: SubscriptionPlan;
 };
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, subscriptionPlan }: UserMenuProps) {
     const initials = user.name
         ?.split(' ')
         .map((n) => n[0])
@@ -53,6 +55,32 @@ export function UserMenu({ user }: UserMenuProps) {
                         Profile
                     </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {subscriptionPlan && (
+                    <>
+                        <DropdownMenuLabel>
+                            <div className="flex flex-col space-y-1">
+                                <span className="text-xs font-normal text-muted-foreground">Current Plan</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">{subscriptionPlan.name}</span>
+                                    {!subscriptionPlan.isPro && (
+                                        <Link href="/pricing" className="text-xs text-primary hover:underline ml-2">
+                                            Upgrade
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                            <Link href="/pricing" className="cursor-pointer">
+                                <span className="flex items-center w-full">
+                                    {subscriptionPlan.isPro ? 'Manage Subscription' : 'Upgrade to Pro'}
+                                </span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                    </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="cursor-pointer text-red-600"

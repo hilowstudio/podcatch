@@ -13,7 +13,7 @@ import { SubscriptionPlan } from '@/lib/subscription';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { PLANS, PlanType, TRIAL_DAYS } from '@/lib/stripe-config';
+import { PLANS, TRIAL_DAYS } from '@/lib/stripe-config';
 import { cn } from '@/lib/utils';
 
 interface BillingFormProps {
@@ -24,16 +24,20 @@ interface BillingFormProps {
 
 export function BillingForm({ subscriptionPlan }: BillingFormProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const [interval, setInterval] = useState<PlanType>('monthly');
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
     async function onSubmit() {
         setIsLoading(true);
 
         try {
+            // Defaulting to PRO plan for the simple billing form upgrade
+            const plan = PLANS.pro;
+            const priceId = billingCycle === 'monthly' ? plan.monthly.priceId : plan.annual.priceId;
+
             const response = await fetch('/api/stripe/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ priceId: PLANS[interval].priceId }),
+                body: JSON.stringify({ priceId }),
             });
 
             if (!response.ok) {
@@ -70,20 +74,20 @@ export function BillingForm({ subscriptionPlan }: BillingFormProps) {
                 {!subscriptionPlan.isPro && (
                     <div className="flex items-center gap-2 rounded-lg border p-1 w-fit">
                         <Button
-                            variant={interval === 'monthly' ? 'secondary' : 'ghost'}
+                            variant={billingCycle === 'monthly' ? 'secondary' : 'ghost'}
                             size="sm"
-                            onClick={() => setInterval('monthly')}
+                            onClick={() => setBillingCycle('monthly')}
                             className="text-xs"
                         >
-                            {PLANS.monthly.label}
+                            Monthly
                         </Button>
                         <Button
-                            variant={interval === 'annual' ? 'secondary' : 'ghost'}
+                            variant={billingCycle === 'annual' ? 'secondary' : 'ghost'}
                             size="sm"
-                            onClick={() => setInterval('annual')}
+                            onClick={() => setBillingCycle('annual')}
                             className="text-xs"
                         >
-                            {PLANS.annual.label}
+                            Annual
                         </Button>
                     </div>
                 )}
@@ -97,7 +101,7 @@ export function BillingForm({ subscriptionPlan }: BillingFormProps) {
                     {isLoading && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    {subscriptionPlan.isPro ? 'Manage Subscription' : `Upgrade to Pro (${interval === 'monthly' ? 'Monthly' : 'Annual'})`}
+                    {subscriptionPlan.isPro ? 'Manage Subscription' : `Upgrade to Pro (${billingCycle === 'monthly' ? 'Monthly' : 'Annual'})`}
                 </Button>
 
                 {!subscriptionPlan.isPro && (

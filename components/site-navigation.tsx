@@ -13,6 +13,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { UserMenu } from '@/components/auth/user-menu';
+import { SubscriptionPlan } from '@/lib/subscription';
 
 interface SiteNavigationProps {
     user?: {
@@ -20,9 +21,10 @@ interface SiteNavigationProps {
         email?: string | null;
         image?: string | null;
     };
+    subscriptionPlan?: SubscriptionPlan;
 }
 
-export function SiteNavigation({ user }: SiteNavigationProps) {
+export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -92,6 +94,13 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                                         Knowledge Graph
                                     </Link>
                                     <Link
+                                        href="/pricing"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Pricing
+                                    </Link>
+                                    <Link
                                         href="/integrations"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
                                         onClick={() => setOpen(false)}
@@ -114,7 +123,7 @@ export function SiteNavigation({ user }: SiteNavigationProps) {
                     {user && (
                         <div className="border-t pt-4 mt-auto">
                             <div className="flex items-center gap-4 px-2">
-                                <UserMenu user={user} />
+                                <UserMenu user={user} subscriptionPlan={subscriptionPlan} />
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">{user.name}</span>
                                     <span className="text-xs text-muted-foreground truncate max-w-[150px]">

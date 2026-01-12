@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { SiteNavigation } from '@/components/site-navigation';
 import { NotificationBell } from '@/components/notification-bell';
+import { SubscriptionPlan } from '@/lib/subscription';
 
 interface SiteHeaderClientProps {
     user?: {
@@ -10,9 +11,10 @@ interface SiteHeaderClientProps {
         email?: string | null;
         image?: string | null;
     };
+    subscriptionPlan?: SubscriptionPlan; // Make optional to avoid strict type breakage on existing usage if any (though usage is only in SiteHeader)
 }
 
-export function SiteHeaderClient({ user }: SiteHeaderClientProps) {
+export function SiteHeaderClient({ user, subscriptionPlan }: SiteHeaderClientProps) {
     const pathname = usePathname();
 
     // Hide header on auth pages
@@ -23,7 +25,7 @@ export function SiteHeaderClient({ user }: SiteHeaderClientProps) {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between pr-4">
-                <SiteNavigation user={user} />
+                <SiteNavigation user={user} subscriptionPlan={subscriptionPlan} />
                 <NotificationBell />
             </div>
         </header>

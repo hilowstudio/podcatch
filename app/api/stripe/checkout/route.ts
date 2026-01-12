@@ -15,10 +15,19 @@ export async function POST(req: Request) {
         }
 
         // Get priceId from body if available
-        let priceId = PLANS.monthly.priceId;
+        let priceId = PLANS.basic.monthly.priceId; // Default to Basic Monthly
         try {
             const body = await req.json();
-            if (body.priceId && Object.values(PLANS).some(p => p.priceId === body.priceId)) {
+
+            // Collect all valid price IDs from the nested PLANS object
+            const validPriceIds = new Set<string>();
+            Object.values(PLANS).forEach((plan: any) => {
+                if (plan.priceId) validPriceIds.add(plan.priceId); // Free
+                if (plan.monthly?.priceId) validPriceIds.add(plan.monthly.priceId);
+                if (plan.annual?.priceId) validPriceIds.add(plan.annual.priceId);
+            });
+
+            if (body.priceId && validPriceIds.has(body.priceId)) {
                 priceId = body.priceId;
             }
         } catch (e) {
