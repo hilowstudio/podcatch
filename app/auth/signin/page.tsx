@@ -33,7 +33,7 @@ export default function SignInPage() {
                     className={`mb-12 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
                 >
-                    <div className="relative h-48 w-48 mb-8 transition-transform duration-300 hover:scale-105">
+                    <div className="relative h-48 w-48 mb-8 mx-auto transition-transform duration-300 hover:scale-105">
                         <Image
                             src="/podcatch.png"
                             alt="Podcatch Logo"
