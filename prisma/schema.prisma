@@ -2,8 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "./generated_new"
+  provider        = "prisma-client"
+  output          = "./generated_new"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -69,6 +69,7 @@ model User {
   collections   Collection[]
   customPrompts CustomPrompt[]
   brandVoice    String?        @db.Text
+  usageLogs     UsageLog[]
 }
 
 model Account {
@@ -173,11 +174,11 @@ model Episode {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  feed    Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
-  insight Insight?
-  snips   Snip[]
-  embeddings EpisodeEmbedding[]
-  entities Entity[]
+  feed        Feed               @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  insight     Insight?
+  snips       Snip[]
+  embeddings  EpisodeEmbedding[]
+  entities    Entity[]
   collections Collection[]
 
   @@index([feedId])
@@ -194,22 +195,22 @@ model Collection {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   episodes Episode[] // Many-to-many
   insights CollectionInsight[]
-  
+
   @@index([userId])
 }
 
 model CollectionInsight {
-    id String @id @default(cuid())
-    collectionId String
-    synthesis String @db.Text // The meta-summary
-    createdAt DateTime @default(now())
-    
-    collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-    
-    @@index([collectionId])
+  id           String   @id @default(cuid())
+  collectionId String
+  synthesis    String   @db.Text // The meta-summary
+  createdAt    DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId])
 }
 
 // Custom Prompts (Phase 3)
@@ -230,7 +231,7 @@ model CustomPrompt {
 model Entity {
   id          String   @id @default(cuid())
   name        String   @unique
-  type        String   // PERSON, BOOK, CONCEPT
+  type        String // PERSON, BOOK, CONCEPT
   description String?  @db.Text
   image       String?
   createdAt   DateTime @default(now())
@@ -265,7 +266,7 @@ model Notification {
   title     String
   message   String
   read      Boolean  @default(false)
-  link      String?  // Optional link to navigate to (e.g., /episodes/123)
+  link      String? // Optional link to navigate to (e.g., /episodes/123)
   type      String   @default("INFO") // INFO, SUCCESS, ERROR
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -283,8 +284,8 @@ model Snip {
   episodeId String
   startTime Int // Seconds
   endTime   Int // Seconds
-  content   String? @db.Text
-  note      String? @db.Text
+  content   String?  @db.Text
+  note      String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -297,14 +298,28 @@ model Snip {
 
 // Vector Embeddings for RAG
 model EpisodeEmbedding {
-  id        String   @id @default(cuid())
+  id        String                     @id @default(cuid())
   episodeId String
-  content   String   @db.Text // The chunk text
+  content   String                     @db.Text // The chunk text
   vector    Unsupported("vector(768)") // Gemini text-embedding-004 is 768 dim
-  createdAt DateTime @default(now())
-  
-  episode   Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  createdAt DateTime                   @default(now())
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@index([episodeId])
 }
 
+// Usage Tracking for Billing Limits
+model UsageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String // e.g., "PROCESS_EPISODE", "CHAT_MESSAGE"
+  targetId  String? // e.g., episodeId
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

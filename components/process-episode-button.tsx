@@ -1,43 +1,46 @@
 'use client';
 
-import { useState } from 'react';
-import { processEpisode } from '@/actions/process-episode-action';
+import { useState, useTransition } from 'react';
+import { processEpisodeAction } from '@/actions/process-episode-action';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { PlayCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-type ProcessEpisodeButtonProps = {
+interface ProcessEpisodeButtonProps {
     episodeId: string;
     status: string;
-};
+}
 
 export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButtonProps) {
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     if (status === 'PROCESSING' || status === 'COMPLETED') {
-        return null; // Don't show button if already processing or done
+        return null;
     }
 
-    const handleProcess = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsProcessing(true);
-        try {
-            await processEpisode(episodeId);
-            // Button will disappear on next render due to status change
-        } catch (error) {
-            console.error('Error:', error);
-            setIsProcessing(false);
-        }
+    const handleProcess = () => {
+        startTransition(async () => {
+            const formData = new FormData();
+            formData.append('episodeId', episodeId);
+
+            const result = await processEpisodeAction(formData);
+
+            if (result.success) {
+                toast.success('Processing started');
+            } else {
+                toast.error(result.error);
+            }
+        });
     };
 
     return (
         <Button
             onClick={handleProcess}
-            disabled={isProcessing}
+            disabled={isPending}
             size="sm"
             className="gap-2"
         >
-            {isProcessing ? (
+            {isPending ? (
                 <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Queuing...

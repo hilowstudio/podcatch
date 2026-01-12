@@ -21,6 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow, format } from 'date-fns';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { Button } from '@/components/ui/button';
 
 type PageProps = {
     params: { episodeId: string };
@@ -29,9 +31,10 @@ type PageProps = {
 export default async function EpisodePage({ params }: PageProps) {
     const { episodeId } = await params;
 
-    const [episode, session] = await Promise.all([
+    const [episode, session, plan] = await Promise.all([
         getEpisodeWithInsight(episodeId),
-        auth()
+        auth(),
+        getUserSubscriptionPlan()
     ]);
 
     if (!episode) {
@@ -171,8 +174,12 @@ export default async function EpisodePage({ params }: PageProps) {
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />
-                                <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
-                                <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
+                                {plan.canChatAboutEpisode && (
+                                    <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
+                                )}
+                                {plan.canSendToClaude && (
+                                    <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
+                                )}
                                 {hasInsights && (
                                     <MarkdownCopyButton
                                         markdown={`# ${episode.title}
@@ -428,7 +435,9 @@ ${episode.insight?.transcript}
                                     <TabsList className="w-full justify-start mb-4">
                                         <TabsTrigger value="transcript">Transcript</TabsTrigger>
                                         <TabsTrigger value="chapters">Chapters</TabsTrigger>
-                                        <TabsTrigger value="studio">Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge></TabsTrigger>
+                                        {plan.canUseStudio && (
+                                            <TabsTrigger value="studio">Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge></TabsTrigger>
+                                        )}
                                     </TabsList>
 
                                     {/* Transcript Tab */}
@@ -474,30 +483,46 @@ ${episode.insight?.transcript}
                                     </TabsContent>
 
                                     {/* Studio Tab */}
-                                    <TabsContent value="studio" className="space-y-6">
-                                        <div className="grid gap-6">
-                                            {episode.audioUrl && (
-                                                <section>
-                                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                                                        <Scissors className="h-4 w-4" /> Clip Editor
-                                                    </h3>
-                                                    <ClipEditor episodeId={episode.id} audioUrl={episode.audioUrl} />
-                                                </section>
-                                            )}
+                                    {plan.canUseStudio && (
+                                        <TabsContent value="studio" className="space-y-6">
+                                            <div className="grid gap-6">
+                                                {episode.audioUrl && (
+                                                    <section>
+                                                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                                            <Scissors className="h-4 w-4" /> Clip Editor
+                                                        </h3>
+                                                        <ClipEditor episodeId={episode.id} audioUrl={episode.audioUrl} />
+                                                    </section>
+                                                )}
 
-                                            <section>
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                                                        <Sparkles className="h-4 w-4" /> Custom Prompts
-                                                    </h3>
-                                                    <Link href="/settings/prompts">
-                                                        <Badge variant="outline" className="hover:bg-muted cursor-pointer">Manage Prompts</Badge>
-                                                    </Link>
-                                                </div>
-                                                <CustomPromptRunner episodeId={episode.id} />
-                                            </section>
-                                        </div>
-                                    </TabsContent>
+                                                {plan.canUseCustomPrompts && (
+                                                    <section>
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <h3 className="text-lg font-semibold flex items-center gap-2">
+                                                                <Sparkles className="h-4 w-4" /> Custom Prompts
+                                                            </h3>
+                                                            <Link href="/settings/prompts">
+                                                                <Badge variant="outline" className="hover:bg-muted cursor-pointer">Manage Prompts</Badge>
+                                                            </Link>
+                                                        </div>
+                                                        <CustomPromptRunner episodeId={episode.id} />
+                                                    </section>
+                                                )}
+                                                {!plan.canUseCustomPrompts && (
+                                                    <section>
+                                                        <div className="p-6 border rounded-lg bg-muted/50 text-center">
+                                                            <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                                            <h3 className="font-semibold">Custom Prompts are a Pro Feature</h3>
+                                                            <p className="text-sm text-muted-foreground mb-4">Upgrade to create and run custom AI prompts on this episode.</p>
+                                                            <Link href="/pricing">
+                                                                <Button variant="outline">Upgrade Plan</Button>
+                                                            </Link>
+                                                        </div>
+                                                    </section>
+                                                )}
+                                            </div>
+                                        </TabsContent>
+                                    )}
                                 </Tabs>
 
 

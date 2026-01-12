@@ -79,20 +79,24 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                                     >
                                         Deep Discovery
                                     </Link>
-                                    <Link
-                                        href="/chat"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Chat with Library
-                                    </Link>
-                                    <Link
-                                        href="/graph"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Knowledge Graph
-                                    </Link>
+                                    {subscriptionPlan?.canChatWithLibrary && (
+                                        <Link
+                                            href="/chat"
+                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Chat with Library
+                                        </Link>
+                                    )}
+                                    {subscriptionPlan?.canUseKnowledgeGraph && (
+                                        <Link
+                                            href="/graph"
+                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Knowledge Graph
+                                        </Link>
+                                    )}
                                     <Link
                                         href="/pricing"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"
@@ -100,20 +104,24 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                                     >
                                         Pricing
                                     </Link>
-                                    <Link
-                                        href="/integrations"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Integrations
-                                    </Link>
-                                    <Link
-                                        href="/brand-voice"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Brand Voice
-                                    </Link>
+                                    {subscriptionPlan?.canUseIntegrations && (
+                                        <Link
+                                            href="/integrations"
+                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Integrations
+                                        </Link>
+                                    )}
+                                    {subscriptionPlan?.canUseBrandVoice && (
+                                        <Link
+                                            href="/brand-voice"
+                                            className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Brand Voice
+                                        </Link>
+                                    )}
                                 </>
                             )}
                         </nav>

@@ -4,17 +4,29 @@ import { revalidatePath } from 'next/cache';
 import { inngest } from '@/lib/inngest/client';
 import { auth } from '@/auth';
 import { z } from 'zod';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { getEpisodeUsage } from '@/lib/usage';
+import { prisma } from '@/lib/prisma'; // Added prisma
 
 const processEpisodeSchema = z.object({
     episodeId: z.string().cuid(),
 });
 
-export async function processEpisode(episodeId: string) {
+export async function processEpisodeAction(formData: FormData) {
     try {
         const session = await auth();
 
         if (!session?.user?.id) {
-            return { success: false, error: 'Unauthorized' };
+            throw new Error('Unauthorized');
+        }
+
+        const episodeId = formData.get('episodeId') as string;
+
+        const plan = await getUserSubscriptionPlan();
+        const usage = await getEpisodeUsage(session.user.id);
+
+        if (usage >= plan.maxEpisodesPerMonth) {
+            throw new Error(`You have reached your limit of ${plan.maxEpisodesPerMonth} episodes per month. Please upgrade to process more.`);
         }
 
         const validation = processEpisodeSchema.safeParse({ episodeId });
@@ -25,6 +37,15 @@ export async function processEpisode(episodeId: string) {
                 error: 'Invalid episode ID',
             };
         }
+
+        // Log Usage
+        await prisma.usageLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'PROCESS_EPISODE',
+                targetId: episodeId,
+            },
+        });
 
         // Trigger Inngest processing workflow
         await inngest.send({
