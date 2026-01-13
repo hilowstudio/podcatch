@@ -34,6 +34,7 @@ export const checkFeeds = inngest.createFunction(
         // Step 2: Process each feed
         for (const feed of feeds) {
             await step.run(`process-feed-${feed.id}`, async () => {
+                let xmlText = '';
                 try {
                     let feedUrl = feed.url;
 
@@ -71,8 +72,17 @@ export const checkFeeds = inngest.createFunction(
                         },
                     });
 
-                    // Parse the RSS feed
-                    const rssFeed = await rssParser.parseURL(feedUrl);
+                    // Fetch with standard API to avoid url.parse deprecation in rss-parser
+                    // Add User-Agent to avoid being blocked (which causes HTML responses => XML parse errors)
+                    const response = await fetch(feedUrl, {
+                        headers: {
+                            'User-Agent': 'Podcatch/1.0 (compatible; RSS Reader)',
+                        }
+                    });
+
+                    if (!response.ok) throw new Error(`Failed to fetch feed: ${response.statusText}`);
+                    xmlText = await response.text();
+                    const rssFeed = await rssParser.parseString(xmlText);
 
                     // Update feed metadata if not set
                     if (!feed.title && rssFeed.title) {
@@ -133,6 +143,9 @@ export const checkFeeds = inngest.createFunction(
                     console.log(`Finished checking feed: ${feed.title || feed.url}`);
                 } catch (error) {
                     console.error(`Error processing feed ${feed.id}:`, error);
+                    if (xmlText) {
+                        console.error('Response content start (first 200 chars):', xmlText.substring(0, 200));
+                    }
                     // Continue with other feeds even if one fails
                 }
             });
