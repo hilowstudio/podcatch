@@ -106,13 +106,7 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                                         </div>
                                     </UpgradeTrigger>
 
-                                    <Link
-                                        href="/pricing"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Pricing
-                                    </Link>
+
 
                                     <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseIntegrations} requiredTier="BASIC">
                                         <div className={!!subscriptionPlan?.canUseIntegrations ? "" : "pointer-events-none"}>

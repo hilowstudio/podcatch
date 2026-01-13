@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { SiteNavigation } from '@/components/site-navigation';
 import { NotificationBell } from '@/components/notification-bell';
+import Link from 'next/link';
 import { SubscriptionPlan } from '@/lib/subscription';
 
 interface SiteHeaderClientProps {
@@ -25,7 +26,14 @@ export function SiteHeaderClient({ user, subscriptionPlan }: SiteHeaderClientPro
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between pr-4">
-                <SiteNavigation user={user} subscriptionPlan={subscriptionPlan} />
+                <div className="flex items-center gap-4">
+                    <SiteNavigation user={user} subscriptionPlan={subscriptionPlan} />
+                    {!user && (
+                        <Link href="/pricing" className="text-sm font-medium transition-colors hover:text-primary">
+                            Pricing
+                        </Link>
+                    )}
+                </div>
                 <NotificationBell />
             </div>
         </header>
