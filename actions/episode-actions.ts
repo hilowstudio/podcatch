@@ -133,3 +133,24 @@ export async function getEpisodeForPlayer(episodeId: string) {
         return null;
     }
 }
+
+/**
+ * Get related episodes (from same feed)
+ */
+export async function getRelatedEpisodes(feedId: string, currentEpisodeId: string, limit: number = 3) {
+    try {
+        const episodes = await prisma.episode.findMany({
+            where: {
+                feedId,
+                id: { not: currentEpisodeId },
+                status: 'COMPLETED',
+            },
+            take: limit,
+            orderBy: { publishedAt: 'desc' },
+        });
+
+        return episodes;
+    } catch {
+        return [];
+    }
+}

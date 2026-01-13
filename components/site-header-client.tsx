@@ -14,9 +14,10 @@ interface SiteHeaderClientProps {
         image?: string | null;
     };
     subscriptionPlan?: SubscriptionPlan; // Make optional to avoid strict type breakage on existing usage if any (though usage is only in SiteHeader)
+    usageCount?: number;
 }
 
-export function SiteHeaderClient({ user, subscriptionPlan }: SiteHeaderClientProps) {
+export function SiteHeaderClient({ user, subscriptionPlan, usageCount = 0 }: SiteHeaderClientProps) {
     const pathname = usePathname();
 
     // Hide header on auth pages
@@ -28,7 +29,7 @@ export function SiteHeaderClient({ user, subscriptionPlan }: SiteHeaderClientPro
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between pr-4">
                 <div className="flex items-center gap-4">
-                    <SiteNavigation user={user} subscriptionPlan={subscriptionPlan} />
+                    <SiteNavigation user={user} subscriptionPlan={subscriptionPlan} usageCount={usageCount} />
                     {!user && (
                         <>
                             <Link href="/pricing" className="text-sm font-medium transition-colors hover:text-primary hidden sm:block">

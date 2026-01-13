@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { SubscriptionPlan } from '@/lib/subscription';
+import { UsageBar } from '@/components/usage-bar';
 
 type UserMenuProps = {
     user: {
@@ -22,9 +23,10 @@ type UserMenuProps = {
         image?: string | null;
     };
     subscriptionPlan?: SubscriptionPlan;
+    usageCount?: number;
 };
 
-export function UserMenu({ user, subscriptionPlan }: UserMenuProps) {
+export function UserMenu({ user, subscriptionPlan, usageCount = 0 }: UserMenuProps) {
     const initials = user.name
         ?.split(' ')
         .map((n) => n[0])
@@ -59,15 +61,22 @@ export function UserMenu({ user, subscriptionPlan }: UserMenuProps) {
                 {subscriptionPlan && (
                     <>
                         <DropdownMenuLabel>
-                            <div className="flex flex-col space-y-1">
-                                <span className="text-xs font-normal text-muted-foreground">Current Plan</span>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">{subscriptionPlan.name}</span>
-                                    {!subscriptionPlan.isPro && (
-                                        <Link href="/pricing" className="text-xs text-primary hover:underline ml-2">
-                                            Upgrade
-                                        </Link>
-                                    )}
+                            <div className="flex flex-col space-y-3">
+                                {subscriptionPlan.maxEpisodesPerMonth < 1000 && (
+                                    <div className="mb-1">
+                                        <UsageBar usage={usageCount} limit={subscriptionPlan.maxEpisodesPerMonth} />
+                                    </div>
+                                )}
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-normal text-muted-foreground">Current Plan</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">{subscriptionPlan.name}</span>
+                                        {!subscriptionPlan.isPro && (
+                                            <Link href="/pricing" className="text-xs text-primary hover:underline ml-2">
+                                                Upgrade
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
@@ -81,7 +90,6 @@ export function UserMenu({ user, subscriptionPlan }: UserMenuProps) {
                         <DropdownMenuSeparator />
                     </>
                 )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="cursor-pointer text-red-600"
                     onClick={() => signOut({ callbackUrl: '/auth/signin' })}

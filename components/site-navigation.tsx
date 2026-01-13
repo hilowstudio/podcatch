@@ -23,9 +23,10 @@ interface SiteNavigationProps {
         image?: string | null;
     };
     subscriptionPlan?: SubscriptionPlan;
+    usageCount?: number;
 }
 
-export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) {
+export function SiteNavigation({ user, subscriptionPlan, usageCount = 0 }: SiteNavigationProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -151,7 +152,7 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                     {user && (
                         <div className="border-t pt-4 mt-auto">
                             <div className="flex items-center gap-4 px-2">
-                                <UserMenu user={user} subscriptionPlan={subscriptionPlan} />
+                                <UserMenu user={user} subscriptionPlan={subscriptionPlan} usageCount={usageCount} />
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">{user.name}</span>
                                     <span className="text-xs text-muted-foreground truncate max-w-[150px]">

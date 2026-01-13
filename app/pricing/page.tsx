@@ -199,6 +199,81 @@ function PricingContent() {
                     </CardFooter>
                 </Card>
             </div>
-        </div>
+
+            {/* Feature Comparison Table */}
+            <div className="mt-20">
+                <h2 className="text-2xl font-bold text-center mb-12">Compare Plans</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse min-w-[600px]">
+                        <thead>
+                            <tr className="border-b">
+                                <th className="text-left py-4 px-4 w-1/4">Feature</th>
+                                <th className="text-center py-4 px-4 w-1/4">Free</th>
+                                <th className="text-center py-4 px-4 w-1/4">Basic</th>
+                                <th className="text-center py-4 px-4 w-1/4 font-bold text-primary">Pro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {/* Usage & Limits */}
+                            <tr className="bg-muted/30">
+                                <td colSpan={4} className="py-2 px-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Usage & Limits</td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Episodes per Month</td>
+                                <td className="text-center py-4 px-4">3</td>
+                                <td className="text-center py-4 px-4">20</td>
+                                <td className="text-center py-4 px-4 font-bold text-primary">200</td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Transcript Retention</td>
+                                <td className="text-center py-4 px-4">Unlimited</td>
+                                <td className="text-center py-4 px-4">Unlimited</td>
+                                <td className="text-center py-4 px-4">Unlimited</td>
+                            </tr>
+
+                            {/* AI & Analysis */}
+                            <tr className="bg-muted/30">
+                                <td colSpan={4} className="py-2 px-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider mt-4">AI & Analysis</td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">AI Summaries</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Knowledge Graph</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Chat with Library</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+
+                            {/* Features */}
+                            <tr className="bg-muted/30">
+                                <td colSpan={4} className="py-2 px-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider mt-4">Advanced Features</td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Claude Sync</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Notion Integration</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div >
     );
 }

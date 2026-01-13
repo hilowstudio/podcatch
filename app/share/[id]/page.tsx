@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getEpisodeWithInsight } from '@/actions/episode-actions';
+import { getEpisodeWithInsight, getRelatedEpisodes } from '@/actions/episode-actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Lightbulb, ExternalLink, PlayCircle, FileText, ArrowLeft, Share2 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { EpisodePlayerButton } from '@/components/episode-player-button';
 import { Metadata } from 'next';
+import { auth } from '@/auth';
 
 type PageProps = {
     params: { id: string };
@@ -67,7 +68,7 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-4 py-8 pb-32">
                 <div className="grid gap-8 lg:grid-cols-3">
                     {/* Left Column: Player & Metadata */}
                     <div className="lg:col-span-1">
@@ -79,7 +80,7 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                                 </div>
                             )}
 
-                            {/* Audio Player (Read Only - no persistent state across pages ideally, but we reuse component) */}
+                            {/* Audio Player */}
                             {!episode.youtubeId && (
                                 <Card>
                                     <CardHeader>
@@ -277,9 +278,67 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                                 </Tabs>
                             </>
                         )}
+
+                        {/* Recommendations */}
+                        <div className="pt-8">
+                            <h3 className="text-xl font-bold mb-4">More from {episode.feed.title}</h3>
+                            <RelatedEpisodesList feedId={episode.feedId} currentEpisodeId={episode.id} />
+                        </div>
                     </div>
                 </div>
             </main>
+
+            {/* Sticky CTA for unauthenticated users */}
+            <StickyCTA />
+        </div>
+    );
+}
+
+async function RelatedEpisodesList({ feedId, currentEpisodeId }: { feedId: string, currentEpisodeId: string }) {
+    const episodes = await getRelatedEpisodes(feedId, currentEpisodeId);
+
+    if (episodes.length === 0) return null;
+
+    return (
+        <div className="grid gap-4 sm:grid-cols-2">
+            {episodes.map((ep: any) => (
+                <Link key={ep.id} href={`/share/${ep.id}`} className="block group">
+                    <Card className="h-full hover:border-primary transition-colors">
+                        <CardHeader className="p-4">
+                            <CardTitle className="text-base line-clamp-2 group-hover:text-primary transition-colors">
+                                {ep.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                                {format(ep.publishedAt, 'MMM d, yyyy')}
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+                </Link>
+            ))}
+        </div>
+    );
+}
+
+async function StickyCTA() {
+    const session = await auth();
+    if (session?.user) return null;
+
+    return (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-4 z-50">
+            <div className="container mx-auto flex items-center justify-between gap-4">
+                <div className="hidden sm:block">
+                    <p className="font-bold">Unlock the full power of Podcatch</p>
+                    <p className="text-sm text-muted-foreground">Save episodes, chat with AI, and more.</p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Link href="/auth/signin" className="w-full sm:w-auto">
+                        <Button variant="secondary" className="w-full">Log in</Button>
+                    </Link>
+                    <Link href="/" className="w-full sm:w-auto">
+                        <Button className="w-full">Get Started Free</Button>
+                    </Link>
+                </div>
+            </div>
         </div>
     );
 }
