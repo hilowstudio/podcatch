@@ -3,6 +3,7 @@
 import { signInWithEmail, signInWithGoogle, signInWithGitHub } from '@/actions/auth-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -132,7 +133,7 @@ export default function SignInPage() {
                     </form>
 
                     <p className="pt-4 text-xs text-center text-zinc-400">
-                        By signing in, you agree to our Terms of Service and Privacy Policy.
+                        By signing in, you agree to our <Link href="/terms" className="underline hover:text-zinc-500">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-zinc-500">Privacy Policy</Link>.
                     </p>
                 </div>
             </div>
