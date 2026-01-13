@@ -158,7 +158,10 @@ export async function getFeeds() {
                         episodes: {
                             orderBy: { publishedAt: 'desc' },
                             take: 1,
-                            select: { publishedAt: true },
+                            select: {
+                                publishedAt: true,
+                                status: true
+                            },
                         },
                     },
                 },

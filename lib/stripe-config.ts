@@ -20,7 +20,7 @@ export const PLANS = {
             productId: 'prod_TmNVxilCkGOuEo',
             amount: 120,
         },
-        marketingFeatures: ['10 Episodes/mo', 'Deep Discovery', 'Email Support']
+        marketingFeatures: ['20 Episodes/mo', 'Deep Discovery', 'Email Support']
     },
     pro: {
         name: 'Pro',
@@ -35,7 +35,7 @@ export const PLANS = {
             productId: 'prod_TmNW2KWFOI84Ec',
             amount: 290,
         },
-        marketingFeatures: ['Unlimited Episodes', 'Priority AI Processing', 'Integration Sync (Notion/Claude)']
+        marketingFeatures: ['200 Episodes/mo', 'Priority AI Processing', 'Integration Sync (Notion/Claude)']
     }
 } as const;
 

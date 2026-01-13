@@ -5,6 +5,7 @@ import { processEpisodeAction } from '@/actions/process-episode-action';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { UpgradeDialog } from '@/components/upgrade-dialog';
 
 interface ProcessEpisodeButtonProps {
     episodeId: string;
@@ -13,6 +14,12 @@ interface ProcessEpisodeButtonProps {
 
 export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButtonProps) {
     const [isPending, startTransition] = useTransition();
+    const [showUpgrade, setShowUpgrade] = useState(false);
+    const [upgradeData, setUpgradeData] = useState<{
+        currentPlan: string;
+        nextPlan: string;
+        limit: number;
+    } | null>(null);
 
     if (status === 'PROCESSING' || status === 'COMPLETED') {
         return null;
@@ -27,6 +34,13 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
 
             if (result.success) {
                 toast.success('Processing started');
+            } else if (result.upgradeRequired) {
+                setUpgradeData({
+                    currentPlan: result.plan,
+                    nextPlan: result.nextPlan,
+                    limit: result.limit
+                });
+                setShowUpgrade(true);
             } else {
                 toast.error(result.error);
             }
@@ -34,23 +48,35 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
     };
 
     return (
-        <Button
-            onClick={handleProcess}
-            disabled={isPending}
-            size="sm"
-            className="gap-2"
-        >
-            {isPending ? (
-                <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Queuing...
-                </>
-            ) : (
-                <>
-                    <PlayCircle className="h-4 w-4" />
-                    Process Episode
-                </>
+        <>
+            <Button
+                onClick={handleProcess}
+                disabled={isPending}
+                size="sm"
+                className="gap-2"
+            >
+                {isPending ? (
+                    <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Queuing...
+                    </>
+                ) : (
+                    <>
+                        <PlayCircle className="h-4 w-4" />
+                        Process Episode
+                    </>
+                )}
+            </Button>
+
+            {upgradeData && (
+                <UpgradeDialog
+                    open={showUpgrade}
+                    onOpenChange={setShowUpgrade}
+                    currentPlan={upgradeData.currentPlan}
+                    nextPlan={upgradeData.nextPlan}
+                    limit={upgradeData.limit}
+                />
             )}
-        </Button>
+        </>
     );
 }

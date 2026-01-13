@@ -63,6 +63,15 @@ export function SiteNavigation({ user, subscriptionPlan }: SiteNavigationProps) 
                             >
                                 Home
                             </Link>
+                            {!user && (
+                                <Link
+                                    href="/auth/signin"
+                                    className="px-4 py-2 hover:bg-muted rounded-md font-medium text-primary"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Log in
+                                </Link>
+                            )}
                             {/* Future links: History, Bookmarks, etc. */}
                             {user && (
                                 <>

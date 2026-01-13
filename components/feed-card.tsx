@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, FileAudio } from 'lucide-react';
+import { Calendar, FileAudio, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { DeleteFeedButton } from '@/components/delete-feed-button';
 import { cn } from '@/lib/utils';
@@ -15,10 +15,13 @@ type FeedCardProps = {
     url: string;
     episodeCount: number;
     lastEpisodeDate: Date | null;
+    lastEpisodeStatus: string | null;
     variant?: 'grid' | 'list';
 };
 
-export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, variant = 'grid' }: FeedCardProps) {
+export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, lastEpisodeStatus, variant = 'grid' }: FeedCardProps) {
+    const isProcessing = lastEpisodeStatus === 'PROCESSING';
+
     if (variant === 'list') {
         return (
             <Card className="group overflow-hidden transition-all hover:shadow-lg">
@@ -35,6 +38,12 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, vari
                         ) : (
                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                                 <FileAudio className="h-6 w-6 text-muted-foreground/40" />
+                            </div>
+                        )}
+                        {/* Overlay for processing state */}
+                        {isProcessing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                                <Loader2 className="h-6 w-6 animate-spin text-white" />
                             </div>
                         )}
                     </div>
@@ -90,6 +99,12 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, vari
                                 <FileAudio className="h-16 w-16 text-muted-foreground/40" />
                             </div>
                         )}
+                        {/* Overlay for processing state */}
+                        {isProcessing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                            </div>
+                        )}
                     </div>
                 </CardHeader>
                 <CardContent className="p-4">
@@ -124,4 +139,3 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, vari
         </Card>
     );
 }
-

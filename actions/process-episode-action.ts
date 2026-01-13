@@ -26,7 +26,14 @@ export async function processEpisodeAction(formData: FormData) {
         const usage = await getEpisodeUsage(session.user.id);
 
         if (usage >= plan.maxEpisodesPerMonth) {
-            throw new Error(`You have reached your limit of ${plan.maxEpisodesPerMonth} episodes per month. Please upgrade to process more.`);
+            return {
+                success: false,
+                error: 'Limit reached',
+                upgradeRequired: true,
+                limit: plan.maxEpisodesPerMonth,
+                plan: plan.name,
+                nextPlan: plan.name === 'Free' ? 'Basic' : 'Pro'
+            };
         }
 
         const validation = processEpisodeSchema.safeParse({ episodeId });
@@ -38,16 +45,8 @@ export async function processEpisodeAction(formData: FormData) {
             };
         }
 
-        // Log Usage
-        await prisma.usageLog.create({
-            data: {
-                userId: session.user.id,
-                action: 'PROCESS_EPISODE',
-                targetId: episodeId,
-            },
-        });
-
         // Trigger Inngest processing workflow
+        // Validated at Inngest level again for security, but UI check prevents waste
         await inngest.send({
             name: 'episode/process.requested',
             data: {

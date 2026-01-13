@@ -13,7 +13,7 @@ interface Feed {
     image: string | null;
     url: string;
     _count: { episodes: number };
-    episodes: { publishedAt: Date | null }[];
+    episodes: { publishedAt: Date | null; status?: string }[];
 }
 
 interface FeedGridProps {
@@ -61,6 +61,7 @@ export function FeedGrid({ feeds }: FeedGridProps) {
                         url={feed.url}
                         episodeCount={feed._count.episodes}
                         lastEpisodeDate={feed.episodes[0]?.publishedAt || null}
+                        lastEpisodeStatus={feed.episodes[0]?.status || null}
                         variant={viewMode}
                     />
                 ))}

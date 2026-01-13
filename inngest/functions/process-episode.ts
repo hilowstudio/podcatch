@@ -6,6 +6,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { insightSchema } from '@/lib/ai/schemas';
 
 // No stream/fs/ytdl imports needed for simplified YouTube flow
+import { PLANS } from '@/lib/stripe-config';
 
 export const processEpisode = inngest.createFunction(
     {
@@ -20,11 +21,9 @@ export const processEpisode = inngest.createFunction(
     async ({ event, step }) => {
         const { episodeId } = event.data;
 
-        // Step 1: Fetch episode with feed and user details
         const episode = await step.run('fetch-episode', async () => {
 
-            console.log('🚀 Starting process-episode-shared (New Function ID)');
-            // Removed DMMF debugging
+            console.log('🚀 Starting process-episode-shared (Usage Limit Version)');
 
             const ep = await prisma.episode.findUnique({
                 where: { id: episodeId },
@@ -32,9 +31,9 @@ export const processEpisode = inngest.createFunction(
                     feed: {
                         include: {
                             subscriptions: {
-                                take: 50, // Check plenty of users
+                                take: 50,
                                 orderBy: [
-                                    { user: { stripePriceId: 'asc' } }, // ASC puts non-nulls BEFORE nulls in Postgres
+                                    { user: { stripePriceId: 'asc' } },
                                     { createdAt: 'asc' }
                                 ],
                                 include: {
@@ -43,20 +42,20 @@ export const processEpisode = inngest.createFunction(
                                             id: true,
                                             geminiApiKey: true,
                                             deepgramApiKey: true,
-                                            claudeApiKey: true, // Used in step 5
-                                            claudeProjectId: true, // Used in step 5
-                                            autoSyncToClaude: true, // Used in step 5
+                                            claudeApiKey: true,
+                                            claudeProjectId: true,
+                                            autoSyncToClaude: true,
                                             stripePriceId: true,
                                             stripeCurrentPeriodEnd: true,
-                                            webhookUrl: true, // Used in step 6
-                                            readwiseApiKey: true, // Used in step 7
-                                            notionAccessToken: true, // Used in step 8
-                                            notionPageId: true, // Used in step 8
-                                            googleDriveRefreshToken: true, // Used in step 9
+                                            webhookUrl: true,
+                                            readwiseApiKey: true,
+                                            notionAccessToken: true,
+                                            notionPageId: true,
+                                            googleDriveRefreshToken: true,
                                             openaiKey: true,
                                             openaiAssistantId: true,
                                             openaiVectorStoreId: true,
-                                            brandVoice: true, // Used in step 3
+                                            brandVoice: true,
                                         },
                                     },
                                 },
@@ -66,53 +65,87 @@ export const processEpisode = inngest.createFunction(
                 },
             });
 
-            // Ensure we found the episode
             if (!ep) {
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
-            // Find the first valid Pro user
+            // Funding Logic:
+            // 1. Look for a Pro User (Limit 200)
+            // 2. Look for a Basic User (Limit 20)
+            // 3. Look for a Free User (Limit 3)
+
             const DAY_IN_MS = 86_400_000;
             const now = Date.now();
 
-            console.log(`Checking ${ep.feed.subscriptions.length} subscribers for Pro status...`);
-            ep.feed.subscriptions.forEach((s: any) => {
-                const u = s.user;
-                const end = u?.stripeCurrentPeriodEnd?.getTime() ?? 0;
-                const active = end + DAY_IN_MS > now;
-                console.log(`- User ${u?.id?.slice(0, 8)}: Price=${u?.stripePriceId ?? 'None'}, Ends=${u?.stripeCurrentPeriodEnd?.toISOString() ?? 'N/A'}, Active=${active}`);
-            });
+            // Usage limits
+            const LIMITS = {
+                PRO: 200,
+                BASIC: 20,
+                FREE: 3
+            };
 
-            const fundingUser = ep.feed.subscriptions.map((s: any) => s.user).find((u: any) => {
-                return !!u?.stripePriceId &&
-                    (u.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > now;
-            });
+            // Helper to check plan status
+            const getPlanType = (u: any) => {
+                if (!u?.stripePriceId || (u.stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS <= now) {
+                    return 'FREE';
+                }
+                if (u.stripePriceId === PLANS.pro.monthly.priceId || u.stripePriceId === PLANS.pro.annual.priceId) {
+                    return 'PRO';
+                }
+                if (u.stripePriceId === PLANS.basic.monthly.priceId || u.stripePriceId === PLANS.basic.annual.priceId) {
+                    return 'BASIC';
+                }
+                return 'FREE'; // Default fallback
+            };
 
-            // If no Pro user found, fallback to the first user (for logging/error context)
-            const fallbackUser = ep.feed.subscriptions[0]?.user;
+            // Iterate through subscriptions to find a funder
+            for (const sub of ep.feed.subscriptions) {
+                const user = sub.user;
+                if (!user) continue;
 
-            if (!fundingUser) {
-                console.log(`Skipping: No qualifying Pro user found among ${ep.feed.subscriptions.length} subscribers.`);
-                // Return fallback user logic but marked as skipped
-                return { ...ep, feed: { ...ep.feed, user: fallbackUser || null }, skipped: true };
+                const plan = getPlanType(user);
+                const limit = LIMITS[plan as keyof typeof LIMITS];
+
+                // Check Usage for this month
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+
+                const usageCount = await prisma.usageLog.count({
+                    where: {
+                        userId: user.id,
+                        action: 'PROCESS_EPISODE',
+                        createdAt: { gte: startOfMonth }
+                    }
+                });
+
+                if (usageCount < limit) {
+                    console.log(`✅ Funded by ${plan} User: ${user.id} (${usageCount}/${limit})`);
+
+                    // Log Usage (Consumes quota)
+                    await prisma.usageLog.create({
+                        data: {
+                            userId: user.id,
+                            action: 'PROCESS_EPISODE',
+                            targetId: episodeId,
+                        }
+                    });
+
+                    await prisma.episode.update({
+                        where: { id: episodeId },
+                        data: { status: 'PROCESSING' },
+                    });
+
+                    return { ...ep, feed: { ...ep.feed, user: user } };
+                } else {
+                    console.log(`❌ User ${user.id.slice(0, 8)} (${plan}) exceeded limit (${usageCount}/${limit})`);
+                }
             }
 
-            console.log(`Funded by Pro User: ${fundingUser.id} (${fundingUser.stripePriceId})`);
+            // If we get here, no one has quota
+            console.log('🚫 No eligible users found to fund processing.');
+            return { ...ep, feed: { ...ep.feed, user: null }, skipped: true };
 
-            // Update status to PROCESSING
-            await prisma.episode.update({
-                where: { id: episodeId },
-                data: { status: 'PROCESSING' },
-            });
-
-            // Return with 'user' patched into feed for backward compatibility
-            return {
-                ...ep,
-                feed: {
-                    ...ep.feed,
-                    user: fundingUser
-                }
-            };
         }) as any;
 
         if ((episode as any).skipped) {

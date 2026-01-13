@@ -130,7 +130,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
             canSendToClaude: true,
             canUseStudio: true,
             canUseCustomPrompts: true,
-            maxEpisodesPerMonth: Infinity,
+            maxEpisodesPerMonth: 200,
         };
     }
 

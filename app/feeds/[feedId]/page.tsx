@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ProcessEpisodeButton } from '@/components/process-episode-button';
 import { ArrowLeft, Calendar, PlayCircle, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 
 type PageProps = {
     params: { feedId: string };
@@ -105,6 +106,9 @@ export default async function FeedPage({ params }: PageProps) {
                                                     </Badge>
                                                     {episode.status === 'DISCOVERED' && (
                                                         <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
+                                                    )}
+                                                    {episode.status === 'PROCESSING' && (
+                                                        <EpisodeStatusPoller episodeId={episode.id} initialStatus="PROCESSING" />
                                                     )}
                                                 </div>
                                             </div>
