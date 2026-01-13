@@ -78,10 +78,11 @@ export const processEpisode = inngest.createFunction(
             const now = Date.now();
 
             // Usage limits
+            // Usage limits from centralized config
             const LIMITS = {
-                PRO: 200,
-                BASIC: 20,
-                FREE: 3
+                PRO: PLANS.pro.features.monthlyEpisodeLimit,
+                BASIC: PLANS.basic.features.monthlyEpisodeLimit,
+                FREE: PLANS.free.features.monthlyEpisodeLimit
             };
 
             // Helper to check plan status

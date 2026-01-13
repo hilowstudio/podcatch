@@ -225,10 +225,10 @@ function PricingContent() {
                                 <td className="text-center py-4 px-4 font-bold text-primary">200</td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
-                                <td className="py-4 px-4">Transcript Retention</td>
-                                <td className="text-center py-4 px-4">Unlimited</td>
-                                <td className="text-center py-4 px-4">Unlimited</td>
-                                <td className="text-center py-4 px-4">Unlimited</td>
+                                <td className="py-4 px-4">Studio Access (Creation)</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
 
                             {/* AI & Analysis */}
@@ -239,6 +239,12 @@ function PricingContent() {
                                 <td className="py-4 px-4">AI Summaries</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Chat about Episode</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
@@ -259,13 +265,19 @@ function PricingContent() {
                                 <td colSpan={4} className="py-2 px-4 font-semibold text-xs text-muted-foreground uppercase tracking-wider mt-4">Advanced Features</td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
-                                <td className="py-4 px-4">Claude Sync</td>
+                                <td className="py-4 px-4">Custom Prompts</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
-                                <td className="py-4 px-4">Notion Integration</td>
+                                <td className="py-4 px-4">Integrations (Notion/Claude)</td>
+                                <td className="text-center py-4 px-4 text-muted-foreground">—</td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                            </tr>
+                            <tr className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-4 px-4">Brand Voice</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>

@@ -76,13 +76,18 @@ export function SiteNavigation({ user, subscriptionPlan, usageCount = 0 }: SiteN
                             {/* Future links: History, Bookmarks, etc. */}
                             {user && (
                                 <>
-                                    <Link
-                                        href="/collections"
-                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
-                                        onClick={() => setOpen(false)}
-                                    >
-                                        Collections
-                                    </Link>
+                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseStudio} requiredTier="BASIC">
+                                        <div className={!!subscriptionPlan?.canUseStudio ? "" : "pointer-events-none"}>
+                                            <Link
+                                                href="/collections"
+                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
+                                                onClick={() => setOpen(false)}
+                                                tabIndex={!!subscriptionPlan?.canUseStudio ? 0 : -1}
+                                            >
+                                                Collections (Studio)
+                                            </Link>
+                                        </div>
+                                    </UpgradeTrigger>
                                     <Link
                                         href="/search"
                                         className="px-4 py-2 hover:bg-muted rounded-md font-medium"

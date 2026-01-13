@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, Search, Rss, Info, Youtube } from 'lucide-react';
+import { PlusCircle, Loader2, Search, Rss, Info, Youtube, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
@@ -110,17 +110,21 @@ export function AddFeedDialog() {
                 <DialogHeader>
                     <DialogTitle>Add Podcast</DialogTitle>
                     <DialogDescription>
-                        Search for a podcast or enter an RSS feed URL directly.
+                        Search for a podcast, enter an RSS feed URL directly, or import an OPML file.
                     </DialogDescription>
                 </DialogHeader>
 
                 <Tabs defaultValue="search" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="search">iTunes Search</TabsTrigger>
                         <TabsTrigger value="direct">Direct RSS</TabsTrigger>
                         <TabsTrigger value="youtube" className="gap-2">
                             <Youtube className="h-4 w-4" />
                             YouTube
+                        </TabsTrigger>
+                        <TabsTrigger value="import" className="gap-2">
+                            <UploadCloud className="h-4 w-4" />
+                            Import
                         </TabsTrigger>
                     </TabsList>
 
@@ -232,6 +236,62 @@ export function AddFeedDialog() {
                             <Button type="submit" disabled={isAdding} className="w-full gap-2">
                                 {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Youtube className="h-4 w-4 text-red-600" />}
                                 {isAdding ? 'Subscribing...' : 'Subscribe to Channel'}
+                            </Button>
+                        </form>
+                    </TabsContent>
+
+                    <TabsContent value="import" className="space-y-4 pt-4">
+                        <form action={async (formData) => {
+                            setIsAdding(true);
+                            try {
+                                const { importOpmlAction } = await import('@/actions/opml');
+                                const result = await importOpmlAction(formData);
+                                if (result.success) {
+                                    toast.success(result.message);
+                                    setOpen(false);
+                                    // Optional: Refresh feed list
+                                } else {
+                                    toast.error(result.error || 'Failed to import OPML');
+                                }
+                            } catch (err) {
+                                toast.error('Failed to import file');
+                            } finally {
+                                setIsAdding(false);
+                            }
+                        }} className="space-y-4">
+                            <div className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 transition-colors">
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <UploadCloud className="h-8 w-8 text-muted-foreground mb-2" />
+                                    <Label htmlFor="file" className="cursor-pointer text-sm font-medium">
+                                        Click to upload .opml file
+                                    </Label>
+                                    <Input
+                                        id="file"
+                                        name="file"
+                                        type="file"
+                                        accept=".opml,.xml"
+                                        required
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            if (e.target.files?.[0]) {
+                                                toast.info(`Selected: ${e.target.files[0].name}`);
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Supports exports from Apple Podcasts, Overcast, Pocket Casts, etc.
+                                    </p>
+                                </div>
+                            </div>
+                            <Button type="submit" disabled={isAdding} className="w-full">
+                                {isAdding ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Importing Feeds...
+                                    </>
+                                ) : (
+                                    'Import Library'
+                                )}
                             </Button>
                         </form>
                     </TabsContent>

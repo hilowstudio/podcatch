@@ -2,10 +2,19 @@ export const PLANS = {
     free: {
         name: 'Free',
         label: 'Free',
-        priceId: 'price_1SorsuICURxkmpICuXXJgIBC', // Monthly (Free doesn't strictly need intervals but good for schema)
+        priceId: 'price_1SorsuICURxkmpICuXXJgIBC',
         productId: 'prod_TmNSuTaiiK90ZS',
         amount: 0,
-        marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Web Access']
+        marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Web Access'],
+        features: {
+            monthlyEpisodeLimit: 3,
+            canChatLibrary: false,
+            canUseGraph: false,
+            canIntegrate: false,
+            canUseCustomPrompts: false,
+            canChatEpisode: false,
+            canUseStudio: false,
+        }
     },
     basic: {
         name: 'Basic',
@@ -20,7 +29,16 @@ export const PLANS = {
             productId: 'prod_TmNVxilCkGOuEo',
             amount: 120,
         },
-        marketingFeatures: ['20 Episodes/mo', 'Deep Discovery', 'Email Support']
+        marketingFeatures: ['20 Episodes/mo', 'Deep Discovery', 'Email Support'],
+        features: {
+            monthlyEpisodeLimit: 20,
+            canChatLibrary: false,
+            canUseGraph: true,
+            canIntegrate: true,
+            canUseCustomPrompts: false,
+            canChatEpisode: false,
+            canUseStudio: true,
+        }
     },
     pro: {
         name: 'Pro',
@@ -35,7 +53,16 @@ export const PLANS = {
             productId: 'prod_TmNW2KWFOI84Ec',
             amount: 290,
         },
-        marketingFeatures: ['200 Episodes/mo', 'Priority AI Processing', 'Integration Sync (Notion/Claude)']
+        marketingFeatures: ['200 Episodes/mo', 'Priority AI Processing', 'Integration Sync (Notion/Claude)'],
+        features: {
+            monthlyEpisodeLimit: 200, // Effectively unlimited for normal use
+            canChatLibrary: true,
+            canUseGraph: true,
+            canIntegrate: true,
+            canUseCustomPrompts: true,
+            canChatEpisode: true,
+            canUseStudio: true,
+        }
     }
 } as const;
 

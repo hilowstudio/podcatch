@@ -12,6 +12,8 @@ import {
     LogseqCard
 } from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { GatedFeature } from '@/components/gated-feature';
 
 export const metadata = {
     title: 'Integrations - Podcatch',
@@ -22,23 +24,36 @@ export default async function IntegrationsPage() {
     const session = await auth();
     if (!session?.user?.id) redirect('/');
 
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: {
-            webhookUrl: true,
-            readwiseApiKey: true,
-            notionAccessToken: true,
-            notionPageId: true,
-            googleDriveRefreshToken: true,
-            tanaApiToken: true,
-            logseqGraphName: true,
-            openaiApiKey: true,
-            geminiApiKey: true,
-            claudeApiKey: true,
-            claudeProjectId: true,
-            autoSyncToClaude: true,
-        }
-    });
+    const [user, subscription] = await Promise.all([
+        prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                webhookUrl: true,
+                readwiseApiKey: true,
+                notionAccessToken: true,
+                notionPageId: true,
+                googleDriveRefreshToken: true,
+                tanaApiToken: true,
+                logseqGraphName: true,
+                openaiApiKey: true,
+                geminiApiKey: true,
+                claudeApiKey: true,
+                claudeProjectId: true,
+                autoSyncToClaude: true,
+            }
+        }),
+        getUserSubscriptionPlan()
+    ]);
+
+    if (!subscription.canUseIntegrations) {
+        return (
+            <GatedFeature
+                title="Integrations Locked"
+                description="Connect your knowledge base and AI models. Upgrade to Basic or Pro to unlock."
+                requiredTier="BASIC"
+            />
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">

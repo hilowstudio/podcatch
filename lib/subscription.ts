@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { PLANS } from '@/lib/stripe-config';
+import { PLANS, PlanType } from '@/lib/stripe-config';
 
 const DAY_IN_MS = 86_400_000;
 
@@ -116,47 +116,46 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
         user.stripePriceId === PLANS.pro.monthly.priceId ||
         user.stripePriceId === PLANS.pro.annual.priceId;
 
+    // Helper to map features
+    const mapFeatures = (planKey: PlanType) => {
+        const features = PLANS[planKey].features;
+        return {
+            canChatWithLibrary: features.canChatLibrary,
+            canUseKnowledgeGraph: features.canUseGraph,
+            canUseIntegrations: features.canIntegrate,
+            canUseBrandVoice: features.canIntegrate, // Brand voice tied to integrations/pro usually, config says 'canIntegrate'
+            canChatAboutEpisode: features.canChatEpisode,
+            canSendToClaude: features.canIntegrate, // Assuming Claude is part of integrations
+            canUseStudio: features.canUseStudio,
+            canUseCustomPrompts: features.canUseCustomPrompts,
+            maxEpisodesPerMonth: features.monthlyEpisodeLimit,
+        };
+    };
+
     if (isPro) {
         return {
-            name: 'Pro',
+            name: PLANS.pro.name,
             description: 'Unlimited AI Processing & Claude Sync',
             stripePriceId: user.stripePriceId || undefined,
             isPro: true,
-            canChatWithLibrary: true,
-            canUseKnowledgeGraph: true,
-            canUseIntegrations: true,
-            canUseBrandVoice: true,
-            canChatAboutEpisode: true,
-            canSendToClaude: true,
-            canUseStudio: true,
-            canUseCustomPrompts: true,
-            maxEpisodesPerMonth: 200,
+            ...mapFeatures('pro')
         };
     }
 
     if (isBasic) {
         return {
-            name: 'Basic',
+            name: PLANS.basic.name,
             description: 'For the avid podcast learner.',
             stripePriceId: user.stripePriceId || undefined,
             isPro: false,
-            // Basic Blocks: Library Chat, Episode Chat, Custom Prompts
-            // Implies it HAS: Graph, Integrations, Brand Voice, Studio
-            canChatWithLibrary: false,
-            canUseKnowledgeGraph: true,
-            canUseIntegrations: true,
-            canUseBrandVoice: true,
-            canChatAboutEpisode: false,
-            canSendToClaude: true,
-            canUseStudio: true,
-            canUseCustomPrompts: false,
-            maxEpisodesPerMonth: 20,
+            ...mapFeatures('basic')
         };
     }
 
     // Default to Free
     return {
         ...freePlan,
+        ...mapFeatures('free'),
         stripePriceId: user.stripePriceId || undefined,
     };
 }

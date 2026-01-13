@@ -1,6 +1,10 @@
 import { KnowledgeGraph } from '@/components/knowledge-graph';
 import { getGraphData } from '@/actions/graph-actions';
 import { Metadata } from 'next';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { GatedFeature } from '@/components/gated-feature';
 
 export const metadata: Metadata = {
     title: 'Knowledge Graph - Podcatch',
@@ -8,7 +12,23 @@ export const metadata: Metadata = {
 };
 
 export default async function GraphPage() {
-    const data = await getGraphData();
+    const session = await auth();
+    if (!session?.user) redirect('/auth/signin');
+
+    const [subscription, data] = await Promise.all([
+        getUserSubscriptionPlan(),
+        getGraphData()
+    ]);
+
+    if (!subscription.canUseKnowledgeGraph) {
+        return (
+            <GatedFeature
+                title="Knowledge Graph Locked"
+                description="visualizing your entire library's connections is a powerful tool. Upgrade to Basic or Pro to unlock."
+                requiredTier="BASIC"
+            />
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-black relative">
