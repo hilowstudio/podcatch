@@ -12,6 +12,9 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  // Use webpack for build (next-pwa requires webpack, not turbopack)
+  // This silences the Turbopack warning while allowing next-pwa to work
+  turbopack: {},
   images: {
     remotePatterns: [
       {
