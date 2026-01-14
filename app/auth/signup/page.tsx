@@ -145,7 +145,16 @@ export default function SignUpPage() {
             {/* Right Column: Visual */}
             <div className="hidden md:flex relative min-h-screen bg-indigo-900 overflow-hidden items-center justify-center p-12">
                 {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-800/20 via-transparent to-blue-900/40 animate-gradient-shift" />
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-800/20 via-transparent to-blue-900/40 animate-gradient-shift opacity-50 z-10" />
+
+                <Image
+                    src="/woman4.png"
+                    alt="Podcast Listener"
+                    fill
+                    className={`object-cover object-right-top transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                        }`}
+                    priority
+                />
 
                 <div className="relative z-10 max-w-lg">
                     <h2 className="text-3xl font-bold text-white mb-8">Everything you need to master your audio library.</h2>
