@@ -99,29 +99,35 @@ export const processEpisode = inngest.createFunction(
                 return 'FREE'; // Default fallback
             };
 
-            // Iterate through subscriptions to find a funder
+            // Batch Funding Check Strategy (Optimized to avoid N+1 queries)
+            // 1. Get all subscriber IDs
+            const subscriberIds = ep.feed.subscriptions.map(s => s.user.id);
+
+            // 2. Fetch usage counts for all in one query
+            const usageCounts = await prisma.usageLog.groupBy({
+                by: ['userId'],
+                where: {
+                    userId: { in: subscriberIds },
+                    action: 'PROCESS_EPISODE',
+                    createdAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
+                },
+                _count: { _all: true }
+            });
+
+            const usageMap = new Map<string, number>();
+            usageCounts.forEach(u => usageMap.set(u.userId, u._count._all));
+
+            // 3. Find the first eligible funder
             for (const sub of ep.feed.subscriptions) {
                 const user = sub.user;
                 if (!user) continue;
 
                 const plan = getPlanType(user);
                 const limit = LIMITS[plan as keyof typeof LIMITS];
+                const currentUsage = usageMap.get(user.id) || 0;
 
-                // Check Usage for this month
-                const startOfMonth = new Date();
-                startOfMonth.setDate(1);
-                startOfMonth.setHours(0, 0, 0, 0);
-
-                const usageCount = await prisma.usageLog.count({
-                    where: {
-                        userId: user.id,
-                        action: 'PROCESS_EPISODE',
-                        createdAt: { gte: startOfMonth }
-                    }
-                });
-
-                if (usageCount < limit) {
-                    console.log(`✅ Funded by ${plan} User: ${user.id} (${usageCount}/${limit})`);
+                if (currentUsage < limit) {
+                    console.log(`✅ Funded by ${plan} User: ${user.id} (${currentUsage}/${limit})`);
 
                     // Log Usage (Consumes quota)
                     await prisma.usageLog.create({
@@ -138,8 +144,6 @@ export const processEpisode = inngest.createFunction(
                     });
 
                     return { ...ep, feed: { ...ep.feed, user: user } };
-                } else {
-                    console.log(`❌ User ${user.id.slice(0, 8)} (${plan}) exceeded limit (${usageCount}/${limit})`);
                 }
             }
 
