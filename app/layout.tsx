@@ -10,6 +10,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { NetworkStatus } from "@/components/network-status";
 import { auth } from "@/auth";
+import { SerwistProvider } from "@/components/serwist-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -100,17 +101,19 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <AudioProvider>
-          <NetworkStatus />
-          <OnboardingGuard shouldOnboard={needsOnboarding} />
-          <SiteHeader />
-          <div className="flex-1 mb-20 pt-12"> {/* Add margin for sticky player and padded top for header spacing */}
-            {children}
-          </div>
-          <StickyPlayer />
-          <BottomNav />
-          <InstallPrompt />
-        </AudioProvider>
+        <SerwistProvider>
+          <AudioProvider>
+            <NetworkStatus />
+            <OnboardingGuard shouldOnboard={needsOnboarding} />
+            <SiteHeader />
+            <div className="flex-1 mb-20 pt-12"> {/* Add margin for sticky player and padded top for header spacing */}
+              {children}
+            </div>
+            <StickyPlayer />
+            <BottomNav />
+            <InstallPrompt />
+          </AudioProvider>
+        </SerwistProvider>
       </body>
     </html>
   );
