@@ -81,7 +81,6 @@ async function registerBackgroundSync(): Promise<void> {
     if ('serviceWorker' in navigator && 'sync' in ServiceWorkerRegistration.prototype) {
         try {
             const registration = await navigator.serviceWorker.ready;
-            // @ts-expect-error - sync is not in TypeScript's ServiceWorkerRegistration
             await registration.sync.register('sync-queue');
         } catch (error) {
             console.warn('Background sync registration failed:', error);
