@@ -26,13 +26,14 @@ export function IntegrationsCarousel() {
                     Works with your favorite tools
                 </h2>
             </div>
-            <div className="relative flex overflow-hidden">
+            {/* Group container - hovering anywhere pauses both tracks */}
+            <div className="group relative flex overflow-hidden">
                 {/* Gradient overlays for fade effect */}
                 <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-muted/30 to-transparent z-10 pointer-events-none" />
                 <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-muted/30 to-transparent z-10 pointer-events-none" />
 
                 {/* Scrolling track - duplicated for seamless loop */}
-                <div className="flex animate-marquee gap-12 py-4">
+                <div className="flex animate-marquee group-hover:[animation-play-state:paused] gap-12 py-4">
                     {integrations.map((integration) => (
                         <div
                             key={integration.name}
@@ -49,7 +50,7 @@ export function IntegrationsCarousel() {
                         </div>
                     ))}
                 </div>
-                <div className="flex animate-marquee gap-12 py-4" aria-hidden="true">
+                <div className="flex animate-marquee group-hover:[animation-play-state:paused] gap-12 py-4" aria-hidden="true">
                     {integrations.map((integration) => (
                         <div
                             key={`dup-${integration.name}`}
