@@ -24,10 +24,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         authorized: async ({ auth, request: { nextUrl } }) => {
-            // Allow public access to root and share pages
-            if (nextUrl.pathname === '/' || nextUrl.pathname.startsWith('/share')) {
+            const pathname = nextUrl.pathname;
+
+            // Allow static assets (images, fonts, etc.)
+            if (pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$/i)) {
                 return true;
             }
+
+            // Allow public pages
+            if (
+                pathname === '/' ||
+                pathname.startsWith('/share') ||
+                pathname.startsWith('/auth') ||
+                pathname.startsWith('/pricing') ||
+                pathname.startsWith('/terms') ||
+                pathname.startsWith('/privacy')
+            ) {
+                return true;
+            }
+
             // Return true if user is authenticated
             return !!auth;
         },
