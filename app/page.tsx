@@ -33,9 +33,9 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 min-w-[200px] pt-4">
-            <Link href="/auth/signin">
+            <Link href="/auth/signup">
               <Button size="lg" className="h-12 px-8 text-lg shadow-lg hover:shadow-primary/20 transition-all">
-                Start Building for Free
+                Get Started for Free
               </Button>
             </Link>
             <p className="text-xs text-muted-foreground mt-2 sm:hidden">No credit card required.</p>
@@ -225,7 +225,7 @@ export default async function Home() {
 
             <div className="mt-16 text-center">
               <h3 className="text-2xl font-bold mb-4">Ready to upgrade your listening?</h3>
-              <Link href="/auth/signin">
+              <Link href="/auth/signup">
                 <Button size="lg">Get Started Now</Button>
               </Link>
             </div>

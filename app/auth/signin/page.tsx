@@ -132,6 +132,13 @@ export default function SignInPage() {
                         </div>
                     </form>
 
+                    <div className="pt-6">
+                        <p className="text-sm text-zinc-500 mb-2">Don't have an account?</p>
+                        <Link href="/auth/signup" className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 hover:underline">
+                            Create an account
+                        </Link>
+                    </div>
+
                     <p className="pt-4 text-xs text-center text-zinc-400">
                         By signing in, you agree to our <Link href="/terms" className="underline hover:text-zinc-500">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-zinc-500">Privacy Policy</Link>.
                     </p>

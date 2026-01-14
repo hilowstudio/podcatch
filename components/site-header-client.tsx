@@ -35,9 +35,12 @@ export function SiteHeaderClient({ user, subscriptionPlan, usageCount = 0 }: Sit
                             <Link href="/pricing" className="text-sm font-medium transition-colors hover:text-primary hidden sm:block">
                                 Pricing
                             </Link>
-                            <Link href="/auth/signin">
+                            <Link href="/auth/signin" className="text-sm font-medium transition-colors hover:text-primary">
+                                Log in
+                            </Link>
+                            <Link href="/auth/signup">
                                 <Button size="sm" variant="default">
-                                    Log in
+                                    Sign Up
                                 </Button>
                             </Link>
                         </>
