@@ -143,33 +143,33 @@ export default function SignUpPage() {
             </div>
 
             {/* Right Column: Visual */}
-            <div className="hidden md:flex relative min-h-screen bg-indigo-900 overflow-hidden items-center justify-center p-12">
-                {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-800/20 via-transparent to-blue-900/40 animate-gradient-shift opacity-50 z-10" />
-
+            <div className="hidden md:flex relative min-h-screen bg-zinc-900 overflow-hidden">
+                {/* Background Image */}
                 <img
-                    src="/woman13.png"
+                    src="/woman4.png"
                     alt="Podcast Listener"
                     className={`absolute inset-0 w-full h-full object-cover object-right-top transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                         }`}
                 />
 
-                <div className="relative z-10 max-w-lg">
-                    <h2 className="text-3xl font-bold text-white mb-8">Everything you need to master your audio library.</h2>
-                    <ul className="space-y-6">
-                        {features.map((feature, i) => (
-                            <li key={i} className={`flex items-center gap-4 text-lg text-white/90 transition-all duration-500 delay-[${i * 100}ms] ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
-                                <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                                    <CheckCircle2 className="h-6 w-6 text-green-400" />
-                                </div>
-                                {feature}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                {/* Dark gradient overlay for contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
 
-                {/* Layered gradients for depth */}
-                <div className="absolute inset-0 bg-gradient-to-t from-indigo-950 via-indigo-900/50 to-transparent" />
+                {/* Content positioned at bottom-left with glassmorphism */}
+                <div className={`absolute bottom-12 left-8 right-8 z-10 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl max-w-md">
+                        <h2 className="text-2xl font-bold text-white mb-6">Everything you need to master your audio library.</h2>
+                        <ul className="space-y-4">
+                            {features.map((feature, i) => (
+                                <li key={i} className="flex items-center gap-3 text-white/90">
+                                    <CheckCircle2 className="h-5 w-5 text-green-400 shrink-0" />
+                                    <span>{feature}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     );
