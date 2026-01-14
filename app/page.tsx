@@ -21,15 +21,6 @@ export default async function Home() {
         {/* HERO SECTION */}
         <section className="flex-1 w-full flex flex-col items-center justify-center py-20 md:py-32 px-4 text-center space-y-8 bg-gradient-to-b from-background via-muted/20 to-background border-b">
           <div className="space-y-6 max-w-4xl mx-auto">
-            <div className="relative h-64 w-64 md:h-80 md:w-80 mx-auto mb-8">
-              <Image
-                src="/podcatch.png"
-                alt="Podcatch Logo"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
             <Badge variant="secondary" className="mb-4">
               Now with Claude & Notion Integration
             </Badge>
@@ -41,6 +32,15 @@ export default async function Home() {
               Don't just listen. Capture, search, and chat with your audio library.
               Turn passive hours into actionable knowledge in seconds.
             </p>
+          </div>
+          <div className="relative h-64 w-64 md:h-80 md:w-80 mx-auto mb-8">
+            <Image
+              src="/podcatch.png"
+              alt="Podcatch Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <div className="flex flex-col sm:flex-row gap-4 min-w-[200px] pt-4">
             <Link href="/auth/signup">
