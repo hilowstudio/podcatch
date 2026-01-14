@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function SearchPage() {
     return (
-        <div className="container max-w-4xl mx-auto py-8">
+        <div className="container max-w-4xl mx-auto py-8 px-4">
             <div className="mb-8 text-center">
                 <h1 className="text-3xl font-bold tracking-tight mb-2">Deep Discovery</h1>
                 <p className="text-muted-foreground">

@@ -29,7 +29,7 @@ export default async function ProfilePage() {
     }
 
     return (
-        <div className="container max-w-4xl py-10">
+        <div className="container max-w-4xl mx-auto py-10 px-4">
             <h1 className="text-3xl font-bold tracking-tight mb-8">Profile</h1>
 
             <div className="grid gap-10">

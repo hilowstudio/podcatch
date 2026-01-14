@@ -22,7 +22,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { UpgradeTrigger } from '@/components/upgrade-trigger';
 
 type PageProps = {
@@ -84,14 +84,14 @@ export default async function EpisodePage({ params }: PageProps) {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-4 py-4 lg:py-8">
                 <div className="grid gap-8 lg:grid-cols-3">
                     {/* Left Column: Player & Metadata */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-8 space-y-6">
                             {/* Podcast Art */}
                             {episode.feed.image && (
-                                <div className="relative aspect-square w-full overflow-hidden rounded-lg shadow-xl">
+                                <div className="relative aspect-square w-48 sm:w-64 lg:w-full mx-auto lg:mx-0 overflow-hidden rounded-lg shadow-xl">
                                     <Image src={episode.feed.image} alt={episode.title} fill className="object-cover" />
                                 </div>
                             )}
@@ -527,8 +527,8 @@ ${episode.insight?.transcript}
                                                             <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                                                             <h3 className="font-semibold">Custom Prompts are a Pro Feature</h3>
                                                             <p className="text-sm text-muted-foreground mb-4">Upgrade to create and run custom AI prompts on this episode.</p>
-                                                            <Link href="/pricing">
-                                                                <Button variant="outline">Upgrade Plan</Button>
+                                                            <Link href="/pricing" className={buttonVariants({ variant: 'outline' })}>
+                                                                Upgrade Plan
                                                             </Link>
                                                         </div>
                                                     </section>
