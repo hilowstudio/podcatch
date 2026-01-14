@@ -95,6 +95,13 @@ export async function POST(req: Request) {
 
         const isFree = priceId === PLANS.free.priceId;
 
+        if (isFree) {
+            // For free tier, we don't need to send them to Stripe.
+            // We can just redirect them to the dashboard (or home).
+            // Optionally update user state here if needed, but "free" is usually the default.
+            return NextResponse.json({ url: process.env.NEXTAUTH_URL || '/' });
+        }
+
         const stripeSession = await stripe.checkout.sessions.create({
             success_url: settingsUrl,
             cancel_url: settingsUrl,

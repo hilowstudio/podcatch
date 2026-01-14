@@ -48,7 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const pathname = nextUrl.pathname;
 
             // Allow static assets (images, fonts, etc.)
-            if (pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$/i)) {
+            if (pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|js|css|json|webmanifest)$/i)) {
                 return true;
             }
 
