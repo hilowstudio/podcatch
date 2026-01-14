@@ -6,6 +6,7 @@ import { FeedListSkeleton } from '@/components/feed-list-skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteFooter } from '@/components/site-footer';
 import { Check, Search, MessageSquare, Zap, PlayCircle, Star } from 'lucide-react';
@@ -20,6 +21,15 @@ export default async function Home() {
         {/* HERO SECTION */}
         <section className="flex-1 w-full flex flex-col items-center justify-center py-20 md:py-32 px-4 text-center space-y-8 bg-gradient-to-b from-background via-muted/20 to-background border-b">
           <div className="space-y-6 max-w-4xl mx-auto">
+            <div className="relative h-64 w-64 md:h-80 md:w-80 mx-auto mb-8">
+              <Image
+                src="/podcatch.png"
+                alt="Podcatch Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
             <Badge variant="secondary" className="mb-4">
               Now with Claude & Notion Integration
             </Badge>
