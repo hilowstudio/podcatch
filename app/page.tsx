@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteFooter } from '@/components/site-footer';
 import { Check, Search, MessageSquare, Zap, PlayCircle, Star } from 'lucide-react';
+import { IntegrationsCarousel } from '@/components/landing/integrations-carousel';
 import Link from 'next/link';
 
 export default async function Home() {
@@ -142,6 +143,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* INTEGRATIONS CAROUSEL */}
+        <IntegrationsCarousel />
 
         {/* SOCIAL PROOF */}
         <section className="py-24 bg-muted/50 border-b">

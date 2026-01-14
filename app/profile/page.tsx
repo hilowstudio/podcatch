@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { ConnectedAccounts } from '@/components/profile/connected-accounts';
 import { NotificationSettings } from '@/components/profile/notification-settings';
+import { IntegrationsSettings } from '@/components/profile/integrations-settings';
 
 export const metadata = {
     title: 'Profile',
@@ -54,6 +55,13 @@ export default async function ProfilePage() {
                         Get notified when your episodes finish processing.
                     </p>
                     <NotificationSettings />
+                </section>
+
+                <section>
+                    <IntegrationsSettings
+                        slackWebhookUrl={user.slackWebhookUrl}
+                        obsidianVaultName={user.obsidianVaultName}
+                    />
                 </section>
             </div>
         </div>

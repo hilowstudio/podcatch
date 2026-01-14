@@ -45,6 +45,8 @@ model User {
   googleDriveRefreshToken String? // Google Drive OAuth
   tanaApiToken            String? // Tana Input API
   logseqGraphName         String? // Logseq Graph Name for deep links
+  slackWebhookUrl         String? // Slack Incoming Webhook
+  obsidianVaultName       String? // Obsidian Vault Name
 
   // Stripe Pro Subscription
   stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
