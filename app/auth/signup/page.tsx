@@ -147,13 +147,11 @@ export default function SignUpPage() {
                 {/* Animated gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-800/20 via-transparent to-blue-900/40 animate-gradient-shift opacity-50 z-10" />
 
-                <Image
+                <img
                     src="/woman4.png"
                     alt="Podcast Listener"
-                    fill
-                    className={`object-cover object-right-top transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                    className={`absolute inset-0 w-full h-full object-cover object-right-top transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                         }`}
-                    priority
                 />
 
                 <div className="relative z-10 max-w-lg">
