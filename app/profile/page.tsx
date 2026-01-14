@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { ConnectedAccounts } from '@/components/profile/connected-accounts';
+import { NotificationSettings } from '@/components/profile/notification-settings';
 
 export const metadata = {
     title: 'Profile',
@@ -45,6 +46,14 @@ export default async function ProfilePage() {
                     <ConnectedAccounts
                         accounts={user.accounts.map(acc => ({ provider: acc.provider }))}
                     />
+                </section>
+
+                <section>
+                    <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
+                    <p className="text-muted-foreground mb-6">
+                        Get notified when your episodes finish processing.
+                    </p>
+                    <NotificationSettings />
                 </section>
             </div>
         </div>

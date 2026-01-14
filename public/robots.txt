@@ -1,0 +1,25 @@
+# Podcatch robots.txt
+
+User-agent: *
+Allow: /
+Allow: /share/
+Allow: /pricing
+Allow: /terms
+Allow: /privacy
+
+# Disallow private/authenticated areas
+Disallow: /api/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /collections/
+Disallow: /episodes/
+Disallow: /feeds/
+Disallow: /chat/
+Disallow: /graph/
+Disallow: /integrations/
+Disallow: /brand-voice/
+Disallow: /search/
+
+# Sitemap
+Sitemap: https://www.podcatch.app/sitemap.xml

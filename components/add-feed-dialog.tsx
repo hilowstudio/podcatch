@@ -131,9 +131,12 @@ export function AddFeedDialog() {
                     <TabsContent value="search" className="space-y-4 pt-4">
                         <form onSubmit={handleSearch} className="flex gap-2">
                             <Input
+                                type="search"
+                                inputMode="search"
                                 placeholder="Search by name (e.g. Huberman)"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                aria-label="Search for podcasts"
                             />
                             <Button type="submit" disabled={isSearching || !searchTerm}>
                                 {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
@@ -186,9 +189,12 @@ export function AddFeedDialog() {
                                     id="url"
                                     name="url"
                                     type="url"
+                                    inputMode="url"
                                     placeholder="https://example.com/feed.xml"
                                     required
                                     className="w-full"
+                                    autoComplete="url"
+                                    aria-describedby="url-hint"
                                 />
                             </div>
                             <Button type="submit" disabled={isAdding} className="w-full">

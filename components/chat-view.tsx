@@ -207,12 +207,16 @@ function ChatContent() {
                     <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
                         <form onSubmit={handleFormSubmit} className="flex gap-2">
                             <Input
+                                type="text"
+                                inputMode="text"
                                 value={input}
                                 onChange={handleInputChange}
                                 placeholder="Ask about your podcasts..."
                                 className="flex-1"
+                                aria-label="Chat message"
+                                autoComplete="off"
                             />
-                            <Button type="submit" disabled={isLoading || !input.trim()}>
+                            <Button type="submit" disabled={isLoading || !input.trim()} aria-label="Send message">
                                 <Send className="h-4 w-4" />
                             </Button>
                         </form>

@@ -53,10 +53,13 @@ export function LibrarySearch() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
+                        type="search"
+                        inputMode="search"
                         placeholder="Ask your library... (e.g., 'What did they say about AI safety?')"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         className="pl-9 h-12"
+                        aria-label="Search your podcast library"
                     />
                 </div>
                 <Button type="submit" size="lg" disabled={isLoading} className="h-12 w-full sm:w-auto">

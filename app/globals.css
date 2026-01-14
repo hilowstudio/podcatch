@@ -121,5 +121,216 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Safe area padding for notches/gesture bars */
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
   }
 }
+
+/* ============================================
+   PWA 2.0 DESIGN SYSTEM
+   ============================================ */
+
+/* Fluid Typography Scale */
+:root {
+  /* Fluid font sizes using clamp() */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+  --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
+  --text-5xl: clamp(3rem, 2rem + 5vw, 5rem);
+
+  /* Fluid spacing scale */
+  --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+  --space-md: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  --space-xl: clamp(2rem, 1.5rem + 2.5vw, 4rem);
+  --space-2xl: clamp(3rem, 2rem + 5vw, 6rem);
+
+  /* Touch target minimum (44px) */
+  --touch-target-min: 2.75rem;
+
+  /* Container query breakpoints */
+  --container-sm: 20rem;
+  --container-md: 28rem;
+  --container-lg: 40rem;
+  --container-xl: 56rem;
+
+  /* Safe area fallbacks */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* ============================================
+   CONTAINER QUERY CONTEXTS
+   ============================================ */
+
+/* Define container contexts for components */
+.container-query {
+  container-type: inline-size;
+}
+
+.container-query-size {
+  container-type: size;
+}
+
+/* ============================================
+   FLUID TYPOGRAPHY UTILITIES
+   ============================================ */
+
+.text-fluid-xs { font-size: var(--text-xs); }
+.text-fluid-sm { font-size: var(--text-sm); }
+.text-fluid-base { font-size: var(--text-base); }
+.text-fluid-lg { font-size: var(--text-lg); }
+.text-fluid-xl { font-size: var(--text-xl); }
+.text-fluid-2xl { font-size: var(--text-2xl); }
+.text-fluid-3xl { font-size: var(--text-3xl); }
+.text-fluid-4xl { font-size: var(--text-4xl); }
+.text-fluid-5xl { font-size: var(--text-5xl); }
+
+/* ============================================
+   TOUCH TARGET UTILITIES
+   ============================================ */
+
+.touch-target {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+}
+
+.touch-target-lg {
+  min-height: 3rem;
+  min-width: 3rem;
+}
+
+/* ============================================
+   SAFE AREA UTILITIES
+   ============================================ */
+
+.safe-top { padding-top: var(--safe-top); }
+.safe-right { padding-right: var(--safe-right); }
+.safe-bottom { padding-bottom: var(--safe-bottom); }
+.safe-left { padding-left: var(--safe-left); }
+.safe-x { padding-left: var(--safe-left); padding-right: var(--safe-right); }
+.safe-y { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+.safe-all { padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
+
+/* ============================================
+   MOTION PREFERENCES
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Motion-safe animations */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-safe-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .motion-safe-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   THUMB ZONE LAYOUT
+   ============================================ */
+
+/* Bottom navigation container */
+.thumb-zone-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding-bottom: var(--safe-bottom);
+  z-index: 50;
+}
+
+/* Content area that accounts for bottom nav */
+.main-content-with-bottom-nav {
+  padding-bottom: calc(4rem + var(--safe-bottom));
+}
+
+/* ============================================
+   CONTAINER QUERY CARD STYLES
+   ============================================ */
+
+/* Card that adapts to container size */
+.adaptive-card {
+  container-type: inline-size;
+}
+
+@container (min-width: 20rem) {
+  .adaptive-card .card-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-md);
+  }
+}
+
+@container (min-width: 28rem) {
+  .adaptive-card .card-content {
+    grid-template-columns: auto 1fr auto;
+  }
+}
+
+/* ============================================
+   HIGH CONTRAST / ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  :root {
+    --border: oklch(0.5 0 0);
+    --muted-foreground: oklch(0.3 0 0);
+  }
+  
+  .dark {
+    --border: oklch(0.7 0 0);
+    --muted-foreground: oklch(0.8 0 0);
+  }
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   LOGICAL PROPERTIES FOR RTL SUPPORT
+   ============================================ */
+
+.space-inline-start { margin-inline-start: var(--space-md); }
+.space-inline-end { margin-inline-end: var(--space-md); }
+.space-block-start { margin-block-start: var(--space-md); }
+.space-block-end { margin-block-end: var(--space-md); }
+
+.padding-inline { padding-inline: var(--space-md); }
+.padding-block { padding-block: var(--space-md); }

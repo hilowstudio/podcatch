@@ -113,10 +113,13 @@ export default function SignUpPage() {
                         <div className="flex gap-2">
                             <Input
                                 type="email"
+                                inputMode="email"
                                 name="email"
                                 placeholder="name@example.com"
                                 className="h-10 text-sm bg-zinc-50 border-zinc-200 focus:ring-2 focus:ring-indigo-500/20 transition-shadow"
                                 required
+                                autoComplete="email"
+                                aria-label="Email address"
                             />
                             <Button
                                 type="submit"
