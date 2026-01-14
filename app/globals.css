@@ -8,6 +8,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --animate-fade-in-up: fade-in-up 0.7s ease-out forwards;
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  --animate-zoom-out-enter: zoom-out-enter 1s ease-out forwards;
+
+  @keyframes zoom-out-enter {
+    from {
+      opacity: 0;
+      transform: scale(1.05);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -119,6 +148,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     /* Safe area padding for notches/gesture bars */
@@ -187,15 +217,41 @@
    FLUID TYPOGRAPHY UTILITIES
    ============================================ */
 
-.text-fluid-xs { font-size: var(--text-xs); }
-.text-fluid-sm { font-size: var(--text-sm); }
-.text-fluid-base { font-size: var(--text-base); }
-.text-fluid-lg { font-size: var(--text-lg); }
-.text-fluid-xl { font-size: var(--text-xl); }
-.text-fluid-2xl { font-size: var(--text-2xl); }
-.text-fluid-3xl { font-size: var(--text-3xl); }
-.text-fluid-4xl { font-size: var(--text-4xl); }
-.text-fluid-5xl { font-size: var(--text-5xl); }
+.text-fluid-xs {
+  font-size: var(--text-xs);
+}
+
+.text-fluid-sm {
+  font-size: var(--text-sm);
+}
+
+.text-fluid-base {
+  font-size: var(--text-base);
+}
+
+.text-fluid-lg {
+  font-size: var(--text-lg);
+}
+
+.text-fluid-xl {
+  font-size: var(--text-xl);
+}
+
+.text-fluid-2xl {
+  font-size: var(--text-2xl);
+}
+
+.text-fluid-3xl {
+  font-size: var(--text-3xl);
+}
+
+.text-fluid-4xl {
+  font-size: var(--text-4xl);
+}
+
+.text-fluid-5xl {
+  font-size: var(--text-5xl);
+}
 
 /* ============================================
    TOUCH TARGET UTILITIES
@@ -215,19 +271,42 @@
    SAFE AREA UTILITIES
    ============================================ */
 
-.safe-top { padding-top: var(--safe-top); }
-.safe-right { padding-right: var(--safe-right); }
-.safe-bottom { padding-bottom: var(--safe-bottom); }
-.safe-left { padding-left: var(--safe-left); }
-.safe-x { padding-left: var(--safe-left); padding-right: var(--safe-right); }
-.safe-y { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
-.safe-all { padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
+.safe-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-right {
+  padding-right: var(--safe-right);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-left {
+  padding-left: var(--safe-left);
+}
+
+.safe-x {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.safe-y {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-all {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
 
 /* ============================================
    MOTION PREFERENCES
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -243,20 +322,32 @@
   .motion-safe-fade-in {
     animation: fadeIn 0.3s ease-out;
   }
-  
+
   .motion-safe-slide-up {
     animation: slideUp 0.3s ease-out;
   }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(1rem); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================
@@ -310,7 +401,7 @@
     --border: oklch(0.5 0 0);
     --muted-foreground: oklch(0.3 0 0);
   }
-  
+
   .dark {
     --border: oklch(0.7 0 0);
     --muted-foreground: oklch(0.8 0 0);
@@ -327,10 +418,26 @@
    LOGICAL PROPERTIES FOR RTL SUPPORT
    ============================================ */
 
-.space-inline-start { margin-inline-start: var(--space-md); }
-.space-inline-end { margin-inline-end: var(--space-md); }
-.space-block-start { margin-block-start: var(--space-md); }
-.space-block-end { margin-block-end: var(--space-md); }
+.space-inline-start {
+  margin-inline-start: var(--space-md);
+}
 
-.padding-inline { padding-inline: var(--space-md); }
-.padding-block { padding-block: var(--space-md); }
+.space-inline-end {
+  margin-inline-end: var(--space-md);
+}
+
+.space-block-start {
+  margin-block-start: var(--space-md);
+}
+
+.space-block-end {
+  margin-block-end: var(--space-md);
+}
+
+.padding-inline {
+  padding-inline: var(--space-md);
+}
+
+.padding-block {
+  padding-block: var(--space-md);
+}

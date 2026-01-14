@@ -16,10 +16,8 @@ const testimonials = [
 
 export default function SignInPage() {
     const [activeTestimonial, setActiveTestimonial] = useState(0);
-    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
         const interval = setInterval(() => {
             setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
         }, 5000);
@@ -30,10 +28,7 @@ export default function SignInPage() {
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
             {/* Left Column: Branding & Sign In */}
             <div className="flex flex-col items-center justify-center px-8 md:px-16 lg:px-24 bg-white text-black text-center">
-                <div
-                    className={`mb-12 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}
-                >
+                <div className="mb-12 animate-fade-in-up">
                     <div className="relative h-48 w-48 mb-8 mx-auto transition-transform duration-300 hover:scale-105">
                         <Image
                             src="/podcatch.png"
@@ -52,8 +47,8 @@ export default function SignInPage() {
                 </div>
 
                 <div
-                    className={`max-w-sm w-full space-y-4 transition-all duration-700 ease-out delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}
+                    className="max-w-sm w-full space-y-4 animate-fade-in-up"
+                    style={{ animationDelay: '150ms' }}
                 >
                     {/* Primary Social Logins */}
                     <div className="space-y-3">
@@ -157,8 +152,7 @@ export default function SignInPage() {
                     src="/podcast.png"
                     alt="Podcast listening experience"
                     fill
-                    className={`object-cover object-top transition-all duration-1000 ${mounted ? 'opacity-60 scale-100' : 'opacity-0 scale-105'
-                        }`}
+                    className="object-cover object-top animate-zoom-out-enter"
                     priority
                 />
 
@@ -171,8 +165,8 @@ export default function SignInPage() {
                 <div className="absolute bottom-40 right-40 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float-delayed" />
 
                 <div
-                    className={`absolute bottom-12 left-8 right-8 z-10 text-white transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                        }`}
+                    className="absolute bottom-12 left-8 right-8 z-10 text-white animate-fade-in-up"
+                    style={{ animationDelay: '300ms' }}
                 >
                     {/* Rotating testimonials with glass card design */}
                     <div className="relative h-44">

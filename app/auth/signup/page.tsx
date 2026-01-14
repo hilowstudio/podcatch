@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, CheckCircle2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+
 
 const features = [
     "Transcribe unlimited podcasts",
@@ -16,20 +16,11 @@ const features = [
 ];
 
 export default function SignUpPage() {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     return (
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
             {/* Left Column: Branding & Sign Up */}
             <div className="flex flex-col items-center justify-center px-8 md:px-16 lg:px-24 bg-white text-black text-center">
-                <div
-                    className={`mb-12 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}
-                >
+                <div className="mb-12 animate-fade-in-up">
                     <div className="relative h-48 w-48 mb-6 mx-auto transition-transform duration-300 hover:scale-105">
                         <Image
                             src="/podcatch.png"
@@ -49,8 +40,8 @@ export default function SignUpPage() {
                 </div>
 
                 <div
-                    className={`max-w-sm w-full space-y-4 transition-all duration-700 ease-out delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}
+                    className="max-w-sm w-full space-y-4 animate-fade-in-up"
+                    style={{ animationDelay: '150ms' }}
                 >
                     {/* Primary Social Logins */}
                     <div className="space-y-3">
@@ -151,8 +142,7 @@ export default function SignUpPage() {
                 <img
                     src="/woman4.png"
                     alt="Podcast Listener"
-                    className={`absolute inset-0 w-full h-full object-cover object-right-top transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                        }`}
+                    className="absolute inset-0 w-full h-full object-cover object-right-top animate-zoom-out-enter"
                 />
 
                 {/* Dark gradient overlay for contrast */}
@@ -160,7 +150,10 @@ export default function SignUpPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
 
                 {/* Content positioned at bottom-left with glassmorphism */}
-                <div className={`absolute bottom-12 left-8 right-8 z-10 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                <div
+                    className="absolute bottom-12 left-8 right-8 z-10 animate-fade-in-up"
+                    style={{ animationDelay: '300ms' }}
+                >
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl max-w-md">
                         <h2 className="text-2xl font-bold text-white mb-6">Everything you need to master your audio library.</h2>
                         <ul className="space-y-4">
