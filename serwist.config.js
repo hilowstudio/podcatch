@@ -1,3 +1,4 @@
+// @ts-check
 import { serwist } from "@serwist/next/config";
 
 export default serwist({
