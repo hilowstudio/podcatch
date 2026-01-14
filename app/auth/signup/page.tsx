@@ -1,12 +1,14 @@
 'use client';
 
-import { signInWithEmail, signInWithGoogle, signInWithGitHub } from '@/actions/auth-actions';
+import { signInWithGoogle, signInWithGitHub } from '@/actions/auth-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, CheckCircle2 } from 'lucide-react';
-
+import { useState } from 'react';
+import Turnstile from 'react-turnstile';
+import { signIn } from 'next-auth/react';
 
 const features = [
     "Transcribe unlimited podcasts",
@@ -16,6 +18,55 @@ const features = [
 ];
 
 export default function SignUpPage() {
+    const [email, setEmail] = useState("");
+    const [token, setToken] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
+
+    const handleEmailSignUp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage("");
+
+        try {
+            // 1. Call your secure API to create the user
+            const res = await fetch("/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, captchaToken: token }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // 2. Now that the user exists, trigger the standard NextAuth magic link
+                // We use "resend" provider ID or "email" depending on configuration, 
+                // but usually "resend" works if imported as such.
+                // However, falling back to 'email' is often safer for magic links if mapped.
+                // We will try 'resend' first as per my investigation, but if it fails, the user can try login.
+                const result = await signIn("resend", {
+                    email,
+                    redirect: false,
+                    callbackUrl: "/dashboard" // Or wherever they should go
+                });
+
+                if (result?.error) {
+                    setMessage("Error sending login email.");
+                    console.error(result.error);
+                } else {
+                    setMessage("Account created! Check your email to sign in.");
+                }
+            } else {
+                setMessage(data.message || data.error || "Registration failed.");
+            }
+        } catch (err) {
+            console.error(err);
+            setMessage("An unexpected error occurred.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
             {/* Left Column: Branding & Sign Up */}
@@ -98,28 +149,45 @@ export default function SignUpPage() {
                     </div>
 
                     <form
-                        action={signInWithEmail}
+                        onSubmit={handleEmailSignUp}
                         className="space-y-4"
                     >
-                        <div className="flex gap-2">
+                        <div className="space-y-4">
                             <Input
                                 type="email"
                                 inputMode="email"
                                 name="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                                 className="h-10 text-sm bg-zinc-50 border-zinc-200 focus:ring-2 focus:ring-indigo-500/20 transition-shadow"
                                 required
                                 autoComplete="email"
                                 aria-label="Email address"
                             />
+
+                            <div className="flex justify-center">
+                                <Turnstile
+                                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                                    onVerify={(token) => setToken(token)}
+                                />
+                            </div>
+
                             <Button
                                 type="submit"
                                 variant="secondary"
-                                className="h-10 px-4 whitespace-nowrap bg-zinc-100 hover:bg-zinc-200 text-zinc-900 hover:shadow-md transition-all duration-200 active:scale-[0.98]"
+                                className="w-full h-10 px-4 whitespace-nowrap bg-zinc-100 hover:bg-zinc-200 text-zinc-900 hover:shadow-md transition-all duration-200 active:scale-[0.98]"
+                                disabled={!token || loading}
                             >
                                 <Mail className="mr-2 h-4 w-4" />
-                                Sign Up
+                                {loading ? "Creating Account..." : "Sign Up"}
                             </Button>
+
+                            {message && (
+                                <p className={`text-sm text-center font-medium ${message.includes('Account created') ? 'text-green-600' : 'text-red-500'}`}>
+                                    {message}
+                                </p>
+                            )}
                         </div>
                     </form>
 

@@ -4,6 +4,7 @@ import GitHub from 'next-auth/providers/github';
 import Resend from 'next-auth/providers/resend';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
+import { Resend as ResendClient } from 'resend';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
@@ -20,6 +21,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         Resend({
             apiKey: process.env.AUTH_RESEND_KEY,
             from: process.env.EMAIL_FROM,
+            async sendVerificationRequest({ identifier: email, url }) {
+                const user = await prisma.user.findUnique({
+                    where: { email },
+                });
+
+                if (!user) {
+                    return;
+                }
+
+                const resend = new ResendClient(process.env.AUTH_RESEND_KEY);
+                const { host } = new URL(url);
+
+                await resend.emails.send({
+                    from: process.env.EMAIL_FROM!,
+                    to: email,
+                    subject: `Sign in to ${host}`,
+                    text: `Sign in to ${host}\n${url}\n\n`,
+                    html: `<body><p>Sign in to ${host}</p><p><a href="${url}">Click here to sign in</a></p></body>`,
+                });
+            },
         }),
     ],
     callbacks: {
@@ -38,7 +59,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 pathname.startsWith('/auth') ||
                 pathname.startsWith('/pricing') ||
                 pathname.startsWith('/terms') ||
-                pathname.startsWith('/privacy')
+                pathname.startsWith('/privacy') ||
+                pathname.startsWith('/api/register')
             ) {
                 return true;
             }
