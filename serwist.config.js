@@ -7,10 +7,5 @@ export default serwist({
     additionalPrecacheEntries: [
         { url: "/offline", revision: "offline-v1" },
     ],
-    // Exclude Next.js error pages that may return 500 during build
-    exclude: [
-        /_global-error/,
-        /_error/,
-        /_not-found/,
-    ],
 });
+
