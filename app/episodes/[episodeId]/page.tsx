@@ -24,6 +24,7 @@ import { prisma } from '@/lib/prisma';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { UpgradeTrigger } from '@/components/upgrade-trigger';
+import { CollapsibleDescription } from '@/components/collapsible-description';
 
 type PageProps = {
     params: { episodeId: string };
@@ -166,7 +167,7 @@ export default async function EpisodePage({ params }: PageProps) {
                         <div>
                             <h1 className="text-4xl font-bold tracking-tight mb-4">{episode.title}</h1>
                             {episode.description && (
-                                <p className="text-muted-foreground text-lg leading-relaxed">{episode.description}</p>
+                                <CollapsibleDescription text={episode.description} />
                             )}
 
                             {/* Actions */}
