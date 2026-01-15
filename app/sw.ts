@@ -15,8 +15,16 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Filter out Next.js error pages that can return 500 during precaching
+const excludePatterns = [/_global-error/, /_error/, /_not-found/];
+
+const filteredManifest = self.__SW_MANIFEST?.filter((entry) => {
+    const url = typeof entry === "string" ? entry : entry.url;
+    return !excludePatterns.some((pattern) => pattern.test(url));
+});
+
 const serwist = new Serwist({
-    precacheEntries: self.__SW_MANIFEST,
+    precacheEntries: filteredManifest,
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
@@ -34,3 +42,4 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
