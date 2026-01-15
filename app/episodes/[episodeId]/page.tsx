@@ -12,7 +12,7 @@ import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors } from 'lucide-react';
-import { TranscriptViewer } from '@/components/transcript-viewer';
+import { OfflineTranscriptViewer } from '@/components/offline-transcript-viewer';
 import { ChapterList } from '@/components/chapter-list';
 import { ClipEditor } from '@/components/clip-editor';
 import { CustomPromptRunner } from '@/components/custom-prompt-runner';
@@ -463,7 +463,7 @@ ${episode.insight?.transcript}
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-0 sm:p-6">
-                                                <TranscriptViewer transcript={episode.insight.transcript} className="max-h-[800px] border rounded-md" />
+                                                <OfflineTranscriptViewer episodeId={episode.id} serverTranscript={episode.insight.transcript} className="max-h-[800px] border rounded-md" />
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
