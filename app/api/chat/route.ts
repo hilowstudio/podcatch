@@ -18,7 +18,25 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { messages, episodeId } = body;
+        const { messages: rawMessages, episodeId } = body;
+
+        // Convert from new AI SDK format (parts[]) to standard format (content string)
+        const messages = rawMessages.map((msg: any) => {
+            // If message already has content string, use it
+            if (typeof msg.content === 'string') {
+                return { role: msg.role, content: msg.content };
+            }
+            // If message has parts array, extract text from parts
+            if (msg.parts && Array.isArray(msg.parts)) {
+                const textContent = msg.parts
+                    .filter((p: any) => p.type === 'text')
+                    .map((p: any) => p.text)
+                    .join('');
+                return { role: msg.role, content: textContent };
+            }
+            // Fallback
+            return { role: msg.role, content: msg.text || '' };
+        });
 
         let episodes;
 
