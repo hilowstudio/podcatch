@@ -123,13 +123,16 @@ export async function POST(req: Request) {
             If the Episode ID is not clear, fallback to [MM:SS].`;
 
         console.log('[Chat API] Sending request to Gemini');
-        const result = await streamText({
+        console.log('[Chat API] Messages count:', messages.length);
+
+        const result = streamText({
             model: google('gemini-3-pro-preview'),
             messages,
             system: systemPrompt,
         });
 
-        return result.toTextStreamResponse();
+        console.log('[Chat API] Returning stream response');
+        return result.toUIMessageStreamResponse();
     } catch (error) {
         console.error('[Chat API Error]:', error);
         return new Response(JSON.stringify({ error: 'Failed to process chat request' }), {
