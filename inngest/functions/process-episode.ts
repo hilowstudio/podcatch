@@ -216,7 +216,7 @@ export const processEpisode = inngest.createFunction(
                 if (!deepgramApiKey) throw new Error('No Deepgram API key available');
 
                 const deepgram = createClient(deepgramApiKey);
-                const { result } = await deepgram.listen.prerecorded.transcribeUrl(
+                const { result, error: deepgramError } = await deepgram.listen.prerecorded.transcribeUrl(
                     { url: episode.audioUrl },
                     {
                         model: 'nova-2',
@@ -227,8 +227,20 @@ export const processEpisode = inngest.createFunction(
                     }
                 );
 
+                // Log Deepgram response for debugging
+                if (deepgramError) {
+                    console.error('❌ Deepgram API Error:', deepgramError);
+                    throw new Error(`Deepgram transcription failed: ${deepgramError.message || JSON.stringify(deepgramError)}`);
+                }
+
+                if (!result) {
+                    console.error('❌ Deepgram returned null result. Audio URL:', episode.audioUrl);
+                    throw new Error(`Deepgram returned no result. The audio file may be inaccessible or in an unsupported format. URL: ${episode.audioUrl}`);
+                }
+
                 if (!result?.results?.channels?.[0]?.alternatives?.[0]) {
-                    throw new Error('No result returned from Deepgram');
+                    console.error('❌ Deepgram result structure unexpected:', JSON.stringify(result, null, 2).substring(0, 1000));
+                    throw new Error(`Deepgram returned empty transcript. Audio may be silent, too short, or unsupported. URL: ${episode.audioUrl}`);
                 }
 
                 const alternative = result.results.channels[0].alternatives[0];
