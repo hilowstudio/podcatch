@@ -210,13 +210,17 @@ export const processEpisode = inngest.createFunction(
 
             // Priority 3: Generate New Transcript (Deepgram or Gemini)
             if (episode.feed.type === 'RSS') {
-                // ... Existing Deepgram Logic ...
                 console.log('🎧 using Deepgram for Audio Transcription...');
                 const deepgramApiKey = episode.feed.user?.deepgramApiKey || process.env.DEEPGRAM_API_KEY;
                 if (!deepgramApiKey) throw new Error('No Deepgram API key available');
 
                 const deepgram = createClient(deepgramApiKey);
-                const { result, error: deepgramError } = await deepgram.listen.prerecorded.transcribeUrl(
+                let result: any = null;
+                let deepgramError: any = null;
+
+                // Try URL transcription first (faster, works 90% of the time)
+                console.log('📡 Attempting URL transcription:', episode.audioUrl);
+                const urlResult = await deepgram.listen.prerecorded.transcribeUrl(
                     { url: episode.audioUrl },
                     {
                         model: 'nova-2',
@@ -226,6 +230,51 @@ export const processEpisode = inngest.createFunction(
                         diarize: true,
                     }
                 );
+
+                // Check if URL transcription failed with access error (403, etc.)
+                const isAccessError = urlResult.error && (
+                    JSON.stringify(urlResult.error).includes('403') ||
+                    JSON.stringify(urlResult.error).includes('REMOTE_CONTENT_ERROR') ||
+                    JSON.stringify(urlResult.error).includes('Forbidden')
+                );
+
+                if (isAccessError) {
+                    // Fallback: Fetch audio ourselves and upload buffer
+                    console.log('⚠️ URL transcription blocked (403). Falling back to buffer upload...');
+
+                    const audioResponse = await fetch(episode.audioUrl, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'audio/*,*/*;q=0.8',
+                        },
+                    });
+
+                    if (!audioResponse.ok) {
+                        throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}. URL: ${episode.audioUrl}`);
+                    }
+
+                    const audioBuffer = await audioResponse.arrayBuffer();
+                    const audioMimeType = audioResponse.headers.get('content-type') || 'audio/mpeg';
+                    console.log(`✅ Fetched audio: ${(audioBuffer.byteLength / (1024 * 1024)).toFixed(2)} MB, type: ${audioMimeType}`);
+
+                    const bufferResult = await deepgram.listen.prerecorded.transcribeFile(
+                        Buffer.from(audioBuffer),
+                        {
+                            model: 'nova-2',
+                            smart_format: true,
+                            punctuate: true,
+                            paragraphs: true,
+                            diarize: true,
+                            mimetype: audioMimeType,
+                        }
+                    );
+
+                    result = bufferResult.result;
+                    deepgramError = bufferResult.error;
+                } else {
+                    result = urlResult.result;
+                    deepgramError = urlResult.error;
+                }
 
                 // Log Deepgram response for debugging
                 if (deepgramError) {

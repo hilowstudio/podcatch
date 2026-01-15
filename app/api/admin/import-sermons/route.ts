@@ -1,0 +1,142 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { importMP3Batch } from '@/actions/import-actions';
+
+// Pastor Adam Vega sermon MP3 URLs
+const PASTOR_ADAM_VEGA_URLS = [
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f292/1669577438102/John+4.mp3/original/John+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f296/1669577438109/john+6.mp3/original/john+6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f29a/1669577438115/John+8.mp3/original/John+8.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2a4/1669577438134/John+13.mp3/original/John+13.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2a8/1669577438142/John+15.mp3/original/John+15.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2aa/1669577438146/john+16.mp3/original/john+16.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ac/1669577438149/John+17.mp3/original/John+17.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ae/1669577438152/John+18.mp3/original/John+18.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2b0/1669577438156/John+19.mp3/original/John+19.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2b2/1669577438160/John+20.mp3/original/John+20.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2b4/1669577438164/John+21.mp3/original/John+21.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2b6/1669577438167/john+22.mp3/original/john+22.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2b8/1669577438170/John+23.mp3/original/John+23.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ba/1669577438173/John+24.mp3/original/John+24.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2be/1669577438179/John+26.mp3/original/John+26.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2c0/1669577438183/John+27.mp3/original/John+27.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2c2/1669577438186/John+28.mp3/original/John+28.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2c6/1669577438193/John+30.mp3/original/John+30.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2c8/1669577438196/John+31.mp3/original/John+31.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ca/1669577438199/john+32.mp3/original/john+32.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2cc/1669577438204/John+33.mp3/original/John+33.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2d4/1669577438222/John+37.mp3/original/John+37.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2d6/1669577438226/John+38.mp3/original/John+38.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2d8/1669577438230/John+39.mp3/original/John+39.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2da/1672602286540/John+40.mp3/original/John+40.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2dc/1673214316075/John+41.mp3/original/John+41.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2e2/1675026429824/John+44.mp3/original/John+44.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2e4/1675629068220/John45.mp3/original/John45.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2e6/1676231446979/John+46.mp3/original/John+46.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2e8/1676864392993/John+47.mp3/original/John+47.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ec/1678044814801/john+49.mp3/original/john+49.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2ee/1678642690201/John+50.mp3/original/John+50.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2f0/1679269599941/John+51.mp3/original/John+51.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2f4/1680487173485/john+53.mp3/original/john+53.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2f6/1681068385037/John+54.mp3/original/John+54.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2fa/1682300253049/John+20+end.mp3/original/John+20+end.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64581d807a8ff9297623f2fe/1683493319547/John+end.mp3/original/John+end.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64625e1751f38a391cc94c5d/1684168245147/1+John+1_1-4.mp3/original/1+John+1_1-4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/646a631bef30617fa57d0837/1684693823225/1+John+1_5-10.mp3/original/1+John+1_5-10.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6490e0960178bf586a14342d/1687216313894/1+J.mp3/original/1+J.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64a1bfa8aa2d36045201ab67/1688321991890/1+John+3.mp3/original/1+John+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64abf3c10f3e895c59ec19b3/1688990690403/1J4.mp3/original/1J4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64bd6460b6c0e62a2d1ac499/1690133637279/IJ5.mp3/original/IJ5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64d159365c27e900c699946f/1691441493710/2+john.mp3/original/2+john.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64d9980110c0206d79660e83/1691981887855/3+John+pt+1.mp3/original/3+John+pt+1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64e282603b778c7609ed8fe7/1692566161242/3+John+pt+2.mp3/original/3+John+pt+2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64f4d180a68d1345d8ede4ad/1703019782510/Hosea+2.mp3/original/Hosea+2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/64fe00e6e59f0c0c03f0d7e5/1703019782514/Hosea+3.mp3/original/Hosea+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6510949f55e1d3647c36df3f/1703019782524/hosea+5.mp3/original/hosea+5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6519c7a4c462866a0a758601/1703019782528/Hosea+6.mp3/original/Hosea+6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/652418859cc5993bde20ea76/1703019782532/Hosea+7.mp3/original/Hosea+7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65357f4cd55fba7907551ad4/1703019782544/Hosea+9.mp3/original/Hosea+9.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/654830d9cddac077fa74304b/1703019782554/Hosea+11.mp3/original/Hosea+11.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65513700d01e595cb81a3d4b/1703019782561/Hosea+12.mp3/original/Hosea+12.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/655a6254cc12211ee9e3eb50/1703019782565/Hosea+13.mp3/original/Hosea+13.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6563b925d80eb032604e80b2/1703019782570/Hosea+14.mp3/original/Hosea+14.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/657f4a1e2b4fca7f6f1b5d54/1708717814935/Advent+3.mp3/original/Advent+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6588846e40266212f90ee364/1708717814945/Advent+4.mp3/original/Advent+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6591d31589a1dc45b7a285a4/1704055599841/Galatians+s1.mp3/original/Galatians+s1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65a4442685a20765cf457796/1705264197050/Galatians+s3.mp3/original/Galatians+s3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65ad83390cc034287bd36992/1705870162839/Galatians+s4.mp3/original/Galatians+s4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65bfeeac00ed40076c35e174/1707077324116/Galatians+s6.mp3/original/Galatians+s6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65c92940ca70ac27f920ee46/1707682145715/Galatians+s7.mp3/original/Galatians+s7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65d262c482f003586f9c02dc/1708286685344/Galatians+s8.mp3/original/Galatians+s8.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65db9c8341399150538d3a58/1708891294570/Galatians+s9.mp3/original/Galatians+s9.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65ee0dd188104a66786020e6/1710099953291/Galatians+s11.mp3/original/Galatians+s11.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/65f740ee6af51d3e11d0361e/1710702868775/Galatians+s12.mp3/original/Galatians+s12.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6609c37e0290e44546ff9b23/1714865568029/Daughters1.mp3/original/Daughters1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6612f68bd7db102994a5594c/1714865568036/Daughters+2.mp3/original/Daughters+2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/661c36ff2f2505447af45883/1714865568039/Daughters+3.mp3/original/Daughters+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/662586aee06d72657808d8c4/1714865568042/Daughters+4.mp3/original/Daughters+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/662eb12e24b8b23ac1fb6abe/1714865568045/Daughters+5.mp3/original/Daughters+5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6641283573b0754b03090837/1715546193157/Daughters+7.mp3/original/Daughters+7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/664a5be70415ec672974fae8/1730054095736/Obadiah+1.mp3/original/Obadiah+1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6653b7d474a1ce3d4ed890dc/1716762597707/SOA_1.mp3/original/SOA_1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6665f431eb41d45f4ebb6247/1717957763661/Psalm+122.mp3/original/Psalm+122.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66703b920414d612d26dc433/1718631380767/Psalm+123.mp3/original/Psalm+123.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/667876a085dba077ab4e2368/1719170735474/SOA+7.mp3/original/SOA+7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6681a3b1361e6110fcee30cc/1719772100552/SOA+6.mp3/original/SOA+6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/668aec9764bd166ea520b876/1720380586571/SOA+7.mp3/original/SOA+7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66afcb9de06ece12525e15e1/1722796984043/SOA+11.mp3/original/SOA+11.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66b901f0cfd84d34ef6af2a2/1723400707260/SOA+12.mp3/original/SOA+12.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66c25516730a10184f793af8/1724011824862/SOA+13.mp3/original/SOA+13.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66cb89c8d9331e79760feac7/1724615140541/SOA+13.mp3/original/SOA+13.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66d4ab385efd467f5fa18ab6/1725213523396/SOA+14.mp3/original/SOA+14.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66ddee171aced37e87d7ffbc/1725820466201/Hab+1.mp3/original/Hab+1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66e72e03f3b7f93a89f0d2e6/1726426657789/Hab2.mp3/original/Hab2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/66f98e03ec23625cb6b30acd/1727630871717/Hab+4.mp3/original/Hab+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6702e8582318356122cd9dcb/1728243833738/Hab+5.mp3/original/Hab+5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5e090955afc7590ba0892aec/1577650580407/Great+Commission.mp3/original/Great+Commission.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5e530b45cd15995a4eb10a53/1582500747465/Zephaniah.mp3/original/Zephaniah.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/61195fb557b99e26b93f4b39/1629052879999/Stand+Alone.mp3/original/Stand+Alone.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6147e8ee649ec94660fba56a/1632102677781/Stand+Alone.mp3/original/Stand+Alone.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/620040f7c443042350ecee8a/1644183825957/Stand+Alone.mp3/original/Stand+Alone.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/60c78897e9bfd55ff3fd57f0/1619378675258/WOL+3.mp3/original/WOL+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/60c78897e9bfd55ff3fd57fa/1622403309480/WOL+8.mp3/original/WOL+8.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/600ee5c87dafa96389ab7322/1602438783183/Ephesians+3.mp3/original/Ephesians+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/600ee5c87dafa96389ab7328/1604258368441/Ephesians+6.mp3/original/Ephesians+6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/600ee5c87dafa96389ab732e/1606085721422/Ephesians+9.mp3/original/Ephesians+9.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/600ee5c87dafa96389ab7334/1610915551543/Ephesians+6.mp3/original/Ephesians+6.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/606b66fb07e27c42c12dcf4d/1616965654456/RK2.mp3/original/RK2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/604e55bb118dc23a0501fbce/1615145688724/Ruth+5.mp3/original/Ruth+5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/611d81a079001a282c271fbf/1624215984835/D%2BE+1.mp3/original/D%2BE+1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/611d81a079001a282c271fc3/1625430885235/D%2BE+3.mp3/original/D%2BE+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/61a3dd4465f99c7761762a95/1636311927475/Lev+7.mp3/original/Lev+7.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/61d1fddcc928c1690350e680/1641151834874/LBB5.mp3/original/LBB5.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/6383bc275f679917d0b714b4/1669577824642/Advent+1.mp3/original/Advent+1.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/638ce4707fce1745780f5f01/1670178017168/Advent+2.mp3/original/Advent+2.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/639f7053cb9b84319f24f541/1671393394943/Advent+4.mp3/original/Advent+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5edd2a094191b966b728475f/1589738374133/Exodus+12.mp3/original/Exodus+12.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5f4c417bb40a3222693e68e8/1592757701883/Beatitudes+3.mp3/original/Beatitudes+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5f4c417bb40a3222693e68ea/1593362559285/Beatitudes+4.mp3/original/Beatitudes+4.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5f67a6b19c2b2577e3b2b710/1600028392394/Prodigal+God+3.mp3/original/Prodigal+God+3.mp3',
+    'https://static1.squarespace.com/static/5618768ee4b049990b701f39/t/5fe8e06588e2b4051df138f6/1609097346026/Christmas+4.mp3/original/Christmas+4.mp3',
+];
+
+export async function POST(request: NextRequest) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Simple auth check - only allow specific user or admin
+    // You can customize this check
+    const allowedEmails = ['adam@example.com']; // Replace with your email
+    if (session.user.email && !allowedEmails.includes(session.user.email)) {
+        // For now, allow any authenticated user - remove this check if needed
+        // return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const items = PASTOR_ADAM_VEGA_URLS.map(url => ({ url }));
+
+    const result = await importMP3Batch('Pastor Adam Vega', items);
+
+    return NextResponse.json(result);
+}
