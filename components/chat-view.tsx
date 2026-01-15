@@ -12,9 +12,30 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { getEpisodeForPlayer } from '@/actions/episode-actions';
 
+// Helper to extract text content from message (handles both old and new SDK formats)
+function getMessageContent(message: any): string {
+    // New SDK format: parts array
+    if (message.parts && Array.isArray(message.parts)) {
+        return message.parts
+            .filter((p: any) => p.type === 'text')
+            .map((p: any) => p.text)
+            .join('');
+    }
+    // Old format: content string
+    if (typeof message.content === 'string') {
+        return message.content;
+    }
+    return '';
+}
+
 // Helper to parse text with timestamps [MM:SS] or [MM:SS|id:uuid]
 function MessageContent({ content }: { content: string }) {
     const { seek, play, currentEpisode } = useAudio();
+
+    // Guard against undefined/empty content
+    if (!content) {
+        return null;
+    }
 
     // Regex for [MM:SS] or [HH:MM:SS] optionally with |id:uuid
     const timestampRegex = /\[(\d{1,2}:)?(\d{1,2}:\d{2})(?:\|id:([a-zA-Z0-9-]+))?\]/g;
@@ -193,7 +214,7 @@ function ChatContent() {
                                             : 'bg-muted/50 border'
                                             }`}
                                     >
-                                        <MessageContent content={m.content} />
+                                        <MessageContent content={getMessageContent(m)} />
                                     </div>
                                 </div>
                             ))}
