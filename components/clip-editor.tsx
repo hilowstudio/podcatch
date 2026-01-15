@@ -36,7 +36,8 @@ export function ClipEditor({ episodeId, audioUrl }: ClipEditorProps) {
     const regionsRef = useRef<any>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isReady, setIsReady] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedRegion, setSelectedRegion] = useState<{ start: number, end: number } | null>(null);
 
@@ -49,22 +50,31 @@ export function ClipEditor({ episodeId, audioUrl }: ClipEditorProps) {
         }
 
         setIsLoading(true);
+        setIsInitialized(true);
         setError(null);
         setIsReady(false);
         setSelectedRegion(null);
 
         const proxiedUrl = getProxiedAudioUrl(audioUrl);
 
+        // Use MediaElement backend to stream instead of downloading entire file
+        // This prevents memory crashes on long audio files
         const ws = WaveSurfer.create({
             container: containerRef.current,
             waveColor: '#4f46e5',
             progressColor: '#818cf8',
             cursorColor: '#ffffff',
-            barWidth: 2,
-            barGap: 3,
+            barWidth: 3,
+            barGap: 4,
+            barRadius: 2,
             height: 128,
-            url: proxiedUrl,
+            normalize: true,
+            // Use media element to stream audio instead of downloading all
+            media: document.createElement('audio'),
         });
+
+        // Load the audio via URL
+        ws.load(proxiedUrl);
 
         // Initialize Regions Plugin
         const wsRegions = ws.registerPlugin(RegionsPlugin.create());
@@ -110,8 +120,8 @@ export function ClipEditor({ episodeId, audioUrl }: ClipEditorProps) {
     };
 
     useEffect(() => {
-        initWaveSurfer();
-
+        // Don't auto-initialize - wait for user to click Load button
+        // This prevents memory crashes on long audio files
         return () => {
             if (wavesurferRef.current) {
                 wavesurferRef.current.destroy();
@@ -160,6 +170,21 @@ export function ClipEditor({ episodeId, audioUrl }: ClipEditorProps) {
 
             {/* Waveform Container */}
             <div className="relative min-h-[128px]">
+                {!isInitialized && !error && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-muted/30 rounded z-10 border-2 border-dashed border-muted-foreground/30">
+                        <div className="flex flex-col items-center gap-3 p-4 text-center">
+                            <Scissors className="h-8 w-8 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground max-w-xs">
+                                Load the waveform to create clips from this episode
+                            </span>
+                            <Button variant="outline" size="sm" onClick={initWaveSurfer}>
+                                <Play className="h-4 w-4 mr-2" />
+                                Load Waveform
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded z-10">
                         <div className="flex flex-col items-center gap-2">
