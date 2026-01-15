@@ -101,7 +101,11 @@ function ChatContent() {
     const episodeId = searchParams.get('episode');
     const episodeTitle = searchParams.get('title');
 
-    const { messages, sendMessage, status } = useChat();
+    const { messages, sendMessage, status, error } = useChat({
+        onError: (err) => {
+            console.error('[Chat Error]:', err);
+        },
+    });
 
     const isLoading = status === 'submitted' || status === 'streaming';
 
@@ -116,12 +120,18 @@ function ChatContent() {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
 
-        const userMessage = { role: 'user', content: input };
+        const userInput = input;
         setInput('');
 
-        await sendMessage(userMessage as any, {
-            body: episodeId ? { episodeId } : undefined,
-        } as any);
+        try {
+            await sendMessage({
+                text: userInput,
+            }, {
+                body: episodeId ? { episodeId } : undefined,
+            });
+        } catch (err) {
+            console.error('[SendMessage Error]:', err);
+        }
     };
 
     useEffect(() => {
