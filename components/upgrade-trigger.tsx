@@ -47,7 +47,7 @@ export function UpgradeTrigger({ isUnlocked, requiredTier, children, className }
                         variant="secondary"
                         className="absolute right-2 top-1/2 -translate-y-1/2 shadow-sm border bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-all gap-1 pointer-events-none"
                     >
-                        <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                        <Crown className="w-3 h-3 text-primary fill-primary" />
                         <span className="font-bold text-[10px] tracking-wide">{requiredTier}</span>
                     </Badge>
                 </div>
@@ -57,7 +57,7 @@ export function UpgradeTrigger({ isUnlocked, requiredTier, children, className }
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <div className="mx-auto bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/20 dark:to-orange-900/20 p-3 rounded-full mb-4 w-fit">
-                            <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-500" />
+                            <Crown className="h-8 w-8 text-primary" />
                         </div>
                         <DialogTitle className="text-center text-xl">Unlock {requiredTier} Features</DialogTitle>
                         <DialogDescription className="text-center pt-2">

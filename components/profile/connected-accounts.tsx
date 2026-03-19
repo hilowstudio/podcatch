@@ -45,7 +45,7 @@ export function ConnectedAccounts({ accounts }: ConnectedAccountsProps) {
                 </CardHeader>
                 <CardContent>
                     {isGoogleConnected ? (
-                        <Button variant="outline" className="w-full bg-green-50 text-green-700 hover:bg-green-100 border-green-200" disabled>
+                        <Button variant="outline" className="w-full bg-status-success/10 text-status-success hover:bg-status-success/20 border-status-success/30" disabled>
                             <Check className="mr-2 h-4 w-4" />
                             Connected
                         </Button>
@@ -76,7 +76,7 @@ export function ConnectedAccounts({ accounts }: ConnectedAccountsProps) {
                 </CardHeader>
                 <CardContent>
                     {isGithubConnected ? (
-                        <Button variant="outline" className="w-full bg-green-50 text-green-700 hover:bg-green-100 border-green-200" disabled>
+                        <Button variant="outline" className="w-full bg-status-success/10 text-status-success hover:bg-status-success/20 border-status-success/30" disabled>
                             <Check className="mr-2 h-4 w-4" />
                             Connected
                         </Button>

@@ -109,7 +109,7 @@ function CitationButton({ seconds, label, episodeId }: { seconds: number, label:
         <button
             onClick={handleClick}
             disabled={isLoading}
-            className="inline-flex items-center gap-1 mx-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 disabled:opacity-50"
+            className="inline-flex items-center gap-1 mx-1 text-xs font-medium text-primary hover:underline cursor-pointer bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 disabled:opacity-50"
         >
             {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <PlayCircle className="h-3 w-3" />}
             {label}

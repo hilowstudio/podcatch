@@ -30,14 +30,14 @@ export default async function FeedPage({ params }: PageProps) {
     const episodes = await getEpisodesByFeed(feedId);
 
     const statusConfig: Record<EpisodeStatus, { icon: React.ComponentType<any>; label: string; color: string; animate?: boolean }> = {
-        DISCOVERED: { icon: PlayCircle, label: 'Discovered', color: 'bg-blue-500' },
-        PROCESSING: { icon: Loader2, label: 'Processing', color: 'bg-yellow-500', animate: true },
-        COMPLETED: { icon: CheckCircle2, label: 'Completed', color: 'bg-green-500' },
-        FAILED: { icon: AlertCircle, label: 'Failed', color: 'bg-red-500' },
+        DISCOVERED: { icon: PlayCircle, label: 'Discovered', color: 'bg-status-info' },
+        PROCESSING: { icon: Loader2, label: 'Processing', color: 'bg-status-warning', animate: true },
+        COMPLETED: { icon: CheckCircle2, label: 'Completed', color: 'bg-status-success' },
+        FAILED: { icon: AlertCircle, label: 'Failed', color: 'bg-status-danger' },
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="min-h-screen">
             {/* Header */}
             <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container mx-auto flex h-16 items-center px-4">
@@ -84,7 +84,7 @@ export default async function FeedPage({ params }: PageProps) {
 
                             return (
                                 <Link key={episode.id} href={`/episodes/${episode.id}`}>
-                                    <Card className="group transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer">
+                                    <Card className="group transition-all hover:shadow-md cursor-pointer">
                                         <CardHeader>
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0">

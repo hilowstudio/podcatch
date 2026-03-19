@@ -60,7 +60,7 @@ export default function AdminImportPage() {
                         <Button
                             onClick={handleImport}
                             disabled={isLoading}
-                            className="w-full h-12 text-lg bg-indigo-600 hover:bg-indigo-700"
+                            className="w-full h-12 text-lg bg-primary hover:bg-primary/90"
                         >
                             {isLoading ? (
                                 <>
@@ -77,12 +77,12 @@ export default function AdminImportPage() {
                     )}
 
                     {result && (
-                        <div className={`p-6 rounded-lg border ${result.success ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
+                        <div className={`p-6 rounded-lg border ${result.success ? 'bg-status-success/5 border-status-success/20' : 'bg-status-danger/5 border-status-danger/20'}`}>
                             <div className="flex items-start gap-3">
                                 {result.success ? (
-                                    <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+                                    <CheckCircle2 className="h-6 w-6 text-status-success shrink-0" />
                                 ) : (
-                                    <AlertCircle className="h-6 w-6 text-red-500 shrink-0" />
+                                    <AlertCircle className="h-6 w-6 text-status-danger shrink-0" />
                                 )}
                                 <div className="space-y-2">
                                     <h3 className="font-semibold text-lg">
@@ -95,9 +95,9 @@ export default function AdminImportPage() {
                                         </div>
                                     )}
                                     {result.errors && result.errors.length > 0 && (
-                                        <div className="mt-4 p-3 bg-red-500/10 rounded border border-red-500/20 text-xs font-mono max-h-40 overflow-y-auto">
+                                        <div className="mt-4 p-3 bg-status-danger/10 rounded border border-status-danger/20 text-xs font-mono max-h-40 overflow-y-auto">
                                             {result.errors.map((err: string, i: number) => (
-                                                <p key={i} className="text-red-400 mb-1">• {err}</p>
+                                                <p key={i} className="text-status-danger mb-1">• {err}</p>
                                             ))}
                                         </div>
                                     )}

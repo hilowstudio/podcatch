@@ -61,8 +61,8 @@ export function NetworkStatus() {
             className={cn(
                 "fixed top-0 left-0 right-0 z-[100] py-2 px-4 text-center text-sm font-medium transition-all duration-300 safe-top",
                 isOnline
-                    ? "bg-green-500 text-white"
-                    : "bg-amber-500 text-black"
+                    ? "bg-status-success text-white"
+                    : "bg-status-warning text-foreground"
             )}
         >
             <div className="flex items-center justify-center gap-2">

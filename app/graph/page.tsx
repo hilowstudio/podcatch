@@ -39,9 +39,9 @@ export default async function GraphPage() {
                 </p>
                 <div className="mt-2 flex gap-2 text-xs">
                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white"></div> Episode</span>
-                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Person</span>
-                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500"></div> Book</span>
-                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500"></div> Concept</span>
+                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-status-info"></div> Person</span>
+                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-status-success"></div> Book</span>
+                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-primary"></div> Concept</span>
                 </div>
             </div>
 

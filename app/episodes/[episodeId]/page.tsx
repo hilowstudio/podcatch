@@ -59,7 +59,7 @@ export default async function EpisodePage({ params }: PageProps) {
     const hasInsights = episode.insight && episode.status === 'COMPLETED';
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="min-h-screen">
             {/* Auto-seek from URL timestamp param */}
             {episode.audioUrl && (
                 <AutoSeek
@@ -213,10 +213,10 @@ ${episode.insight?.transcript}
 
                         {/* Processing State */}
                         {isProcessing && (
-                            <Card className="border-yellow-500/50 bg-yellow-500/5">
+                            <Card className="border-status-warning/30 bg-status-warning/5">
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
-                                        <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />
+                                        <Loader2 className="h-5 w-5 animate-spin text-status-warning" />
                                         <CardTitle>Processing Episode</CardTitle>
                                     </div>
                                     <CardDescription>
@@ -229,10 +229,10 @@ ${episode.insight?.transcript}
 
                         {/* Discovered (Ready) State - Optional Hint */}
                         {isDiscovered && !isProcessing && (
-                            <Card className="border-blue-500/50 bg-blue-500/5">
+                            <Card className="border-status-info/30 bg-status-info/5">
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
-                                        <PlayCircle className="h-5 w-5 text-blue-600" />
+                                        <PlayCircle className="h-5 w-5 text-status-info" />
                                         <CardTitle>Ready to Process</CardTitle>
                                     </div>
                                     <CardDescription>
@@ -244,9 +244,9 @@ ${episode.insight?.transcript}
 
                         {/* Failed State */}
                         {isFailed && (
-                            <Card className="border-red-500/50 bg-red-500/5">
+                            <Card className="border-status-danger/30 bg-status-danger/5">
                                 <CardHeader>
-                                    <CardTitle className="text-red-600">Processing Failed</CardTitle>
+                                    <CardTitle className="text-status-danger">Processing Failed</CardTitle>
                                     <CardDescription>
                                         We were unable to process this episode. This could be due to an invalid audio URL, network issues,
                                         or API failures.
@@ -324,10 +324,10 @@ ${episode.insight?.transcript}
 
                                 {/* Creator Studio */}
                                 {(episode.insight.socialContent as any) && (
-                                    <Card className="border-purple-500/20 bg-purple-500/5">
+                                    <Card className="border-accent/30 bg-accent/5">
                                         <CardHeader>
                                             <div className="flex items-center gap-2">
-                                                <Sparkles className="h-5 w-5 text-purple-600" />
+                                                <Sparkles className="h-5 w-5 text-primary" />
                                                 <CardTitle>Creator Studio</CardTitle>
                                             </div>
                                             <CardDescription>AI-generated assets ready for social sharing</CardDescription>
@@ -335,7 +335,7 @@ ${episode.insight?.transcript}
                                         <CardContent className="grid gap-4">
                                             {(episode.insight.socialContent as any).tweet && (
                                                 <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-sky-500">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
                                                         <Share2 className="h-4 w-4" /> Viral Tweet
                                                     </h4>
                                                     <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).tweet}</p>
@@ -343,7 +343,7 @@ ${episode.insight?.transcript}
                                             )}
                                             {(episode.insight.socialContent as any).linkedin && (
                                                 <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-blue-700">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
                                                         <Share2 className="h-4 w-4" /> LinkedIn Post
                                                     </h4>
                                                     <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).linkedin}</p>
@@ -351,7 +351,7 @@ ${episode.insight?.transcript}
                                             )}
                                             {(episode.insight.socialContent as any).blogTitle && (
                                                 <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-orange-600">
+                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
                                                         <FileText className="h-4 w-4" /> Blog Title Idea
                                                     </h4>
                                                     <p className="font-medium">{(episode.insight.socialContent as any).blogTitle}</p>
@@ -364,10 +364,10 @@ ${episode.insight?.transcript}
 
                                 {/* Mentions: Knowledge Graph */}
                                 {episode.entities && episode.entities.length > 0 && (
-                                    <Card className="border-indigo-500/20 bg-indigo-500/5">
+                                    <Card className="border-accent/30 bg-accent/5">
                                         <CardHeader>
                                             <div className="flex items-center gap-2">
-                                                <div className="h-5 w-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                <div className="h-5 w-5 bg-primary rounded-full flex items-center justify-center">
                                                     <span className="text-[10px] font-bold text-white">#</span>
                                                 </div>
                                                 <CardTitle>Mentions</CardTitle>
@@ -385,7 +385,7 @@ ${episode.insight?.transcript}
                                                         <div className="flex flex-wrap gap-2">
                                                             {episode.entities.filter(e => e.type === 'PERSON').map(person => (
                                                                 <Link href={`/search?q=${encodeURIComponent(person.name)}`} key={person.id}>
-                                                                    <Badge variant="outline" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer pl-1 gap-1.5 py-1">
+                                                                    <Badge variant="outline" className="hover:bg-accent/20 transition-colors cursor-pointer pl-1 gap-1.5 py-1">
                                                                         <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                                                                             {/* Placeholder Avatar */}
                                                                             <span className="text-[10px] font-bold">{person.name[0]}</span>
@@ -407,7 +407,7 @@ ${episode.insight?.transcript}
                                                         <div className="flex flex-wrap gap-2">
                                                             {episode.entities.filter(e => e.type === 'BOOK').map(book => (
                                                                 <Link href={`/search?q=${encodeURIComponent(book.name)}`} key={book.id}>
-                                                                    <Badge variant="secondary" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer gap-1 py-1">
+                                                                    <Badge variant="secondary" className="hover:bg-accent/20 transition-colors cursor-pointer gap-1 py-1">
                                                                         📚 {book.name}
                                                                     </Badge>
                                                                 </Link>
@@ -425,7 +425,7 @@ ${episode.insight?.transcript}
                                                         <div className="flex flex-wrap gap-2">
                                                             {episode.entities.filter(e => e.type === 'CONCEPT').map(concept => (
                                                                 <Link href={`/search?q=${encodeURIComponent(concept.name)}`} key={concept.id}>
-                                                                    <Badge variant="outline" className="hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer border-dashed">
+                                                                    <Badge variant="outline" className="hover:bg-accent/20 transition-colors cursor-pointer border-dashed">
                                                                         💡 {concept.name}
                                                                     </Badge>
                                                                 </Link>

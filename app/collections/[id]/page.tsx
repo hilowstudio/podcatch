@@ -89,11 +89,11 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                 {/* Right: Synthesis Result */}
                 <div className="lg:col-span-2">
                     <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-                        <Sparkles className="h-4 w-4 text-purple-500" /> AI Synthesis
+                        <Sparkles className="h-4 w-4 text-primary" /> AI Synthesis
                     </h3>
 
                     {synthesis ? (
-                        <Card className="border-purple-500/20 bg-purple-500/5">
+                        <Card className="border-accent/30 bg-accent/5">
                             <CardHeader>
                                 <CardTitle>Synthesized Insights</CardTitle>
                                 <CardDescription>
@@ -107,8 +107,8 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                     ) : (
                         <Card className="bg-muted/30">
                             <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-                                <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
-                                    <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                    <Sparkles className="h-6 w-6 text-primary" />
                                 </div>
                                 <h4 className="font-medium text-lg">Ready to Synthesize</h4>
                                 <p className="text-muted-foreground max-w-sm mt-2 mb-6">

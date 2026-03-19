@@ -38,7 +38,7 @@ export function StickyPlayer() {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 shadow-[0_-1px_4px_oklch(0.5_0_0/0.08)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 z-50">
             <div className="container flex items-center gap-4 max-w-screen-xl mx-auto">
                 {/* Episode Info */}
                 <div className="flex items-center gap-3 w-1/4 min-w-0">

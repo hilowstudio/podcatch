@@ -56,7 +56,7 @@ function PricingContent() {
                 {isOnboarding ? (
                     <div className="mb-6">
                         <Badge variant="outline" className="mb-4 py-1 px-4 text-sm border-primary text-primary">Step 2 of 2</Badge>
-                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
+                        <h1 className="text-3xl font-bold tracking-tight lg:text-5xl mb-4">
                             Welcome to Podcatch
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -65,7 +65,7 @@ function PricingContent() {
                     </div>
                 ) : (
                     <>
-                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
+                        <h1 className="text-3xl font-bold tracking-tight lg:text-5xl mb-4">
                             Simple, Transparent Pricing
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -85,7 +85,7 @@ function PricingContent() {
                         className="data-[state=checked]:bg-primary"
                     />
                     <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Annual <Badge variant="secondary" className="ml-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Save ~15%</Badge>
+                        Annual <Badge variant="secondary" className="ml-1 text-xs bg-accent/20 text-accent-foreground">Save ~15%</Badge>
                     </span>
                 </div>
             </div>
@@ -105,7 +105,7 @@ function PricingContent() {
                         <ul className="space-y-3">
                             {PLANS.free.marketingFeatures.map((feature) => (
                                 <li key={feature} className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-500" />
+                                    <Check className="h-4 w-4 text-status-success" />
                                     <span className="text-sm">{feature}</span>
                                 </li>
                             ))}
@@ -141,7 +141,7 @@ function PricingContent() {
                         <ul className="space-y-3">
                             {PLANS.basic.marketingFeatures.map((feature) => (
                                 <li key={feature} className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-500" />
+                                    <Check className="h-4 w-4 text-status-success" />
                                     <span className="text-sm">{feature}</span>
                                 </li>
                             ))}
@@ -160,7 +160,7 @@ function PricingContent() {
                 </Card>
 
                 {/* PRO TIER */}
-                <Card className="flex flex-col border-2 border-primary shadow-lg scale-105 z-10 relative">
+                <Card className="flex flex-col border-2 border-primary shadow-lg z-10 relative">
                     <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
                         POPULAR
                     </div>
@@ -227,7 +227,7 @@ function PricingContent() {
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Studio Access (Creation)</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
 
@@ -237,8 +237,8 @@ function PricingContent() {
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">AI Summaries</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
@@ -250,7 +250,7 @@ function PricingContent() {
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Knowledge Graph</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
@@ -273,13 +273,13 @@ function PricingContent() {
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Integrations (Notion/Claude)</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Brand Voice</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-green-500" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
                             </tr>
                         </tbody>

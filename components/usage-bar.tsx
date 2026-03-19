@@ -11,8 +11,8 @@ export function UsageBar({ usage, limit, className }: UsageBarProps) {
 
     // Color logic
     let colorClass = "bg-primary";
-    if (percentage >= 90) colorClass = "bg-red-500";
-    else if (percentage >= 75) colorClass = "bg-yellow-500";
+    if (percentage >= 90) colorClass = "bg-status-danger";
+    else if (percentage >= 75) colorClass = "bg-status-warning";
 
     return (
         <div className={cn("space-y-1 w-full", className)}>

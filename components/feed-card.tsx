@@ -36,7 +36,7 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, last
                                 sizes="64px"
                             />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                            <div className="flex h-full w-full items-center justify-center bg-muted">
                                 <FileAudio className="h-6 w-6 text-muted-foreground/40" />
                             </div>
                         )}
@@ -82,7 +82,7 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, last
 
     // Grid variant (default)
     return (
-        <Card className="group overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02]">
+        <Card className="group overflow-hidden transition-all hover:shadow-lg">
             <Link href={`/feeds/${id}`} className="block">
                 <CardHeader className="p-0">
                     <div className="relative aspect-square w-full overflow-hidden bg-muted">
@@ -95,7 +95,7 @@ export function FeedCard({ id, title, image, episodeCount, lastEpisodeDate, last
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                            <div className="flex h-full w-full items-center justify-center bg-muted">
                                 <FileAudio className="h-16 w-16 text-muted-foreground/40" />
                             </div>
                         )}

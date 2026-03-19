@@ -70,7 +70,7 @@ export function OfflineTranscriptViewer({
     return (
         <div>
             {isFromCache && (
-                <div className="flex items-center gap-2 px-4 py-2 mb-2 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-md text-sm">
+                <div className="flex items-center gap-2 px-4 py-2 mb-2 bg-status-warning/10 text-status-warning rounded-md text-sm">
                     <WifiOff className="h-4 w-4" />
                     Viewing cached transcript (offline)
                 </div>

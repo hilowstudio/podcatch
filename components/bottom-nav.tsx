@@ -85,10 +85,7 @@ export function BottomNav() {
                             aria-label={item.label}
                             aria-current={active ? 'page' : undefined}
                         >
-                            <Icon className={cn(
-                                "h-5 w-5 transition-transform",
-                                active && "scale-110"
-                            )} />
+                            <Icon className="h-5 w-5" />
                             <span className="text-[10px] font-medium">{item.label}</span>
                         </Link>
                     );

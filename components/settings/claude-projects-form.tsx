@@ -140,13 +140,13 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
                     </div>
 
                     {error && (
-                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                        <div className="rounded-md bg-status-danger/10 p-3 text-sm text-status-danger">
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                        <div className="rounded-md bg-status-success/10 p-3 text-sm text-status-success">
                             ✅ Saved!
                         </div>
                     )}
