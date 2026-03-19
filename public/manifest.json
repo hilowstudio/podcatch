@@ -10,8 +10,8 @@
         "minimal-ui"
     ],
     "orientation": "any",
-    "background_color": "#ffffff",
-    "theme_color": "#000000",
+    "background_color": "#f8f5f0",
+    "theme_color": "#f8f5f0",
     "scope": "/",
     "lang": "en",
     "dir": "ltr",
