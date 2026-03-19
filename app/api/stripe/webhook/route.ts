@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 
@@ -48,6 +49,8 @@ export async function POST(req: Request) {
                 ),
             },
         });
+
+        revalidatePath('/', 'layout');
     }
 
     if (event.type === 'invoice.payment_succeeded') {
@@ -68,6 +71,8 @@ export async function POST(req: Request) {
                 ),
             },
         });
+
+        revalidatePath('/', 'layout');
     }
 
     return new NextResponse(null, { status: 200 });

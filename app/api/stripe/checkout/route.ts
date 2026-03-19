@@ -4,7 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { NextResponse } from 'next/server';
 import { PLANS, TRIAL_DAYS } from '@/lib/stripe-config';
 
-const settingsUrl = process.env.NEXTAUTH_URL + '/settings';
+const settingsUrl = process.env.NEXTAUTH_URL + '/profile';
 
 export async function POST(req: Request) {
     try {
@@ -96,9 +96,10 @@ export async function POST(req: Request) {
         const isFree = priceId === PLANS.free.priceId;
 
         if (isFree) {
-            // For free tier, we don't need to send them to Stripe.
-            // We can just redirect them to the dashboard (or home).
-            // Optionally update user state here if needed, but "free" is usually the default.
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: { stripePriceId: PLANS.free.priceId },
+            });
             return NextResponse.json({ url: process.env.NEXTAUTH_URL || '/' });
         }
 
