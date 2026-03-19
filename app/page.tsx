@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteFooter } from '@/components/site-footer';
-import { Check, Search, MessageSquare, Zap, PlayCircle, Star, Clock, TrendingDown, Lock } from 'lucide-react';
+import { Check, Search, MessageSquare, Zap, Star, Clock, TrendingDown, Lock } from 'lucide-react';
 import { IntegrationsCarousel } from '@/components/landing/integrations-carousel';
 import Link from 'next/link';
 
@@ -55,13 +55,6 @@ export default async function Home() {
             <p className="text-sm text-muted-foreground">Free Forever Plan • No Credit Card • Cancel Anytime</p>
           </div>
 
-          {/* Hero Visual Mockup */}
-          <div className="mt-12 relative w-full max-w-5xl mx-auto rounded-lg border bg-card text-card-foreground shadow-lg overflow-hidden aspect-[16/9] hidden md:flex items-center justify-center">
-            <p className="text-muted-foreground font-medium flex items-center gap-2">
-              <PlayCircle className="h-12 w-12 opacity-50" />
-              <span className="text-lg">Interactive Demo Replay</span>
-            </p>
-          </div>
         </section>
 
         {/* AGITATION SECTION */}
