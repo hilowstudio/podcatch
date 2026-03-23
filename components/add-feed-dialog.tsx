@@ -106,7 +106,7 @@ export function AddFeedDialog() {
                     Add Feed
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>Add Podcast</DialogTitle>
                     <DialogDescription>

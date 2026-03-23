@@ -2,23 +2,41 @@
 
 import { prisma } from '@/lib/prisma';
 
-export interface GraphNode {
+export interface GraphEntity {
     id: string;
     name: string;
-    val: number; // size
-    group: string; // 'episode', 'person', 'book', 'concept'
-    color?: string;
-    image?: string;
+    type: 'PERSON' | 'BOOK' | 'CONCEPT';
+    description: string | null;
+    image: string | null;
+    episodeCount: number;
+    episodes: {
+        id: string;
+        title: string;
+        feedTitle: string | null;
+        feedImage: string | null;
+    }[];
 }
 
-export interface GraphLink {
+export interface GraphEdge {
     source: string;
     target: string;
+    weight: number;
+    sharedEpisodes: {
+        id: string;
+        title: string;
+    }[];
 }
 
 export interface GraphData {
-    nodes: GraphNode[];
-    links: GraphLink[];
+    entities: GraphEntity[];
+    edges: GraphEdge[];
+    stats: {
+        totalEntities: number;
+        totalEdges: number;
+        personCount: number;
+        bookCount: number;
+        conceptCount: number;
+    };
 }
 
 export async function getGraphData(): Promise<GraphData> {
@@ -33,48 +51,90 @@ export async function getGraphData(): Promise<GraphData> {
                     id: true,
                     name: true,
                     type: true,
+                    description: true,
+                    image: true,
                 }
             }
         }
     });
 
-    const nodes: GraphNode[] = [];
-    const links: GraphLink[] = [];
-    const entityMap = new Map<string, boolean>();
+    // Build entity map: accumulate episodes per entity
+    const entityMap = new Map<string, GraphEntity>();
 
-    // Process Episodes
-    episodes.forEach(ep => {
-        // Add Episode Node
-        nodes.push({
-            id: ep.id,
-            name: ep.title,
-            val: 20, // Larger size for episodes
-            group: 'episode',
-            color: '#ffffff', // White for episodes
-            image: ep.feed.image || undefined
-        });
-
-        // Process Entities
-        ep.entities.forEach(entity => {
-            // Add Entity Node if not already added
-            if (!entityMap.has(entity.id)) {
-                nodes.push({
+    for (const ep of episodes) {
+        for (const entity of ep.entities) {
+            const existing = entityMap.get(entity.id);
+            if (existing) {
+                existing.episodeCount++;
+                existing.episodes.push({
+                    id: ep.id,
+                    title: ep.title,
+                    feedTitle: ep.feed.title,
+                    feedImage: ep.feed.image,
+                });
+            } else {
+                entityMap.set(entity.id, {
                     id: entity.id,
                     name: entity.name,
-                    val: 5, // Smaller size for entities
-                    group: entity.type.toLowerCase(),
-                    // Colors handled by frontend or here? Let's generic 'group' handle auto-color for now
+                    type: entity.type as 'PERSON' | 'BOOK' | 'CONCEPT',
+                    description: entity.description,
+                    image: entity.image,
+                    episodeCount: 1,
+                    episodes: [{
+                        id: ep.id,
+                        title: ep.title,
+                        feedTitle: ep.feed.title,
+                        feedImage: ep.feed.image,
+                    }],
                 });
-                entityMap.set(entity.id, true);
             }
+        }
+    }
 
-            // Add Link
-            links.push({
-                source: ep.id,
-                target: entity.id
-            });
-        });
-    });
+    // Build co-occurrence edges
+    const edgeMap = new Map<string, GraphEdge>();
 
-    return { nodes, links };
+    for (const ep of episodes) {
+        const entityIds = ep.entities.map(e => e.id);
+        for (let i = 0; i < entityIds.length; i++) {
+            for (let j = i + 1; j < entityIds.length; j++) {
+                const [a, b] = [entityIds[i], entityIds[j]].sort();
+                const key = `${a}::${b}`;
+                const existing = edgeMap.get(key);
+                if (existing) {
+                    existing.weight++;
+                    existing.sharedEpisodes.push({ id: ep.id, title: ep.title });
+                } else {
+                    edgeMap.set(key, {
+                        source: a,
+                        target: b,
+                        weight: 1,
+                        sharedEpisodes: [{ id: ep.id, title: ep.title }],
+                    });
+                }
+            }
+        }
+    }
+
+    // Filter out singleton entities (no edges)
+    const connectedIds = new Set<string>();
+    for (const edge of edgeMap.values()) {
+        connectedIds.add(edge.source);
+        connectedIds.add(edge.target);
+    }
+
+    const entities = Array.from(entityMap.values()).filter(e => connectedIds.has(e.id));
+    const edges = Array.from(edgeMap.values());
+
+    return {
+        entities,
+        edges,
+        stats: {
+            totalEntities: entities.length,
+            totalEdges: edges.length,
+            personCount: entities.filter(e => e.type === 'PERSON').length,
+            bookCount: entities.filter(e => e.type === 'BOOK').length,
+            conceptCount: entities.filter(e => e.type === 'CONCEPT').length,
+        },
+    };
 }
