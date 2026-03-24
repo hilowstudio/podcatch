@@ -5,6 +5,7 @@ import { ProfileForm } from '@/components/profile/profile-form';
 import { ConnectedAccounts } from '@/components/profile/connected-accounts';
 import { NotificationSettings } from '@/components/profile/notification-settings';
 import { UsageCard } from '@/components/profile/usage-card';
+import { DigestSettings } from '@/components/digest-settings';
 
 export default async function SettingsAccountPage() {
     const session = await auth();
@@ -51,6 +52,14 @@ export default async function SettingsAccountPage() {
                     Get notified when your episodes finish processing.
                 </p>
                 <NotificationSettings />
+            </section>
+
+            <section>
+                <h2 className="text-xl font-semibold mb-4">Email Digest</h2>
+                <p className="text-muted-foreground mb-6">
+                    Receive summaries of newly processed episodes.
+                </p>
+                <DigestSettings initialFrequency={user.digestFrequency || 'NONE'} />
             </section>
         </div>
     );

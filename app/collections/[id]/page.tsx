@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, PlayCircle, Trash2, Calendar } from 'lucide-react';
+import { ArrowLeft, Sparkles, PlayCircle, Trash2, Calendar, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { DeleteCollectionButton } from '@/components/delete-collection-button';
 import { SynthesizeButton } from '@/components/synthesize-button';
@@ -39,6 +39,11 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                         <p className="text-muted-foreground mt-2 max-w-2xl text-lg">{collection.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Link href={`/chat?collection=${collection.id}&title=${encodeURIComponent(collection.title)}`}>
+                            <Button variant="outline" className="gap-2">
+                                <MessageSquare className="h-4 w-4" /> Chat
+                            </Button>
+                        </Link>
                         <DeleteCollectionButton collectionId={collection.id} />
                         <SynthesizeButton collectionId={collection.id} disabled={collection.episodes.length < 2} />
                     </div>

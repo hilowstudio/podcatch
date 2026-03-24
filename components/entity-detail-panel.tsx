@@ -1,10 +1,11 @@
 'use client';
 
-import { X, ExternalLink, User, BookOpen, Lightbulb } from 'lucide-react';
+import { X, ExternalLink, User, BookOpen, Lightbulb, Building2, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Link from 'next/link';
+import { MessageSquare } from 'lucide-react';
 import type { GraphEntity } from '@/actions/graph-actions';
 
 interface CoOccurrence {
@@ -24,6 +25,8 @@ const typeConfig = {
     PERSON: { icon: User, label: 'Person' },
     BOOK: { icon: BookOpen, label: 'Book' },
     CONCEPT: { icon: Lightbulb, label: 'Concept' },
+    ORGANIZATION: { icon: Building2, label: 'Organization' },
+    TECHNOLOGY: { icon: Cpu, label: 'Technology' },
 } as const;
 
 export function EntityDetailPanel({ entity, coOccurringEntities, onClose, onEntityClick }: EntityDetailPanelProps) {
@@ -48,6 +51,16 @@ export function EntityDetailPanel({ entity, coOccurringEntities, onClose, onEnti
                 <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 h-8 w-8 p-0">
                     <X className="h-4 w-4" />
                 </Button>
+            </div>
+
+            {/* Ask about entity */}
+            <div className="px-4 py-3 border-b shrink-0">
+                <Link href={`/chat?entity=${encodeURIComponent(entity.name)}&title=${encodeURIComponent(entity.name)}`}>
+                    <Button variant="outline" size="sm" className="w-full gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Ask about {entity.name}
+                    </Button>
+                </Link>
             </div>
 
             {/* Scrollable content */}

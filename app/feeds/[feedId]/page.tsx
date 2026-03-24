@@ -5,6 +5,9 @@ import { getEpisodesByFeed } from '@/actions/episode-actions';
 import { prisma } from '@/lib/prisma';
 import { ArrowLeft } from 'lucide-react';
 import { FeedEpisodeList } from '@/components/feed-episode-list';
+import { auth } from '@/auth';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { AutoProcessToggle } from '@/components/auto-process-toggle';
 
 type PageProps = {
     params: { feedId: string };
@@ -22,6 +25,20 @@ export default async function FeedPage({ params }: PageProps) {
     }
 
     const episodes = await getEpisodesByFeed(feedId);
+
+    const session = await auth();
+    const plan = await getUserSubscriptionPlan();
+    let subscription = null;
+    if (session?.user?.id) {
+        subscription = await prisma.subscription.findUnique({
+            where: {
+                userId_feedId: {
+                    userId: session.user.id,
+                    feedId,
+                },
+            },
+        });
+    }
 
     return (
         <div className="min-h-screen">
@@ -51,6 +68,9 @@ export default async function FeedPage({ params }: PageProps) {
                         <p className="text-muted-foreground">
                             {episodes.length} {episodes.length === 1 ? 'episode' : 'episodes'}
                         </p>
+                        {subscription && plan.canAutoProcess && (
+                            <AutoProcessToggle feedId={feedId} initialValue={subscription.autoProcess} />
+                        )}
                     </div>
                 </div>
 

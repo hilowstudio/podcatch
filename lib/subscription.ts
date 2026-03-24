@@ -19,6 +19,7 @@ export type SubscriptionPlan = {
     canSendToClaude: boolean;
     canUseStudio: boolean;
     canUseCustomPrompts: boolean;
+    canAutoProcess: boolean;
     maxEpisodesPerMonth: number;
 };
 
@@ -38,6 +39,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
         canSendToClaude: false,
         canUseStudio: false,
         canUseCustomPrompts: false,
+        canAutoProcess: false,
         maxEpisodesPerMonth: 3,
     };
 
@@ -128,6 +130,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
             canSendToClaude: features.canIntegrate, // Assuming Claude is part of integrations
             canUseStudio: features.canUseStudio,
             canUseCustomPrompts: features.canUseCustomPrompts,
+            canAutoProcess: features.canAutoProcess,
             maxEpisodesPerMonth: features.monthlyEpisodeLimit,
         };
     };

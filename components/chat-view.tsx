@@ -121,6 +121,8 @@ function ChatContent() {
     const searchParams = useSearchParams();
     const episodeId = searchParams.get('episode');
     const episodeTitle = searchParams.get('title');
+    const entityName = searchParams.get('entity');
+    const collectionId = searchParams.get('collection');
 
     const { messages, sendMessage, status, error } = useChat({
         onError: (err) => {
@@ -145,10 +147,18 @@ function ChatContent() {
         setInput('');
 
         try {
+            const body = episodeId
+                ? { episodeId }
+                : entityName
+                    ? { entityName }
+                    : collectionId
+                        ? { collectionId }
+                        : undefined;
+
             await sendMessage({
                 text: userInput,
             }, {
-                body: episodeId ? { episodeId } : undefined,
+                body,
             });
         } catch (err) {
             console.error('[SendMessage Error]:', err);
@@ -170,13 +180,35 @@ function ChatContent() {
                         Back to episode
                     </Link>
                 )}
+                {entityName && (
+                    <Link href="/graph" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2">
+                        <ArrowLeft className="h-3 w-3" />
+                        Back to Knowledge Graph
+                    </Link>
+                )}
+                {collectionId && (
+                    <Link href={`/collections/${collectionId}`} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2">
+                        <ArrowLeft className="h-3 w-3" />
+                        Back to collection
+                    </Link>
+                )}
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    {episodeTitle ? `Chat about: ${episodeTitle}` : 'Chat with your Library'}
+                    {episodeTitle
+                        ? `Chat about: ${episodeTitle}`
+                        : entityName
+                            ? `Ask about: ${entityName}`
+                            : collectionId
+                                ? `Chat with Collection: ${searchParams.get('title') || 'Collection'}`
+                                : 'Chat with your Library'}
                 </h1>
                 <p className="text-muted-foreground">
                     {episodeTitle
                         ? 'Ask questions about this episode. Click timestamps to jump to audio.'
-                        : 'Ask questions about any episode. Click timestamps (e.g. [12:30]) to jump to audio.'
+                        : entityName
+                            ? `Explore what your podcasts say about ${entityName}.`
+                            : collectionId
+                                ? 'Ask questions across all episodes in this collection.'
+                                : 'Ask questions about any episode. Click timestamps (e.g. [12:30]) to jump to audio.'
                     }
                 </p>
             </div>

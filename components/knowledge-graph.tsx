@@ -21,7 +21,7 @@ interface KnowledgeGraphProps {
     initialData: GraphData;
 }
 
-type EntityType = 'PERSON' | 'BOOK' | 'CONCEPT';
+type EntityType = 'PERSON' | 'BOOK' | 'CONCEPT' | 'ORGANIZATION' | 'TECHNOLOGY';
 
 /** Resolve a CSS custom property to an rgb() string the canvas can use. */
 function resolveColor(cssVar: string): string {
@@ -40,6 +40,8 @@ function resolveThemeColors() {
         person: resolveColor('--primary'),
         concept: resolveColor('--status-success'),
         book: resolveColor('--chart-4'),
+        organization: resolveColor('--chart-2'),
+        technology: resolveColor('--chart-3'),
         muted: resolveColor('--muted-foreground'),
         border: resolveColor('--border'),
     };
@@ -49,7 +51,7 @@ export function KnowledgeGraph({ initialData }: KnowledgeGraphProps) {
     const fgRef = useRef<any>(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const [selectedEntity, setSelectedEntity] = useState<GraphEntity | null>(null);
-    const [activeFilters, setActiveFilters] = useState<Set<EntityType>>(new Set(['PERSON', 'BOOK', 'CONCEPT']));
+    const [activeFilters, setActiveFilters] = useState<Set<EntityType>>(new Set(['PERSON', 'BOOK', 'CONCEPT', 'ORGANIZATION', 'TECHNOLOGY']));
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
     const [themeColors, setThemeColors] = useState<ReturnType<typeof resolveThemeColors> | null>(null);
@@ -134,6 +136,8 @@ export function KnowledgeGraph({ initialData }: KnowledgeGraphProps) {
         if (!themeColors) return '#888';
         if (type === 'PERSON') return themeColors.person;
         if (type === 'BOOK') return themeColors.book;
+        if (type === 'ORGANIZATION') return themeColors.organization;
+        if (type === 'TECHNOLOGY') return themeColors.technology;
         return themeColors.concept;
     }, [themeColors]);
 
@@ -237,6 +241,8 @@ export function KnowledgeGraph({ initialData }: KnowledgeGraphProps) {
         { type: 'PERSON', label: 'People' },
         { type: 'BOOK', label: 'Books' },
         { type: 'CONCEPT', label: 'Concepts' },
+        { type: 'ORGANIZATION', label: 'Orgs' },
+        { type: 'TECHNOLOGY', label: 'Tech' },
     ];
 
     return (
@@ -292,7 +298,7 @@ export function KnowledgeGraph({ initialData }: KnowledgeGraphProps) {
 
             {/* Legend — bottom left */}
             <div className="absolute bottom-4 left-4 z-10 bg-card/80 backdrop-blur-sm rounded-md px-3 py-2 pointer-events-none shadow-sm">
-                <div className="flex gap-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Person
                     </span>
@@ -301,6 +307,12 @@ export function KnowledgeGraph({ initialData }: KnowledgeGraphProps) {
                     </span>
                     <span className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-status-success" /> Concept
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-chart-2" /> Org
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-chart-3" /> Tech
                     </span>
                 </div>
             </div>

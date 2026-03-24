@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles } from 'lucide-react';
 import { CreatePromptForm } from '@/components/create-prompt-form';
 import { DeletePromptButton } from '@/components/delete-prompt-button';
+import { SharePromptToggle } from '@/components/share-prompt-toggle';
 
 export default async function PromptSettingsPage() {
     const prompts = await getUserPrompts();
@@ -35,7 +36,10 @@ export default async function PromptSettingsPage() {
                                         <CardTitle>{prompt.title}</CardTitle>
                                         <CardDescription className="font-mono text-xs mt-1">ID: {prompt.id}</CardDescription>
                                     </div>
-                                    <DeletePromptButton promptId={prompt.id} />
+                                    <div className="flex items-center gap-3">
+                                        <SharePromptToggle promptId={prompt.id} initialValue={prompt.isPublic} />
+                                        <DeletePromptButton promptId={prompt.id} />
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent>

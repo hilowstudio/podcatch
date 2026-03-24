@@ -14,6 +14,7 @@ export const PLANS = {
             canUseCustomPrompts: false,
             canChatEpisode: false,
             canUseStudio: false,
+            canAutoProcess: false,
         }
     },
     basic: {
@@ -38,6 +39,7 @@ export const PLANS = {
             canUseCustomPrompts: false,
             canChatEpisode: false,
             canUseStudio: true,
+            canAutoProcess: true,
         }
     },
     pro: {
@@ -62,6 +64,7 @@ export const PLANS = {
             canUseCustomPrompts: true,
             canChatEpisode: true,
             canUseStudio: true,
+            canAutoProcess: true,
         }
     }
 } as const;

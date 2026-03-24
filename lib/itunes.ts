@@ -14,7 +14,7 @@ export async function searchPodcasts(term: string): Promise<PodcastResult[]> {
             term,
             media: 'podcast',
             entity: 'podcast',
-            limit: '5'
+            limit: '15'
         });
 
         const response = await fetch(`https://itunes.apple.com/search?${params.toString()}`);

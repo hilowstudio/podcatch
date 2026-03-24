@@ -4,12 +4,13 @@ import { createSnip } from '@/actions/snip-actions';
 import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, X, SkipBack, SkipForward, Scissors } from 'lucide-react';
+import { Play, Pause, X, SkipBack, SkipForward, Scissors, Volume2, VolumeX } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export function StickyPlayer() {
-    const { currentEpisode, isPlaying, toggle, currentTime, duration, seek, close } = useAudio();
+    const { currentEpisode, isPlaying, toggle, currentTime, duration, seek, close, playbackRate, setPlaybackRate, volume, setVolume, silenceSkip, setSilenceSkip } = useAudio();
     const [isSnipping, setIsSnipping] = useState(false);
 
     if (!currentEpisode) return null;
@@ -18,6 +19,12 @@ export function StickyPlayer() {
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const SPEED_OPTIONS = [1, 1.25, 1.5, 1.75, 2, 0.5, 0.75];
+    const cycleSpeed = () => {
+        const idx = SPEED_OPTIONS.indexOf(playbackRate);
+        setPlaybackRate(SPEED_OPTIONS[(idx + 1) % SPEED_OPTIONS.length]);
     };
 
     const handleSnip = async () => {
@@ -72,6 +79,17 @@ export function StickyPlayer() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => seek(currentTime + 30)}>
                             <SkipForward className="h-4 w-4" />
                         </Button>
+                        <Button variant="ghost" size="sm" className="h-8 min-w-[3rem] text-xs font-mono tabular-nums" onClick={cycleSpeed}>
+                            {playbackRate}x
+                        </Button>
+                        <Button
+                            variant={silenceSkip ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-8 text-xs hidden md:flex"
+                            onClick={() => setSilenceSkip(!silenceSkip)}
+                        >
+                            Skip Silence
+                        </Button>
                     </div>
 
                     <div className="flex items-center gap-2 w-full max-w-md">
@@ -89,6 +107,23 @@ export function StickyPlayer() {
 
                 {/* Extra Actions */}
                 <div className="flex items-center justify-end w-1/4 gap-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex">
+                                {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-12 p-3" side="top">
+                            <Slider
+                                orientation="vertical"
+                                value={[volume * 100]}
+                                max={100}
+                                step={1}
+                                onValueChange={(val) => setVolume(val[0] / 100)}
+                                className="h-24"
+                            />
+                        </PopoverContent>
+                    </Popover>
                     <Button
                         variant="outline"
                         size="sm"

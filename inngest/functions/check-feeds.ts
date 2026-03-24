@@ -131,7 +131,18 @@ export const checkFeeds = inngest.createFunction(
 
                         console.log(`New episode discovered: ${episode.title} (${episode.id})`);
 
-                        // Note: Episode remains in DISCOVERED status until user manually triggers processing
+                        // Auto-process: check if any subscriber opted in
+                        const autoProcessSubs = await prisma.subscription.findMany({
+                            where: { feedId: feed.id, autoProcess: true },
+                            take: 1,
+                        });
+                        if (autoProcessSubs.length > 0) {
+                            await inngest.send({
+                                name: 'episode/process.requested',
+                                data: { episodeId: episode.id },
+                            });
+                            console.log(`Auto-process triggered for: ${episode.title}`);
+                        }
                     }
 
                     // Update lastCheckedAt timestamp

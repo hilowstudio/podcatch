@@ -1,5 +1,6 @@
 import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@/prisma/generated_new/client';
 import { createClient } from '@deepgram/sdk';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -161,7 +162,7 @@ export const processEpisode = inngest.createFunction(
 
         // Step 2: Transcribe/Analyze Content
         // We branch here based on Feed Type and available metadata
-        let transcriptData: { rawTranscript: string, timestampedTranscript: string, fileUri?: string } = { rawTranscript: '', timestampedTranscript: '' };
+        let transcriptData: { rawTranscript: string, timestampedTranscript: string, fileUri?: string, wordTimestamps?: { word: string; start: number; end: number; speaker?: number }[] } = { rawTranscript: '', timestampedTranscript: '' };
 
         transcriptData = await step.run('get-transcript', async () => {
             // Priority 1: Existing Transcript URL (from RSS)
@@ -295,6 +296,14 @@ export const processEpisode = inngest.createFunction(
                 const alternative = result.results.channels[0].alternatives[0];
                 const rawTranscript = alternative.transcript;
 
+                // Extract word-level timestamps for animated transcript
+                const wordTimestamps = (alternative.words || []).map((w: any) => ({
+                    word: w.punctuated_word || w.word,
+                    start: w.start,
+                    end: w.end,
+                    speaker: w.speaker,
+                }));
+
                 // Format timestamps
                 const formatTime = (seconds: number) => {
                     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -310,7 +319,7 @@ export const processEpisode = inngest.createFunction(
                     }).join('\n\n');
                 }
 
-                return { rawTranscript, timestampedTranscript };
+                return { rawTranscript, timestampedTranscript, wordTimestamps };
 
             } else if (episode.feed.type === 'YOUTUBE' && episode.videoUrl) {
                 // YouTube Video Processing - Direct URL Method
@@ -426,6 +435,7 @@ export const processEpisode = inngest.createFunction(
                         links: insights.links || [],
                         socialContent: insights.socialContent || {},
                         chapters: insights.chapters || [],
+                        wordTimestamps: transcriptData.wordTimestamps || Prisma.DbNull,
                     },
                     update: {
                         transcript: transcriptData.timestampedTranscript || transcriptData.rawTranscript || '(Video Transcript in process...)',
@@ -434,6 +444,7 @@ export const processEpisode = inngest.createFunction(
                         links: insights.links || [],
                         socialContent: insights.socialContent || {},
                         chapters: insights.chapters || [],
+                        wordTimestamps: transcriptData.wordTimestamps || Prisma.DbNull,
                     },
                 });
 

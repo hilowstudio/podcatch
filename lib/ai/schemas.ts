@@ -21,9 +21,9 @@ export const insightSchema = z.object({
     })).describe('Key segments/chapters with timestamps'),
     entities: z.array(z.object({
         name: z.string().describe('Name of the person, book, or concept'),
-        type: z.enum(['PERSON', 'BOOK', 'CONCEPT']).describe('Type of entity'),
+        type: z.enum(['PERSON', 'BOOK', 'CONCEPT', 'ORGANIZATION', 'TECHNOLOGY']).describe('Type of entity'),
         description: z.string().describe('Brief context about why this entity was mentioned')
-    })).describe('List of people, books, and key concepts mentioned')
+    })).describe('List of people, books, key concepts, organizations, and technologies mentioned')
 });
 
 export type InsightData = z.infer<typeof insightSchema>;

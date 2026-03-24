@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export interface GraphEntity {
     id: string;
     name: string;
-    type: 'PERSON' | 'BOOK' | 'CONCEPT';
+    type: 'PERSON' | 'BOOK' | 'CONCEPT' | 'ORGANIZATION' | 'TECHNOLOGY';
     description: string | null;
     image: string | null;
     episodeCount: number;
@@ -36,6 +36,8 @@ export interface GraphData {
         personCount: number;
         bookCount: number;
         conceptCount: number;
+        organizationCount: number;
+        technologyCount: number;
     };
 }
 
@@ -76,7 +78,7 @@ export async function getGraphData(): Promise<GraphData> {
                 entityMap.set(entity.id, {
                     id: entity.id,
                     name: entity.name,
-                    type: entity.type as 'PERSON' | 'BOOK' | 'CONCEPT',
+                    type: entity.type as GraphEntity['type'],
                     description: entity.description,
                     image: entity.image,
                     episodeCount: 1,
@@ -135,6 +137,8 @@ export async function getGraphData(): Promise<GraphData> {
             personCount: entities.filter(e => e.type === 'PERSON').length,
             bookCount: entities.filter(e => e.type === 'BOOK').length,
             conceptCount: entities.filter(e => e.type === 'CONCEPT').length,
+            organizationCount: entities.filter(e => e.type === 'ORGANIZATION').length,
+            technologyCount: entities.filter(e => e.type === 'TECHNOLOGY').length,
         },
     };
 }
