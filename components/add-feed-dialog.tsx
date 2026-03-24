@@ -145,28 +145,26 @@ export function AddFeedDialog() {
 
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                             {searchResults.map((podcast, idx) => (
-                                <div key={idx} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent transition-colors">
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    disabled={isAdding}
+                                    onClick={() => handleAddFeed(podcast.feedUrl)}
+                                    className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent transition-colors w-full text-left cursor-pointer disabled:opacity-50"
+                                >
                                     {podcast.image && (
                                         <img
                                             src={podcast.image}
                                             alt={podcast.title}
-                                            className="w-12 h-12 rounded-md object-cover bg-muted"
+                                            className="w-12 h-12 rounded-md object-cover bg-muted flex-shrink-0"
                                         />
                                     )}
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-medium text-sm truncate">{podcast.title}</h4>
                                         <p className="text-xs text-muted-foreground truncate">{podcast.author}</p>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        disabled={isAdding}
-                                        onClick={() => handleAddFeed(podcast.feedUrl)}
-                                        className="flex-shrink-0"
-                                    >
-                                        {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
-                                    </Button>
-                                </div>
+                                    <PlusCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                </button>
                             ))}
                             {searchResults.length === 0 && !isSearching && searchTerm && (
                                 <p className="text-center text-sm text-muted-foreground py-4">
