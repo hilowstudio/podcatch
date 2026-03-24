@@ -115,17 +115,11 @@ export function AddFeedDialog() {
                 </DialogHeader>
 
                 <Tabs defaultValue="search" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="search">iTunes Search</TabsTrigger>
-                        <TabsTrigger value="direct">Direct RSS</TabsTrigger>
-                        <TabsTrigger value="youtube" className="gap-2">
-                            <Youtube className="h-4 w-4" />
-                            YouTube
-                        </TabsTrigger>
-                        <TabsTrigger value="import" className="gap-2">
-                            <UploadCloud className="h-4 w-4" />
-                            Import
-                        </TabsTrigger>
+                    <TabsList className="w-full">
+                        <TabsTrigger value="search">iTunes</TabsTrigger>
+                        <TabsTrigger value="direct">RSS</TabsTrigger>
+                        <TabsTrigger value="youtube">YouTube</TabsTrigger>
+                        <TabsTrigger value="import">Import</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="search" className="space-y-4 pt-4">
@@ -143,14 +137,14 @@ export function AddFeedDialog() {
                             </Button>
                         </form>
 
-                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto overflow-x-hidden pr-1">
                             {searchResults.map((podcast, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
                                     disabled={isAdding}
                                     onClick={() => handleAddFeed(podcast.feedUrl)}
-                                    className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent transition-colors w-full text-left cursor-pointer disabled:opacity-50"
+                                    className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent transition-colors w-full text-left cursor-pointer disabled:opacity-50 overflow-hidden"
                                 >
                                     {podcast.image && (
                                         <img
@@ -159,7 +153,7 @@ export function AddFeedDialog() {
                                             className="w-12 h-12 rounded-md object-cover bg-muted flex-shrink-0"
                                         />
                                     )}
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0 overflow-hidden">
                                         <h4 className="font-medium text-sm truncate">{podcast.title}</h4>
                                         <p className="text-xs text-muted-foreground truncate">{podcast.author}</p>
                                     </div>
