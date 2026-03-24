@@ -123,31 +123,13 @@ export function SiteNavigation({ user, subscriptionPlan, usageCount = 0 }: SiteN
 
 
 
-                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseIntegrations} requiredTier="BASIC">
-                                        <div className={!!subscriptionPlan?.canUseIntegrations ? "" : "pointer-events-none"}>
-                                            <Link
-                                                href="/integrations"
-                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
-                                                onClick={() => setOpen(false)}
-                                                tabIndex={!!subscriptionPlan?.canUseIntegrations ? 0 : -1}
-                                            >
-                                                Integrations
-                                            </Link>
-                                        </div>
-                                    </UpgradeTrigger>
-
-                                    <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canUseBrandVoice} requiredTier="BASIC">
-                                        <div className={!!subscriptionPlan?.canUseBrandVoice ? "" : "pointer-events-none"}>
-                                            <Link
-                                                href="/brand-voice"
-                                                className="px-4 py-2 hover:bg-muted rounded-md font-medium block"
-                                                onClick={() => setOpen(false)}
-                                                tabIndex={!!subscriptionPlan?.canUseBrandVoice ? 0 : -1}
-                                            >
-                                                Brand Voice
-                                            </Link>
-                                        </div>
-                                    </UpgradeTrigger>
+                                    <Link
+                                        href="/settings"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Settings
+                                    </Link>
                                 </>
                             )}
                         </nav>

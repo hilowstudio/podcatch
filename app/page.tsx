@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteFooter } from '@/components/site-footer';
+import { RecentlyPlayed } from '@/components/recently-played';
 import { Check, Search, MessageSquare, Zap, Star, Clock, TrendingDown, Lock } from 'lucide-react';
 import { IntegrationsCarousel } from '@/components/landing/integrations-carousel';
 import Link from 'next/link';
@@ -251,6 +252,8 @@ export default async function Home() {
           <h2 className="text-3xl font-bold tracking-tight">Your Podcasts</h2>
           <AddFeedDialog />
         </div>
+
+        <RecentlyPlayed />
 
         <Suspense fallback={<FeedListSkeleton />}>
           <FeedList userId={session.user.id} />

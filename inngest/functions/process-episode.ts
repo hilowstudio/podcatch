@@ -109,7 +109,7 @@ export const processEpisode = inngest.createFunction(
                 where: {
                     userId: { in: subscriberIds },
                     action: 'PROCESS_EPISODE',
-                    createdAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
+                    createdAt: { gte: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)) }
                 },
                 _count: { _all: true }
             });

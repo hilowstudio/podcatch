@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Eye, EyeOff, ExternalLink, Bot } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ExternalLink, Bot, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 type ClaudeProjectsFormProps = {
     userId: string;
@@ -59,9 +60,25 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
     return (
         <Card className="border-indigo-500/20 shadow-sm">
             <CardHeader>
-                <CardTitle>Claude Projects</CardTitle>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <CardTitle>Claude Projects</CardTitle>
+                        <Badge variant="outline" className="text-xs border-status-warning/50 text-status-warning">Experimental</Badge>
+                    </div>
+                    {initialSettings.claudeApiKey && initialSettings.claudeProjectId ? (
+                        <Badge variant="secondary" className="bg-status-success/10 text-status-success border-status-success/20 gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Connected
+                        </Badge>
+                    ) : (
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground gap-1">
+                            <Circle className="h-3 w-3" />
+                            Not configured
+                        </Badge>
+                    )}
+                </div>
                 <CardDescription>
-                    Sync episodes to your Anthropic Claude Knowledge Base.
+                    Send episode transcripts to Claude via the API. This is a best-effort sync and does not use a dedicated Projects API.
                 </CardDescription>
             </CardHeader>
             <CardContent>

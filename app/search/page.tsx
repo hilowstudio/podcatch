@@ -1,5 +1,7 @@
 import { LibrarySearch } from '@/components/library-search';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'Search Library - Podcatch',
@@ -16,7 +18,9 @@ export default function SearchPage() {
                 </p>
             </div>
 
-            <LibrarySearch />
+            <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                <LibrarySearch />
+            </Suspense>
         </div>
     );
 }

@@ -4,7 +4,8 @@ import { useState, Suspense } from 'react';
 import { PLANS } from '@/lib/stripe-config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Sparkles } from 'lucide-react';
+import { TRIAL_DAYS } from '@/lib/stripe-config';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useSearchParams } from 'next/navigation';
@@ -85,7 +86,7 @@ function PricingContent() {
                         className="data-[state=checked]:bg-primary"
                     />
                     <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Annual <Badge variant="secondary" className="ml-1 text-xs bg-accent/20 text-accent-foreground">Save ~15%</Badge>
+                        Annual <Badge variant="secondary" className="ml-1 text-xs bg-primary/10 text-primary">Save up to ${PLANS.pro.monthly.amount * 12 - PLANS.pro.annual.amount}/yr</Badge>
                     </span>
                 </div>
             </div>
@@ -134,7 +135,11 @@ function PricingContent() {
                                 {formatPrice(isAnnual ? PLANS.basic.annual.amount / 12 : PLANS.basic.monthly.amount).split('.')[0]}
                             </span>
                             <span className="text-muted-foreground">/mo</span>
-                            {isAnnual && <span className="block text-xs text-muted-foreground mt-1">Billed ${PLANS.basic.annual.amount} yearly</span>}
+                            {isAnnual && (
+                                <span className="block text-xs text-muted-foreground mt-1">
+                                    Billed ${PLANS.basic.annual.amount}/yr (save ${PLANS.basic.monthly.amount * 12 - PLANS.basic.annual.amount})
+                                </span>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="flex-1">
@@ -172,7 +177,11 @@ function PricingContent() {
                                 {formatPrice(isAnnual ? PLANS.pro.annual.amount / 12 : PLANS.pro.monthly.amount).split('.')[0]}
                             </span>
                             <span className="text-muted-foreground">/mo</span>
-                            {isAnnual && <span className="block text-xs text-muted-foreground mt-1">Billed ${PLANS.pro.annual.amount} yearly</span>}
+                            {isAnnual && (
+                                <span className="block text-xs text-muted-foreground mt-1">
+                                    Billed ${PLANS.pro.annual.amount}/yr (save ${PLANS.pro.monthly.amount * 12 - PLANS.pro.annual.amount})
+                                </span>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="flex-1">
@@ -198,6 +207,16 @@ function PricingContent() {
                         </Button>
                     </CardFooter>
                 </Card>
+            </div>
+
+            {/* Trial Mention */}
+            <div className="mt-10 text-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/5 border border-primary/20 px-6 py-3">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">
+                        Try Pro free for {TRIAL_DAYS} days — no credit card required to start
+                    </span>
+                </div>
             </div>
 
             {/* Feature Comparison Table */}

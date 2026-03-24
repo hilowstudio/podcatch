@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -32,8 +33,19 @@ export async function getEpisodesByFeed(feedId: string) {
  */
 export async function getEpisodeWithInsight(episodeId: string) {
     try {
-        const episode = await prisma.episode.findUnique({
-            where: { id: episodeId },
+        const session = await auth();
+        if (!session?.user?.id) return null;
+
+        // Auth-checked: only return episodes the user subscribes to
+        const episode = await prisma.episode.findFirst({
+            where: {
+                id: episodeId,
+                feed: {
+                    subscriptions: {
+                        some: { userId: session.user.id },
+                    },
+                },
+            },
             include: {
                 feed: {
                     select: {
@@ -50,6 +62,36 @@ export async function getEpisodeWithInsight(episodeId: string) {
         return episode;
     } catch (error) {
         console.error('Error fetching episode:', error);
+        return null;
+    }
+}
+
+/**
+ * Get episode for public sharing (no auth check - only returns completed episodes)
+ */
+export async function getPublicEpisodeWithInsight(episodeId: string) {
+    try {
+        const episode = await prisma.episode.findFirst({
+            where: {
+                id: episodeId,
+                status: 'COMPLETED',
+            },
+            include: {
+                feed: {
+                    select: {
+                        id: true,
+                        title: true,
+                        image: true,
+                    },
+                },
+                insight: true,
+                entities: true,
+            },
+        });
+
+        return episode;
+    } catch (error) {
+        console.error('Error fetching public episode:', error);
         return null;
     }
 }

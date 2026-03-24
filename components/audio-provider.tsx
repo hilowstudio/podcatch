@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 
 interface Episode {
     id: string;
@@ -10,15 +10,40 @@ interface Episode {
     feedTitle?: string;
 }
 
+export interface PlayHistoryEntry {
+    episode: Episode;
+    playedAt: number; // timestamp ms
+}
+
 interface AudioContextType {
     currentEpisode: Episode | null;
     isPlaying: boolean;
     currentTime: number;
     duration: number;
+    playHistory: PlayHistoryEntry[];
     play: (episode: Episode) => void;
     toggle: () => void;
     seek: (time: number) => void;
     close: () => void;
+}
+
+const HISTORY_KEY = 'podcatch_play_history';
+const MAX_HISTORY = 20;
+
+function loadHistory(): PlayHistoryEntry[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveHistory(entries: PlayHistoryEntry[]) {
+    try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, MAX_HISTORY)));
+    } catch { /* quota exceeded - ignore */ }
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -28,7 +53,22 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [playHistory, setPlayHistory] = useState<PlayHistoryEntry[]>([]);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Load history on mount
+    useEffect(() => {
+        setPlayHistory(loadHistory());
+    }, []);
+
+    const addToHistory = useCallback((episode: Episode) => {
+        setPlayHistory(prev => {
+            const filtered = prev.filter(e => e.episode.id !== episode.id);
+            const updated = [{ episode, playedAt: Date.now() }, ...filtered].slice(0, MAX_HISTORY);
+            saveHistory(updated);
+            return updated;
+        });
+    }, []);
 
     useEffect(() => {
         const audio = new Audio();
@@ -83,7 +123,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }
             });
         }
-    }, [currentEpisode]); // Re-bind if episode changes to ensure closure scope is correct
+    }, [currentEpisode]);
 
     const play = (episode: Episode) => {
         const audio = audioRef.current;
@@ -93,6 +133,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setCurrentEpisode(episode);
             audio.src = episode.audioUrl;
             audio.load();
+            addToHistory(episode);
         }
 
         audio.play()
@@ -119,8 +160,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         if (!audio) return;
         audio.currentTime = time;
         setCurrentTime(time);
-
-        // Ensure prompt playback if seeking while paused? Currently no.
     };
 
     const close = () => {
@@ -136,7 +175,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AudioContext.Provider value={{ currentEpisode, isPlaying, currentTime, duration, play, toggle, seek, close }}>
+        <AudioContext.Provider value={{ currentEpisode, isPlaying, currentTime, duration, playHistory, play, toggle, seek, close }}>
             {children}
         </AudioContext.Provider>
     );

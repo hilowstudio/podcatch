@@ -1,14 +1,9 @@
 import { prisma } from '@/lib/prisma';
-import { startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns';
 
 export async function getEpisodeUsage(userId: string) {
-    // For now, simpler implementation: Count episodes created in the current calendar month.
-    // Ideally this should align with the billing cycle, but calendar month is a good proxy for MVP.
-    // If we have strict billing requirements later, we can fetch the stripeCurrentPeriodStart from DB.
-
     const now = new Date();
-    const start = startOfMonth(now);
-    const end = endOfMonth(now);
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
     const count = await prisma.usageLog.count({
         where: {

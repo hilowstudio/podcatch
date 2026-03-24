@@ -7,8 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook, updateTanaToken, updateLogseqGraph } from '@/actions/integrations';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+
+function ConnectionBadge({ connected }: { connected: boolean }) {
+    return connected ? (
+        <Badge variant="secondary" className="bg-status-success/10 text-status-success border-status-success/20 gap-1">
+            <CheckCircle2 className="h-3 w-3" />
+            Connected
+        </Badge>
+    ) : (
+        <Badge variant="secondary" className="bg-muted text-muted-foreground gap-1">
+            <Circle className="h-3 w-3" />
+            Not configured
+        </Badge>
+    );
+}
 
 // --- Types ---
 interface IntegrationProps {
@@ -42,7 +57,10 @@ export function WebhookCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Webhook</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Webhook</CardTitle>
+                    <ConnectionBadge connected={!!initialValue} />
+                </div>
                 <CardDescription>Receive JSON events when episodes are processed.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -85,7 +103,10 @@ export function ReadwiseCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Readwise Reader</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Readwise Reader</CardTitle>
+                    <ConnectionBadge connected={!!initialValue} />
+                </div>
                 <CardDescription>Save full transcripts and summaries to your library.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -128,7 +149,10 @@ export function NotionCard({ initialToken, initialPageId }: { initialToken?: str
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Notion</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Notion</CardTitle>
+                    <ConnectionBadge connected={!!(initialToken && initialPageId)} />
+                </div>
                 <CardDescription>Sync episodes to a Notion Database.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -164,20 +188,18 @@ export function GoogleDriveCard({ isConnected }: { isConnected: boolean }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Google Drive</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Google Drive</CardTitle>
+                    <ConnectionBadge connected={isConnected} />
+                </div>
                 <CardDescription>Export deep research docs for NotebookLM.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-center justify-between rounded-md bg-muted p-3">
-                    <span className="text-sm font-medium">Connection Status</span>
-                    {isConnected ? (
-                        <div className="flex items-center text-green-600 text-sm font-medium gap-2">
-                            Connected
-                        </div>
-                    ) : (
-                        <span className="text-sm text-muted-foreground">Not Connected</span>
-                    )}
-                </div>
+                <p className="text-sm text-muted-foreground">
+                    {isConnected
+                        ? 'Your Google Drive is connected and ready to receive exports.'
+                        : 'Connect your Google account to export research documents.'}
+                </p>
             </CardContent>
             <CardFooter className="justify-end border-t pt-4">
                 <Button
@@ -210,7 +232,10 @@ export function TanaCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Tana</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Tana</CardTitle>
+                    <ConnectionBadge connected={!!initialValue} />
+                </div>
                 <CardDescription>Send nodes to Tana via Input API.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -249,7 +274,10 @@ export function LogseqCard({ initialValue }: IntegrationProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Logseq</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Logseq</CardTitle>
+                    <ConnectionBadge connected={!!initialValue} />
+                </div>
                 <CardDescription>Configure deep links to your local graph.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

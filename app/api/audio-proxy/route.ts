@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const BLOCKED_HOSTNAMES = new Set([
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    '::1',
+    '169.254.169.254', // Cloud metadata (AWS/GCP)
+    'metadata.google.internal',
+]);
+
+function isPrivateIP(hostname: string): boolean {
+    if (BLOCKED_HOSTNAMES.has(hostname)) return true;
+    // Block private IPv4 ranges
+    if (/^10\./.test(hostname)) return true;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true;
+    if (/^192\.168\./.test(hostname)) return true;
+    // Block link-local
+    if (/^169\.254\./.test(hostname)) return true;
+    return false;
+}
+
 export async function GET(request: NextRequest) {
     const url = request.nextUrl.searchParams.get('url');
 
@@ -16,8 +36,14 @@ export async function GET(request: NextRequest) {
             return new NextResponse('Invalid URL protocol', { status: 400 });
         }
 
-        // Fetch the audio with streaming
+        // Block internal/private network access (SSRF protection)
+        if (isPrivateIP(parsedUrl.hostname)) {
+            return new NextResponse('Invalid URL', { status: 400 });
+        }
+
+        // Fetch the audio with streaming and timeout
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(30000),
             headers: {
                 'User-Agent': 'Podcatch/1.0',
             },

@@ -11,7 +11,7 @@ import { EpisodePlayerButton } from '@/components/episode-player-button';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors } from 'lucide-react';
+import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors, Crown, Bot, Wand2 } from 'lucide-react';
 import { OfflineTranscriptViewer } from '@/components/offline-transcript-viewer';
 import { ChapterList } from '@/components/chapter-list';
 import { ClipEditor } from '@/components/clip-editor';
@@ -22,8 +22,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { UpgradeTrigger } from '@/components/upgrade-trigger';
+import { buttonVariants } from '@/components/ui/button';
 import { CollapsibleDescription } from '@/components/collapsible-description';
 
 type PageProps = {
@@ -176,23 +175,16 @@ export default async function EpisodePage({ params }: PageProps) {
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />
-                                {/* Episode Chat: Basic Feature */}
-                                <UpgradeTrigger isUnlocked={!!plan.canChatAboutEpisode} requiredTier="PRO" className="inline-flex">
-                                    <div className={!!plan.canChatAboutEpisode ? "" : "pointer-events-none"}>
-                                        <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
-                                    </div>
-                                </UpgradeTrigger>
-
-                                {/* Claude Sync: Basic Feature */}
-                                <UpgradeTrigger isUnlocked={!!plan.canSendToClaude} requiredTier="BASIC" className="inline-flex">
-                                    <div className={!!plan.canSendToClaude ? "" : "pointer-events-none"}>
-                                        <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
-                                    </div>
-                                </UpgradeTrigger>
+                                {plan.canChatAboutEpisode && (
+                                    <EpisodeChatButton episodeId={episode.id} episodeTitle={episode.title} />
+                                )}
+                                {plan.canSendToClaude && (
+                                    <ClaudeSyncButton episodeId={episode.id} isConfigured={isClaudeConfigured} />
+                                )}
                                 {hasInsights && (
                                     <MarkdownCopyButton
                                         markdown={`# ${episode.title}
-                                        
+
 **Summary**
 ${episode.insight?.summary}
 
@@ -444,14 +436,11 @@ ${episode.insight?.transcript}
                                     <TabsList className="w-full justify-start mb-4">
                                         <TabsTrigger value="transcript">Transcript</TabsTrigger>
                                         <TabsTrigger value="chapters">Chapters</TabsTrigger>
-
-                                        <UpgradeTrigger isUnlocked={!!plan.canUseStudio} requiredTier="BASIC" className="inline-flex">
-                                            <div className={!!plan.canUseStudio ? "" : "pointer-events-none"}>
-                                                <TabsTrigger value="studio" disabled={!plan.canUseStudio} className="data-[state=active]:bg-background">
-                                                    Studio <Badge variant="secondary" className="ml-2 text-[10px]">New</Badge>
-                                                </TabsTrigger>
-                                            </div>
-                                        </UpgradeTrigger>
+                                        {plan.canUseStudio && (
+                                            <TabsTrigger value="studio" className="data-[state=active]:bg-background">
+                                                Studio
+                                            </TabsTrigger>
+                                        )}
                                     </TabsList>
 
                                     {/* Transcript Tab */}
@@ -539,6 +528,46 @@ ${episode.insight?.transcript}
                                     )}
                                 </Tabs>
 
+                                {/* Unified Upgrade Card */}
+                                {(() => {
+                                    const locked: { label: string; tier: string; icon: React.ReactNode }[] = [];
+                                    if (!plan.canChatAboutEpisode) locked.push({ label: 'Chat about this episode with AI', tier: 'PRO', icon: <MessageSquare className="h-4 w-4" /> });
+                                    if (!plan.canSendToClaude) locked.push({ label: 'Sync to Claude Projects', tier: 'BASIC', icon: <Bot className="h-4 w-4" /> });
+                                    if (!plan.canUseStudio) locked.push({ label: 'Studio: Clip Editor & Social Assets', tier: 'BASIC', icon: <Scissors className="h-4 w-4" /> });
+                                    if (!plan.canUseCustomPrompts) locked.push({ label: 'Run custom AI prompts', tier: 'PRO', icon: <Wand2 className="h-4 w-4" /> });
+
+                                    if (locked.length === 0) return null;
+
+                                    const highestTier = locked.some(f => f.tier === 'PRO') ? 'Pro' : 'Basic';
+
+                                    return (
+                                        <Card className="border-primary/20 bg-primary/5">
+                                            <CardHeader>
+                                                <div className="flex items-center gap-2">
+                                                    <Crown className="h-5 w-5 text-primary" />
+                                                    <CardTitle>Unlock More Features</CardTitle>
+                                                </div>
+                                                <CardDescription>
+                                                    Upgrade to {highestTier} to get the full experience for every episode.
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                                <ul className="space-y-2">
+                                                    {locked.map((feature) => (
+                                                        <li key={feature.label} className="flex items-center gap-3 text-sm">
+                                                            <span className="text-primary">{feature.icon}</span>
+                                                            <span>{feature.label}</span>
+                                                            <Badge variant="outline" className="ml-auto text-[10px]">{feature.tier}</Badge>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <Link href="/pricing" className={buttonVariants({ className: 'w-full' })}>
+                                                    View Plans
+                                                </Link>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })()}
 
                             </>
                         )}

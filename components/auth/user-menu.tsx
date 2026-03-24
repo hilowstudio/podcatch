@@ -52,9 +52,9 @@ export function UserMenu({ user, subscriptionPlan, usageCount = 0 }: UserMenuPro
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">
+                    <Link href="/settings" className="cursor-pointer">
                         <Settings className="mr-2 h-4 w-4" />
-                        Profile
+                        Settings
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

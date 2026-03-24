@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getEpisodeWithInsight, getRelatedEpisodes } from '@/actions/episode-actions';
+import { getPublicEpisodeWithInsight, getRelatedEpisodes } from '@/actions/episode-actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MessageSquare, Lightbulb, ExternalLink, PlayCircle, FileText, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, MessageSquare, Lightbulb, ExternalLink, PlayCircle, FileText, ArrowLeft } from 'lucide-react';
+import { ShareToolbar } from '@/components/share-toolbar';
 import { TranscriptViewer } from '@/components/transcript-viewer';
 import { ChapterList } from '@/components/chapter-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +21,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
-    const episode = await getEpisodeWithInsight(id);
+    const episode = await getPublicEpisodeWithInsight(id);
 
     if (!episode) {
         return {
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SharedEpisodePage({ params }: PageProps) {
     const { id } = await params;
-    const episode = await getEpisodeWithInsight(id);
+    const episode = await getPublicEpisodeWithInsight(id);
 
     if (!episode) {
         notFound();
@@ -159,8 +160,12 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                         <div>
                             <h1 className="text-4xl font-bold tracking-tight mb-4">{episode.title}</h1>
                             {episode.description && (
-                                <p className="text-muted-foreground text-lg leading-relaxed">{episode.description}</p>
+                                <p className="text-muted-foreground text-lg leading-relaxed mb-4">{episode.description}</p>
                             )}
+                            <ShareToolbar
+                                title={`${episode.title} - AI Insights by Podcatch`}
+                                url={`https://www.podcatch.app/share/${episode.id}`}
+                            />
                         </div>
 
                         {/* AI Insights */}

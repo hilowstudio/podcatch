@@ -1,26 +1,17 @@
-import { getUserPrompts, createCustomPrompt, deleteCustomPrompt } from '@/actions/studio-actions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Plus, Sparkles } from 'lucide-react';
+import { getUserPrompts } from '@/actions/studio-actions';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles } from 'lucide-react';
 import { CreatePromptForm } from '@/components/create-prompt-form';
 import { DeletePromptButton } from '@/components/delete-prompt-button';
-
-export const metadata = {
-    title: 'Custom Prompts - Podcatch',
-    description: 'Manage your custom AI prompts.',
-};
 
 export default async function PromptSettingsPage() {
     const prompts = await getUserPrompts();
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div>
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Prompt Library</h1>
+                    <h2 className="text-xl font-semibold">Prompt Library</h2>
                     <p className="text-muted-foreground mt-1">Create custom AI prompts to run on your episodes.</p>
                 </div>
                 <CreatePromptForm />

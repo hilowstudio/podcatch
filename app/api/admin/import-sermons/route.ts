@@ -126,12 +126,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Simple auth check - only allow specific user or admin
-    // You can customize this check
-    const allowedEmails = ['adam@example.com']; // Replace with your email
-    if (session.user.email && !allowedEmails.includes(session.user.email)) {
-        // For now, allow any authenticated user - remove this check if needed
-        // return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
+    if (!session.user.email || !adminEmails.includes(session.user.email)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const items = PASTOR_ADAM_VEGA_URLS.map(url => ({ url }));
