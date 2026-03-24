@@ -106,7 +106,7 @@ export function AddFeedDialog() {
                     Add Feed
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] overflow-hidden">
+            <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add Podcast</DialogTitle>
                     <DialogDescription>
@@ -162,6 +162,7 @@ export function AddFeedDialog() {
                                         variant="secondary"
                                         disabled={isAdding}
                                         onClick={() => handleAddFeed(podcast.feedUrl)}
+                                        className="flex-shrink-0"
                                     >
                                         {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
                                     </Button>
