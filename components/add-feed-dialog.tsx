@@ -115,7 +115,7 @@ export function AddFeedDialog() {
                 </DialogHeader>
 
                 <Tabs defaultValue="search" className="w-full">
-                    <TabsList className="w-full">
+                    <TabsList className="flex w-full">
                         <TabsTrigger value="search">iTunes</TabsTrigger>
                         <TabsTrigger value="direct">RSS</TabsTrigger>
                         <TabsTrigger value="youtube">YouTube</TabsTrigger>
