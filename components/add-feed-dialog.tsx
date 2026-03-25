@@ -106,7 +106,7 @@ export function AddFeedDialog() {
                     Add Feed
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden">
                 <DialogHeader>
                     <DialogTitle>Add Podcast</DialogTitle>
                     <DialogDescription>
@@ -114,7 +114,7 @@ export function AddFeedDialog() {
                     </DialogDescription>
                 </DialogHeader>
 
-                <Tabs defaultValue="search" className="w-full">
+                <Tabs defaultValue="search" className="w-full min-w-0">
                     <TabsList className="flex w-full">
                         <TabsTrigger value="search">iTunes</TabsTrigger>
                         <TabsTrigger value="direct">RSS</TabsTrigger>
