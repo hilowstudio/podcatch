@@ -66,9 +66,15 @@ export default function PrivacyPage() {
 
                 <section>
                     <h2 className="text-2xl font-semibold">5. Data Retention & Deletion</h2>
-                    <p>
-                        We retain your personal data for as long as your account is active. After subscription cancellation, your data remains accessible for 90 days. You may permanently delete your account and all associated data at any time from the Settings page. Upon deletion, all data is destroyed immediately from our primary systems and within 30 days from backups.
-                    </p>
+                    <p>We retain different categories of data for different periods:</p>
+                    <ul className="list-disc pl-6 space-y-1 mt-2">
+                        <li><strong>Account & Content Data</strong> (profile, episodes, transcripts, insights, collections, prompts, snips): Retained while your account is active. Deleted immediately upon account deletion.</li>
+                        <li><strong>Notification History:</strong> Automatically purged after 90 days.</li>
+                        <li><strong>Usage Logs</strong> (episode processing counts for billing): Retained for 12 months, then automatically purged.</li>
+                        <li><strong>Rate Limit Records:</strong> Automatically purged after 24 hours.</li>
+                        <li><strong>Post-Cancellation:</strong> After subscription cancellation, all data remains accessible and exportable for 90 days, after which it may be permanently deleted.</li>
+                        <li><strong>Post-Deletion:</strong> Upon account deletion, all data is destroyed immediately from our primary systems and within 30 days from backups.</li>
+                    </ul>
                 </section>
 
                 <section>

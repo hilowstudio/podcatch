@@ -29,20 +29,22 @@ export function InstallPrompt() {
         const handler = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e as BeforeInstallPromptEvent);
-            // Show the prompt after a delay if not dismissed before
+            // Show immediately when browser signals install eligibility (no timer)
             const dismissed = localStorage.getItem('installPromptDismissed');
             if (!dismissed) {
-                setTimeout(() => setShowPrompt(true), 3000);
+                setShowPrompt(true);
             }
         };
 
         window.addEventListener('beforeinstallprompt', handler);
 
-        // Show iOS prompt if not seen and not standalone
+        // On iOS, only show if user has visited at least 3 times (meaningful engagement)
         if (iOS && !standalone) {
             const dismissed = localStorage.getItem('installPromptDismissed');
-            if (!dismissed) {
-                setTimeout(() => setShowPrompt(true), 3000);
+            const visits = parseInt(localStorage.getItem('installPromptVisits') || '0', 10) + 1;
+            localStorage.setItem('installPromptVisits', String(visits));
+            if (!dismissed && visits >= 3) {
+                setShowPrompt(true);
             }
         }
 

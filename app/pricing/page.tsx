@@ -165,12 +165,9 @@ function PricingContent() {
                 </Card>
 
                 {/* PRO TIER */}
-                <Card className="flex flex-col border-2 border-primary shadow-lg z-10 relative">
-                    <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        POPULAR
-                    </div>
+                <Card className="flex flex-col border-2 border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                     <CardHeader>
-                        <CardTitle className="text-2xl text-primary">{PLANS.pro.name}</CardTitle>
+                        <CardTitle className="text-2xl">{PLANS.pro.name}</CardTitle>
                         <CardDescription>For founders, researchers & creators.</CardDescription>
                         <div className="mt-4">
                             <span className="text-4xl font-bold">
@@ -188,8 +185,8 @@ function PricingContent() {
                         <ul className="space-y-3">
                             {PLANS.pro.marketingFeatures.map((feature) => (
                                 <li key={feature} className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-medium">{feature}</span>
+                                    <Check className="h-4 w-4 text-status-success" />
+                                    <span className="text-sm">{feature}</span>
                                 </li>
                             ))}
                         </ul>
@@ -197,13 +194,11 @@ function PricingContent() {
                     <CardFooter>
                         <Button
                             className="w-full"
-                            variant="default" // Primary color
-                            size="lg"
                             onClick={() => handleCheckout(isAnnual ? PLANS.pro.annual.priceId : PLANS.pro.monthly.priceId)}
                             disabled={!!isLoading}
                         >
                             {isLoading === (isAnnual ? PLANS.pro.annual.priceId : PLANS.pro.monthly.priceId) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Go Pro
+                            Subscribe Pro
                         </Button>
                     </CardFooter>
                 </Card>
@@ -229,7 +224,7 @@ function PricingContent() {
                                 <th className="text-left py-4 px-4 w-1/4">Feature</th>
                                 <th className="text-center py-4 px-4 w-1/4">Free</th>
                                 <th className="text-center py-4 px-4 w-1/4">Basic</th>
-                                <th className="text-center py-4 px-4 w-1/4 font-bold text-primary">Pro</th>
+                                <th className="text-center py-4 px-4 w-1/4">Pro</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -241,13 +236,13 @@ function PricingContent() {
                                 <td className="py-4 px-4">Episodes per Month</td>
                                 <td className="text-center py-4 px-4">3</td>
                                 <td className="text-center py-4 px-4">20</td>
-                                <td className="text-center py-4 px-4 font-bold text-primary">200</td>
+                                <td className="text-center py-4 px-4">200</td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Studio Access (Creation)</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
 
                             {/* AI & Analysis */}
@@ -258,25 +253,25 @@ function PricingContent() {
                                 <td className="py-4 px-4">AI Summaries</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Chat about Episode</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Knowledge Graph</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Chat with Library</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
 
                             {/* Features */}
@@ -287,19 +282,19 @@ function PricingContent() {
                                 <td className="py-4 px-4">Custom Prompts</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Integrations (Notion/Claude)</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                             <tr className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="py-4 px-4">Brand Voice</td>
                                 <td className="text-center py-4 px-4 text-muted-foreground">—</td>
                                 <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
-                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-primary" /></td>
+                                <td className="text-center py-4 px-4"><Check className="h-5 w-5 mx-auto text-status-success" /></td>
                             </tr>
                         </tbody>
                     </table>

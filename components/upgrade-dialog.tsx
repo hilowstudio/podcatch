@@ -1,60 +1,36 @@
 'use client';
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Info } from 'lucide-react';
 
-interface UpgradeDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+interface UpgradeNoticeProps {
     currentPlan: string;
-    nextPlan: string;
     limit: number;
+    onDismiss: () => void;
 }
 
-export function UpgradeDialog({
-    open,
-    onOpenChange,
+export function UpgradeNotice({
     currentPlan,
-    nextPlan,
     limit,
-}: UpgradeDialogProps) {
+    onDismiss,
+}: UpgradeNoticeProps) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-xl">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        Usage Limit Reached
-                    </DialogTitle>
-                    <DialogDescription className="pt-2 text-base">
-                        You've processed <strong>{limit} episodes</strong> this month, which is the limit for the <strong>{currentPlan}</strong> plan.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-2">
-                    <p className="text-muted-foreground">
-                        Upgrade to <strong>{nextPlan}</strong> to unlock more processing power and deeper insights.
-                    </p>
-                </div>
-                <DialogFooter className="flex flex-col gap-2 sm:flex-row">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Link href="/pricing" className="w-full sm:w-auto">
-                        <Button className="w-full">
-                            Upgrade to {nextPlan}
-                        </Button>
-                    </Link>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <div className="rounded-lg border bg-muted/50 p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                    Monthly limit reached
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                    You've processed {limit} episodes this month on the {currentPlan} plan.
+                    You can <Link href="/pricing" className="text-primary underline hover:no-underline">view available plans</Link> or
+                    wait until your limit resets next month.
+                </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onDismiss} className="shrink-0">
+                Dismiss
+            </Button>
+        </div>
     );
 }
