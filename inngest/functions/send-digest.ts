@@ -7,13 +7,14 @@ export const sendDigest = inngest.createFunction(
         id: 'send-digest',
         name: 'Send Email Digest',
     },
-    { cron: '0 8 * * *' }, // Daily at 8am UTC
+    { cron: '0 * * * *' }, // Every hour — checks each user's preferred delivery time
     async ({ step }) => {
         const today = new Date();
+        const currentUtcHour = today.getUTCHours();
         const isMonday = today.getUTCDay() === 1;
 
         const users = await step.run('fetch-digest-users', async () => {
-            return prisma.user.findMany({
+            const allUsers = await prisma.user.findMany({
                 where: {
                     OR: [
                         { digestFrequency: 'DAILY' },
@@ -25,7 +26,37 @@ export const sendDigest = inngest.createFunction(
                     email: true,
                     lastDigestAt: true,
                     digestFrequency: true,
+                    timezone: true,
+                    digestDeliveryTime: true,
+                    quietHoursStart: true,
+                    quietHoursEnd: true,
                 },
+            });
+
+            // Filter to users whose preferred delivery hour matches the current hour
+            return allUsers.filter(user => {
+                const tz = user.timezone || 'UTC';
+                const preferredTime = user.digestDeliveryTime || '08:00';
+                const preferredHour = parseInt(preferredTime.split(':')[0]);
+
+                // Get current hour in user's timezone
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                    timeZone: tz,
+                    hour: 'numeric',
+                    hour12: false,
+                });
+                const localHour = parseInt(formatter.format(today));
+
+                // Only send if the current hour matches their preferred hour
+                if (localHour !== preferredHour) return false;
+
+                // Skip if already sent today
+                if (user.lastDigestAt) {
+                    const hoursSinceLastDigest = (today.getTime() - user.lastDigestAt.getTime()) / (1000 * 60 * 60);
+                    if (hoursSinceLastDigest < 20) return false; // Prevent double-sends
+                }
+
+                return true;
             });
         });
 

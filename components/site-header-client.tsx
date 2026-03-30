@@ -6,6 +6,7 @@ import { NotificationBell } from '@/components/notification-bell';
 import Link from 'next/link';
 import { SubscriptionPlan } from '@/lib/subscription';
 import { Button } from '@/components/ui/button';
+import { SessionTimer } from '@/components/session-timer';
 
 interface SiteHeaderClientProps {
     user?: {
@@ -46,7 +47,10 @@ export function SiteHeaderClient({ user, subscriptionPlan, usageCount = 0 }: Sit
                         </>
                     )}
                 </div>
-                <NotificationBell />
+                <div className="flex items-center gap-3">
+                    {user && <SessionTimer />}
+                    <NotificationBell />
+                </div>
             </div>
         </header>
     );

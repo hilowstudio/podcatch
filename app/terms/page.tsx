@@ -10,6 +10,20 @@ export default function TermsPage() {
             </div>
 
             <article className="prose prose-slate dark:prose-invert max-w-none space-y-6">
+                <section className="bg-muted/50 rounded-lg p-6 border">
+                    <h2 className="text-2xl font-semibold mt-0">Plain-Language Summary</h2>
+                    <ul className="list-disc pl-6 space-y-1">
+                        <li><strong>What Podcatch does:</strong> Turns podcast audio into searchable text, summaries, and insights using AI.</li>
+                        <li><strong>Your content:</strong> You own everything you create (notes, collections, prompts). We do not claim ownership of your content.</li>
+                        <li><strong>AI accuracy:</strong> AI-generated summaries and insights can contain errors. Always verify important information against the original audio.</li>
+                        <li><strong>Payments:</strong> Paid plans are billed monthly or annually. You can cancel anytime — your access continues through the paid period.</li>
+                        <li><strong>After cancellation:</strong> Your data stays accessible for 90 days so you can export it.</li>
+                        <li><strong>Deleting your account:</strong> You can permanently delete your account and all data from Settings at any time.</li>
+                        <li><strong>If we shut down:</strong> We will give you at least 30 days notice and keep data export working so you can get your data out.</li>
+                    </ul>
+                    <p className="text-sm text-muted-foreground mt-4">The full terms below provide complete legal details.</p>
+                </section>
+
                 <section>
                     <h2 className="text-2xl font-semibold">1. Acceptance of Terms</h2>
                     <p>
@@ -39,7 +53,7 @@ export default function TermsPage() {
                         <strong>3.2 Subscriptions:</strong> Some parts of the Service are billed on a subscription basis ("Subscription(s)"). You will be billed in advance on a recurring and periodic basis (such as monthly or annually).
                     </p>
                     <p>
-                        <strong>3.3 Cancellations:</strong> You may cancel your Subscription renewal at any time through your account management page. You will not receive a refund for the fees you already paid for your current subscription period, and you will be able to access the Service until the end of your current subscription period.
+                        <strong>3.3 Cancellations:</strong> You may cancel your Subscription renewal at any time through your account management page. You will not receive a refund for the fees you already paid for your current subscription period, and you will be able to access the Service until the end of your current subscription period. After cancellation, your data (including episodes, transcripts, insights, collections, and custom prompts) remains accessible and exportable for a minimum of 90 days. After 90 days, your data may be permanently deleted.
                     </p>
                     <p>
                         <strong>3.4 Free Trials:</strong> We may, at our sole discretion, offer a Subscription with a free trial for a limited period of time. You may be required to enter your billing information in order to sign up for the free trial.
@@ -71,6 +85,12 @@ export default function TermsPage() {
                     <p>
                         We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
                     </p>
+                    <p>
+                        <strong>6.1 Account Deletion:</strong> You may permanently delete your account at any time from your Settings page. Deletion is immediate and irreversible — all your data including subscriptions, episodes, transcripts, insights, collections, custom prompts, and notification history will be permanently destroyed. We recommend exporting your data before deletion.
+                    </p>
+                    <p>
+                        <strong>6.2 Service Discontinuation:</strong> If we discontinue the Service, we will provide at least 30 days advance notice via email and in-app notification. During that period, all data export features will remain fully functional so you can retrieve your data.
+                    </p>
                 </section>
 
                 <section>
@@ -81,7 +101,20 @@ export default function TermsPage() {
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold">8. Contact Us</h2>
+                    <h2 className="text-2xl font-semibold">8. Support & Security Policy</h2>
+                    <p>
+                        <strong>8.1 Security Updates:</strong> The current version of Podcatch will receive security updates for a minimum of 12 months from its release date. Critical security vulnerabilities will be patched within 7 calendar days of discovery.
+                    </p>
+                    <p>
+                        <strong>8.2 End-of-Life:</strong> Before deprecating any version, we will provide at least 90 days advance notice via email and changelog. During that period, all features including data export will remain functional.
+                    </p>
+                    <p>
+                        <strong>8.3 Support Response:</strong> We aim to respond to all support requests within 2 business days. Contact us at support@podcatch.app.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 className="text-2xl font-semibold">9. Contact Us</h2>
                     <p>
                         If you have any questions about these Terms, please contact us at support@podcatch.app.
                     </p>

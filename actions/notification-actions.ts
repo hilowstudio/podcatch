@@ -10,9 +10,11 @@ export async function getNotifications() {
     if (!session?.user?.id) return [];
 
     try {
+        const now = new Date();
         const notifications = await prisma.notification.findMany({
             where: {
                 userId: session.user.id,
+                OR: [{ queuedUntil: null }, { queuedUntil: { lte: now } }],
             },
             orderBy: {
                 createdAt: 'desc',
@@ -31,10 +33,12 @@ export async function getUnreadCount() {
     if (!session?.user?.id) return 0;
 
     try {
+        const now = new Date();
         const count = await prisma.notification.count({
             where: {
                 userId: session.user.id,
                 read: false,
+                OR: [{ queuedUntil: null }, { queuedUntil: { lte: now } }],
             },
         });
         return count;
@@ -89,5 +93,26 @@ export async function markAllRead() {
         return { success: true };
     } catch (error) {
         return { success: false };
+    }
+}
+
+export async function getNotificationHistory(days: number = 30) {
+    const session = await auth();
+    if (!session?.user?.id) return { notifications: [], count: 0 };
+
+    try {
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        const [notifications, count] = await Promise.all([
+            prisma.notification.findMany({
+                where: { userId: session.user.id, createdAt: { gte: since } },
+                orderBy: { createdAt: 'desc' },
+            }),
+            prisma.notification.count({
+                where: { userId: session.user.id, createdAt: { gte: since } },
+            }),
+        ]);
+        return { notifications, count };
+    } catch (error) {
+        return { notifications: [], count: 0 };
     }
 }

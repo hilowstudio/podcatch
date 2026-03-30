@@ -34,3 +34,28 @@ export async function getDigestPreference() {
 
     return user?.digestFrequency || 'NONE';
 }
+
+export async function updateScheduleSettings(settings: {
+    timezone: string;
+    deliveryTime: string;
+    quietStart: string;
+    quietEnd: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+            timezone: settings.timezone,
+            digestDeliveryTime: settings.deliveryTime,
+            quietHoursStart: settings.quietStart === 'off' ? null : settings.quietStart || null,
+            quietHoursEnd: settings.quietStart === 'off' ? null : settings.quietEnd || null,
+        },
+    });
+
+    revalidatePath('/settings');
+    return { success: true };
+}

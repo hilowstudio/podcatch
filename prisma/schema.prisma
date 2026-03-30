@@ -73,6 +73,11 @@ model User {
   brandVoice      String?        @db.Text
   digestFrequency String         @default("NONE") // NONE, DAILY, WEEKLY
   lastDigestAt    DateTime?
+  timezone           String?  // IANA timezone e.g. "America/New_York"
+  digestDeliveryTime String?  // "HH:mm" format, default "08:00"
+  quietHoursStart    String?  // "HH:mm" e.g. "22:00"
+  quietHoursEnd      String?  // "HH:mm" e.g. "07:00"
+  deactivatedAt      DateTime?
   usageLogs       UsageLog[]
 }
 
@@ -271,20 +276,22 @@ model Insight {
 
 // User Notifications
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  read      Boolean  @default(false)
-  link      String? // Optional link to navigate to (e.g., /episodes/123)
-  type      String   @default("INFO") // INFO, SUCCESS, ERROR
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  read        Boolean   @default(false)
+  link        String? // Optional link to navigate to (e.g., /episodes/123)
+  type        String    @default("INFO") // INFO, SUCCESS, ERROR
+  queuedUntil DateTime? // If set, notification is held until this time (quiet hours)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
+  @@index([createdAt])
 }
 
 // User Snips (Highlights)

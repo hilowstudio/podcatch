@@ -132,6 +132,11 @@ export function NotificationBell() {
                         </div>
                     )}
                 </div>
+                <div className="border-t px-4 py-2">
+                    <Link href="/notifications" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                        View full history
+                    </Link>
+                </div>
             </PopoverContent>
         </Popover>
     );

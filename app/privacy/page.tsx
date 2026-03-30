@@ -10,6 +10,19 @@ export default function PrivacyPage() {
             </div>
 
             <article className="prose prose-slate dark:prose-invert max-w-none space-y-6">
+                <section className="bg-muted/50 rounded-lg p-6 border">
+                    <h2 className="text-2xl font-semibold mt-0">Plain-Language Summary</h2>
+                    <p>Here is the short version of our privacy policy:</p>
+                    <ul className="list-disc pl-6 space-y-1">
+                        <li><strong>What we collect:</strong> Your name, email, and the podcast content you process (transcripts, notes, prompts). We also collect basic technical data like your browser type.</li>
+                        <li><strong>Why we collect it:</strong> To run the service — manage your account, process episodes, display your library, and handle payments through Stripe.</li>
+                        <li><strong>Who can see it:</strong> Only our AI providers (Google, Anthropic) see your transcripts to generate insights. Stripe sees your payment info. We never sell your data to advertisers.</li>
+                        <li><strong>How long we keep it:</strong> We keep your data as long as your account is active. After you cancel a subscription, your data stays accessible for 90 days. After account deletion, all data is permanently destroyed.</li>
+                        <li><strong>How to delete it:</strong> Go to Settings and click "Delete Account" to permanently remove all your data. You can also export your data as JSON first from the same page.</li>
+                    </ul>
+                    <p className="text-sm text-muted-foreground mt-4">The full policy below provides complete legal details.</p>
+                </section>
+
                 <section>
                     <h2 className="text-2xl font-semibold">1. Introduction</h2>
                     <p>
@@ -52,21 +65,28 @@ export default function PrivacyPage() {
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold">5. Data Security</h2>
+                    <h2 className="text-2xl font-semibold">5. Data Retention & Deletion</h2>
+                    <p>
+                        We retain your personal data for as long as your account is active. After subscription cancellation, your data remains accessible for 90 days. You may permanently delete your account and all associated data at any time from the Settings page. Upon deletion, all data is destroyed immediately from our primary systems and within 30 days from backups.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 className="text-2xl font-semibold">6. Data Security</h2>
                     <p>
                         We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed. In addition, we limit access to your personal data to those employees, agents, contractors and other third parties who have a business need to know.
                     </p>
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold">6. Third-Party Links</h2>
+                    <h2 className="text-2xl font-semibold">7. Third-Party Links</h2>
                     <p>
                         Our Service may include links to third-party websites, plug-ins and applications (e.g., YouTube, RSS feeds). Clicking on those links or enabling those connections may allow third parties to collect or share data about you. We do not control these third-party websites and are not responsible for their privacy statements.
                     </p>
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold">7. Contact Details</h2>
+                    <h2 className="text-2xl font-semibold">8. Contact Details</h2>
                     <p>
                         If you have any questions about this privacy policy or our privacy practices, please contact us at support@podcatch.app.
                     </p>

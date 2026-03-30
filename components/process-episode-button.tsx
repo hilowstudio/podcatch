@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react';
 import { processEpisodeAction } from '@/actions/process-episode-action';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { PlayCircle, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { UpgradeDialog } from '@/components/upgrade-dialog';
+import Link from 'next/link';
 
 interface ProcessEpisodeButtonProps {
     episodeId: string;
@@ -14,7 +15,6 @@ interface ProcessEpisodeButtonProps {
 
 export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButtonProps) {
     const [isPending, startTransition] = useTransition();
-    const [showUpgrade, setShowUpgrade] = useState(false);
     const [upgradeData, setUpgradeData] = useState<{
         currentPlan: string;
         nextPlan: string;
@@ -40,7 +40,6 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
                     nextPlan: result.nextPlan,
                     limit: result.limit
                 });
-                setShowUpgrade(true);
             } else {
                 toast.error(result.error);
             }
@@ -48,7 +47,7 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
     };
 
     return (
-        <>
+        <div className="space-y-3">
             <Button
                 onClick={handleProcess}
                 disabled={isPending}
@@ -69,14 +68,27 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
             </Button>
 
             {upgradeData && (
-                <UpgradeDialog
-                    open={showUpgrade}
-                    onOpenChange={setShowUpgrade}
-                    currentPlan={upgradeData.currentPlan}
-                    nextPlan={upgradeData.nextPlan}
-                    limit={upgradeData.limit}
-                />
+                <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="flex items-start gap-3 p-4">
+                        <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">Usage Limit Reached</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                You&apos;ve processed {upgradeData.limit} episodes this month on the {upgradeData.currentPlan} plan.
+                                Upgrade to {upgradeData.nextPlan} for more.
+                            </p>
+                            <Link href="/pricing" className="inline-block mt-2">
+                                <Button size="sm" variant="outline" className="gap-1.5">
+                                    View Plans
+                                </Button>
+                            </Link>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0" onClick={() => setUpgradeData(null)}>
+                            <X className="h-3.5 w-3.5" />
+                        </Button>
+                    </CardContent>
+                </Card>
             )}
-        </>
+        </div>
     );
 }
