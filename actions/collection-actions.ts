@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { MODELS } from '@/lib/ai/models';
 
 export async function createCollection(title: string, description?: string) {
     const session = await auth();
@@ -167,7 +168,7 @@ Key Takeaways: ${(ep.insight?.keyTakeaways as string[])?.join('\n') || 'N/A'}
         const user = session.user as any;
         const geminiApiKey = user.geminiApiKey || process.env.GEMINI_API_KEY;
         const google = createGoogleGenerativeAI({ apiKey: geminiApiKey });
-        const model = google('gemini-1.5-pro-latest');
+        const model = google(MODELS.synthesis);
 
         const prompt = `
 You are an expert researcher and synthesizer. 

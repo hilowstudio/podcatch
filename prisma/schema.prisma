@@ -37,6 +37,10 @@ model User {
   deepgramApiKey   String?
   openaiApiKey     String? // For future OpenAI support
 
+  // Hi-Low Studio Content Engine
+  hilowIngestUrl          String? // Hi-Low /api/ingest endpoint URL
+  hilowIngestKey          String? // Hi-Low INGEST_API_KEY bearer token
+
   // Phase 2 Integrations
   webhookUrl              String? // Generic Webhook
   readwiseApiKey          String? // Readwise Reader
@@ -318,7 +322,7 @@ model EpisodeEmbedding {
   id        String                     @id @default(cuid())
   episodeId String
   content   String                     @db.Text // The chunk text
-  vector    Unsupported("vector(768)") // Gemini text-embedding-004 is 768 dim
+  vector    Unsupported("vector(768)") // gemini-embedding-2 pinned to 768 dims (see lib/ai/embedding.ts)
   createdAt DateTime                   @default(now())
 
   episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)

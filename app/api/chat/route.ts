@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText } from 'ai';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { MODELS } from '@/lib/ai/models';
 
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -185,7 +186,7 @@ export async function POST(req: Request) {
         console.log('[Chat API] Messages count:', messages.length);
 
         const result = streamText({
-            model: google('gemini-3-pro-preview'),
+            model: google(MODELS.chat),
             messages,
             system: systemPrompt,
         });

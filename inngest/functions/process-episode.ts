@@ -5,6 +5,7 @@ import { createClient } from '@deepgram/sdk';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { insightSchema } from '@/lib/ai/schemas';
+import { MODELS } from '@/lib/ai/models';
 
 // No stream/fs/ytdl imports needed for simplified YouTube flow
 import { PLANS } from '@/lib/stripe-config';
@@ -56,6 +57,8 @@ export const processEpisode = inngest.createFunction(
                                             openaiKey: true,
                                             openaiAssistantId: true,
                                             openaiVectorStoreId: true,
+                                            hilowIngestUrl: true,
+                                            hilowIngestKey: true,
                                             brandVoice: true,
                                         },
                                     },
@@ -349,8 +352,8 @@ export const processEpisode = inngest.createFunction(
                     apiKey: geminiApiKey,
                 });
 
-                // Select Model - Gemini 2.0 Flash supports YouTube URLs directly
-                const modelName = 'gemini-3-pro-preview';
+                // Select Model - the insights model supports YouTube URLs directly
+                const modelName = MODELS.insights;
 
                 const messages: any[] = [];
 
@@ -805,6 +808,52 @@ ${transcriptData.timestampedTranscript}
                     }
                 } catch (error) {
                     console.error('Error in OpenAI sync step:', error);
+                }
+            });
+        }
+
+        // Step: Ingest to Hi-Low Studio content engine
+        if (episode.feed.user?.hilowIngestUrl && episode.feed.user?.hilowIngestKey) {
+            await step.run('ingest-to-hilow', async () => {
+                try {
+                    console.log('Ingesting to Hi-Low Studio...');
+                    const feedType = episode.feed.type;
+                    const res = await fetch(episode.feed.user!.hilowIngestUrl!, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${episode.feed.user!.hilowIngestKey!}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            source: feedType === 'YOUTUBE' ? 'youtube' : 'podcast',
+                            raw_insight: insights.summary,
+                            source_material: (transcriptData.rawTranscript || '').slice(0, 8000),
+                            source_metadata: {
+                                source_system: 'podcatch',
+                                external_id: `episode:${episode.id}`,
+                                show_name: episode.feed.title,
+                                episode_title: episode.title,
+                                summary: insights.summary,
+                                key_takeaways: insights.keyTakeaways || [],
+                                chapters: insights.chapters || [],
+                                entities: (insights.entities || []).map((e: { name: string; type: string }) => ({
+                                    name: e.name,
+                                    type: e.type,
+                                })),
+                            },
+                        }),
+                    });
+
+                    if (res.ok) {
+                        const status = res.status === 201 ? 'created' : 'already exists';
+                        console.log(`✅ Ingested to Hi-Low (${status})`);
+                    } else {
+                        const body = await res.text();
+                        console.error(`Hi-Low ingest failed (${res.status}):`, body);
+                    }
+                } catch (error) {
+                    console.error('Error ingesting to Hi-Low:', error);
+                    // Don't fail the whole job
                 }
             });
         }
