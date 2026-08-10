@@ -18,6 +18,36 @@ export const processEpisode = inngest.createFunction(
         concurrency: {
             limit: 2,
         },
+        // Runs once all retries are exhausted. Without this an episode that throws is
+        // left at PROCESSING forever, indistinguishable from one still in flight —
+        // which is how 14 episodes sat stuck for up to seven months unnoticed.
+        onFailure: async ({ event, error }) => {
+            const episodeId = event?.data?.event?.data?.episodeId;
+            if (!episodeId) return;
+
+            const episode = await prisma.episode.update({
+                where: { id: episodeId },
+                data: { status: 'FAILED' },
+                select: { id: true, title: true, feed: { select: { subscriptions: { select: { userId: true }, take: 10 } } } },
+            }).catch(() => null);
+            if (!episode) return;
+
+            console.error(`Episode ${episodeId} marked FAILED: ${error?.message}`);
+
+            // Tell whoever is subscribed, so a failure is visible rather than silent.
+            const userIds = [...new Set(episode.feed.subscriptions.map(s => s.userId))];
+            if (userIds.length) {
+                await prisma.notification.createMany({
+                    data: userIds.map(userId => ({
+                        userId,
+                        title: 'Episode Processing Failed',
+                        message: `"${episode.title}" could not be processed. You can retry it from the episode page.`,
+                        link: `/episodes/${episode.id}`,
+                        type: 'ERROR',
+                    })),
+                }).catch(() => null);
+            }
+        },
     },
     { event: 'episode/process.requested' },
     async ({ event, step }) => {
