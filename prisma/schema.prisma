@@ -180,7 +180,11 @@ model Episode {
   audioUrl      String
   videoUrl      String? // For YouTube Watch URL
   youtubeId     String? // For YouTube Video ID
-  transcriptUrl String? // Source URL for existing transcript (e.g. from RSS)
+  transcriptUrl String? // Best publisher transcript URL (from RSS <podcast:transcript>)
+  // All cue-timed/JSON candidates for this episode: [{ url, type, kind }].
+  // Granularity can only be established by fetching, so the processor needs the
+  // full ranked list to fall through when a candidate turns out unusable.
+  transcriptSources Json?
   publishedAt   DateTime
   status        EpisodeStatus @default(DISCOVERED)
   feedId        String

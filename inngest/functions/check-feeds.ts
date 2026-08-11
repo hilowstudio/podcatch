@@ -1,7 +1,8 @@
 import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@/prisma/generated_new/client';
 import Parser from 'rss-parser';
-import { selectTranscriptSource } from '@/lib/transcripts';
+import { collectTranscriptSources } from '@/lib/transcripts';
 
 
 export const checkFeeds = inngest.createFunction(
@@ -118,7 +119,7 @@ export const checkFeeds = inngest.createFunction(
                             continue;
                         }
 
-                        // Prefer a publisher transcript, but only in a cue-timed format.
+                        // Collect publisher transcript candidates (json/vtt/srt, ranked).
                         // rss-parser (xml2js) nests tag attributes under `$` — the previous
                         // '@_url' lookup is fast-xml-parser's convention and always produced
                         // undefined, which is why no episode ever had a transcriptUrl.
@@ -126,7 +127,7 @@ export const checkFeeds = inngest.createFunction(
                         const rawTags = item.transcript;
                         const tags = (Array.isArray(rawTags) ? rawTags : rawTags ? [rawTags] : [])
                             .map((t: any) => ({ url: t?.$?.url ?? t?.url, type: t?.$?.type ?? t?.type }));
-                        const source = selectTranscriptSource(tags);
+                        const sources = collectTranscriptSources(tags);
 
                         // Create new episode
                         const episode = await prisma.episode.create({
@@ -135,7 +136,8 @@ export const checkFeeds = inngest.createFunction(
                                 title: item.title || 'Untitled Episode',
                                 description: item.contentSnippet || item.content || null,
                                 audioUrl,
-                                transcriptUrl: source?.url ?? null,
+                                transcriptUrl: sources[0]?.url ?? null,
+                                transcriptSources: sources.length ? sources : Prisma.DbNull,
                                 publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
                                 status: 'DISCOVERED',
                                 feedId: feed.id,

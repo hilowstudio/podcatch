@@ -1,133 +1,264 @@
 /**
  * Publisher-supplied transcripts from the RSS <podcast:transcript> tag.
  *
- * Only cue-timed formats are accepted: WebVTT and SubRip. Both carry a
- * `--> ` timing line by definition, so timing is guaranteed by the format
- * rather than by publisher goodwill. Plain text and HTML carry no dependable
- * timing, and an untimed transcript is worse than none here — the pipeline
- * asks the model for [MM:SS] chapters and citations regardless, so it would
- * invent them.
+ * The declared MIME type is treated as a hint, never as a contract. What a
+ * publisher advertises and what it serves are different things: a URL may 404,
+ * a "vtt" may arrive empty, and the JSON transcript spec permits segment-level
+ * timing as readily as word-level. So every candidate is fetched, parsed and
+ * validated, and anything unusable falls through to the next candidate and
+ * finally to Deepgram.
  *
- * Everything else falls through to Deepgram, which is also the only source of
- * word-level timing (Insight.wordTimestamps) for the animated transcript.
+ * Preference, best first:
+ *   1. JSON, when it turns out to be word-level  -> drives Insight.wordTimestamps,
+ *      so the animated transcript and silence skipper work without transcription
+ *   2. VTT  -> cue-level timing, plus speaker names in <v ...> spans
+ *   3. SRT  -> cue-level timing
+ *   4. JSON that is only phrase/sentence-level -> cue-level equivalent, used only
+ *      when nothing above is available
+ * Plain text and HTML are never used: they carry no dependable timing, and the
+ * pipeline asks the model for [MM:SS] chapters and citations regardless, so an
+ * untimed transcript produces fabricated ones.
  */
 
-export type TranscriptCue = { start: number; end: number; text: string; speaker?: string };
+export type TranscriptKind = 'json' | 'vtt' | 'srt';
+export type TranscriptSource = { url: string; type?: string; kind: TranscriptKind };
+export type WordTimestamp = { word: string; start: number; end: number; speaker?: number };
 
 export type ParsedTranscript = {
-    /** Plain prose, no timings — what the model reads. */
     rawTranscript: string;
-    /** `[MM:SS] text` blocks — what drives chapters and citations. */
     timestampedTranscript: string;
-    cues: TranscriptCue[];
-    format: 'vtt' | 'srt';
+    /** Only present when a word-level source was used. */
+    wordTimestamps?: WordTimestamp[];
+    kind: TranscriptKind;
+    granularity: 'word' | 'cue';
 };
-
-/** MIME types we can trust to carry cue timing, best first. */
-const ACCEPTED: { test: RegExp; format: 'vtt' | 'srt' }[] = [
-    // VTT first: same timing as SRT, but speaker survives in <v ...> tags
-    { test: /vtt/i, format: 'vtt' },
-    { test: /subrip|x-subrip|\bsrt\b/i, format: 'srt' },
-];
 
 export type TranscriptTag = { url?: string; type?: string };
 
+/** Max bytes we will pull for a single transcript; word-level JSON runs ~1MB. */
+const MAX_BYTES = 12 * 1024 * 1024;
+/** At or below this many words per segment, a JSON transcript is word-level. */
+const WORD_LEVEL_MAX_AVG = 1.6;
+
+const KIND_PATTERNS: { kind: TranscriptKind; type: RegExp; ext: RegExp }[] = [
+    { kind: 'json', type: /json/i, ext: /\.json(\?|$)/i },
+    { kind: 'vtt', type: /vtt/i, ext: /\.vtt(\?|$)/i },
+    { kind: 'srt', type: /subrip|x-subrip|\bsrt\b/i, ext: /\.srt(\?|$)/i },
+];
+
 /**
- * Pick the best usable transcript from the tags on one RSS item.
- * Returns null when the item offers nothing cue-timed (plain, HTML, JSON).
+ * Rank the tags on one RSS item into an ordered candidate list.
+ * Order is json, vtt, srt — JSON first because it is the only publisher format
+ * that can be word-level; if it turns out not to be, the caller falls onward.
  */
-export function selectTranscriptSource(tags: TranscriptTag[]): { url: string; format: 'vtt' | 'srt' } | null {
-    for (const { test, format } of ACCEPTED) {
-        const hit = tags.find(t => t?.url && t?.type && test.test(t.type));
-        if (hit?.url) return { url: hit.url, format };
+export function collectTranscriptSources(tags: TranscriptTag[]): TranscriptSource[] {
+    const out: TranscriptSource[] = [];
+    for (const { kind, type, ext } of KIND_PATTERNS) {
+        for (const t of tags) {
+            if (!t?.url) continue;
+            const matches = (t.type && type.test(t.type)) || (!t.type && ext.test(t.url)) || ext.test(t.url);
+            if (matches && !out.some(o => o.url === t.url)) out.push({ url: t.url, type: t.type, kind });
+        }
     }
-    // Some publishers omit `type`; fall back to the file extension.
-    const byExt = tags.find(t => /\.vtt(\?|$)/i.test(t?.url || '')) ;
-    if (byExt?.url) return { url: byExt.url, format: 'vtt' };
-    const srtExt = tags.find(t => /\.srt(\?|$)/i.test(t?.url || ''));
-    if (srtExt?.url) return { url: srtExt.url, format: 'srt' };
-    return null;
+    return out;
 }
 
-const TIMING = /(\d{1,2}:)?(\d{1,2}):(\d{2})[.,](\d{1,3})\s*-->\s*(\d{1,2}:)?(\d{1,2}):(\d{2})[.,](\d{1,3})/;
-
-function toSeconds(h: string | undefined, m: string, s: string, ms: string) {
-    return (parseInt(h || '0', 10) || 0) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms.padEnd(3, '0'), 10) / 1000;
+/** Back-compat helper: the single best cue-timed URL, or null. */
+export function selectTranscriptSource(tags: TranscriptTag[]): { url: string; format: TranscriptKind } | null {
+    const first = collectTranscriptSources(tags)[0];
+    return first ? { url: first.url, format: first.kind } : null;
 }
 
 const stamp = (sec: number) =>
     `[${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}]`;
 
+const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+
+/** Map free-form speaker labels onto the numeric ids the UI groups paragraphs by. */
+function speakerNumberer() {
+    const seen = new Map<string, number>();
+    return (raw: unknown): number | undefined => {
+        if (raw == null) return undefined;
+        if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+        const key = String(raw).trim();
+        if (!key) return undefined;
+        const digits = key.match(/(\d+)\s*$/);           // SPEAKER_02, Speaker 1
+        if (digits) return parseInt(digits[1], 10);
+        if (!seen.has(key)) seen.set(key, seen.size);
+        return seen.get(key);
+    };
+}
+
+/** Group timed items into readable `[MM:SS] Speaker: text` blocks. */
+function toBlocks(items: { start: number; text: string; speaker?: number }[]): string {
+    const blocks: { start: number; speaker?: number; text: string }[] = [];
+    for (const it of items) {
+        const last = blocks[blocks.length - 1];
+        if (last && last.speaker === it.speaker && last.text.length + it.text.length < 400) {
+            last.text += ' ' + it.text;
+        } else {
+            blocks.push({ start: it.start, speaker: it.speaker, text: it.text });
+        }
+    }
+    return blocks
+        .map(b => `${stamp(b.start)} ${b.speaker !== undefined ? `Speaker ${b.speaker}: ` : ''}${b.text}`)
+        .join('\n\n');
+}
+
+// ---------------------------------------------------------------- VTT / SRT
+
+const TIMING = /(\d{1,2}:)?(\d{1,2}):(\d{2})[.,](\d{1,3})\s*-->\s*(\d{1,2}:)?(\d{1,2}):(\d{2})[.,](\d{1,3})/;
+const toSeconds = (h: string | undefined, m: string, s: string, ms: string) =>
+    (parseInt(h || '0', 10) || 0) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms.padEnd(3, '0'), 10) / 1000;
+
 /**
- * Parse WebVTT or SubRip. The two differ only in a header line, the decimal
- * separator and VTT's inline tags, so one pass handles both — and the content
- * is what's trusted, not the declared MIME type.
- *
- * Returns null if no cue survives, so callers fall back to transcription
- * rather than storing an empty or malformed transcript.
+ * Parse WebVTT or SubRip. They differ only in a header line, the decimal
+ * separator and VTT's inline tags, so one pass covers both.
+ * Returns null when no cue survives, so the caller can fall through.
  */
 export function parseCueTranscript(body: string): ParsedTranscript | null {
     if (!body || !body.includes('-->')) return null;
-
     const isVtt = /^﻿?WEBVTT/.test(body.trimStart());
     const text = body.replace(/\r\n/g, '\n').replace(/^﻿/, '');
-    const cues: TranscriptCue[] = [];
+    const num = speakerNumberer();
+    const cues: { start: number; text: string; speaker?: number }[] = [];
 
     for (const block of text.split(/\n{2,}/)) {
         const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
         if (!lines.length) continue;
-        if (/^WEBVTT/.test(lines[0]) || /^NOTE\b/.test(lines[0]) || /^STYLE\b/.test(lines[0])) continue;
+        if (/^(WEBVTT|NOTE\b|STYLE\b|REGION\b)/.test(lines[0])) continue;
 
         const idx = lines.findIndex(l => TIMING.test(l));
         if (idx === -1) continue;
-        const m = lines[idx].match(TIMING);
-        if (!m) continue;
-
+        const m = lines[idx].match(TIMING)!;
         const start = toSeconds(m[1]?.replace(':', ''), m[2], m[3], m[4]);
-        const end = toSeconds(m[5]?.replace(':', ''), m[6], m[7], m[8]);
+        if (!finite(start)) continue;
 
-        let speaker: string | undefined;
-        const payload = lines.slice(idx + 1).join(' ')
-            // VTT voice spans: <v Speaker>text</v>
-            .replace(/<v\s+([^>]+)>/gi, (_x, who) => { speaker ??= String(who).trim(); return ''; })
+        let speakerRaw: string | undefined;
+        let payload = lines.slice(idx + 1).join(' ')
+            .replace(/<v\s+([^>]+)>/gi, (_x, who) => { speakerRaw ??= String(who).trim(); return ''; })
             .replace(/<\/v>/gi, '')
-            // any other VTT/HTML markup (<b>, <i>, <c.colour>, timestamps)
             .replace(/<[^>]+>/g, '')
             .trim();
         if (!payload) continue;
 
-        // SRT carries the speaker inline ("Speaker 1: hello") — lift it out so it
+        // SRT carries the speaker inline ("Speaker 1: hello"); lift it out so it
         // does not pollute the prose the model reads.
-        let body2 = payload;
-        if (!speaker) {
-            const inline = body2.match(/^([A-Z][\w .'-]{0,30}?):\s+/);
-            if (inline) { speaker = inline[1].trim(); body2 = body2.slice(inline[0].length); }
+        if (!speakerRaw) {
+            const inline = payload.match(/^([A-Z][\w .'-]{0,30}?):\s+/);
+            if (inline) { speakerRaw = inline[1].trim(); payload = payload.slice(inline[0].length); }
         }
-        if (!body2.trim()) continue;
-
-        cues.push({ start, end, text: body2.trim(), speaker });
+        if (!payload.trim()) continue;
+        cues.push({ start, text: payload.trim(), speaker: num(speakerRaw) });
     }
 
     if (!cues.length) return null;
+    cues.sort((a, b) => a.start - b.start);
+    return {
+        kind: isVtt ? 'vtt' : 'srt',
+        granularity: 'cue',
+        rawTranscript: cues.map(c => c.text).join(' ').replace(/\s+/g, ' ').trim(),
+        timestampedTranscript: toBlocks(cues),
+    };
+}
 
-    // Merge consecutive cues into readable blocks so the timestamped view is not
-    // one line per two seconds. Break on speaker change or ~400 chars.
-    const blocks: { start: number; speaker?: string; text: string }[] = [];
-    for (const cue of cues) {
-        const last = blocks[blocks.length - 1];
-        if (last && last.speaker === cue.speaker && last.text.length + cue.text.length < 400) {
-            last.text += ' ' + cue.text;
-        } else {
-            blocks.push({ start: cue.start, speaker: cue.speaker, text: cue.text });
-        }
+// -------------------------------------------------------------------- JSON
+
+/**
+ * Parse a podcast-namespace JSON transcript.
+ *
+ * The spec fixes neither field names nor granularity in practice, so this is
+ * deliberately permissive about shape and strict about substance: it accepts
+ * several field spellings, then decides word-vs-cue from the data itself rather
+ * than from anything the publisher claims. Returns null if the payload has no
+ * usable timing at all.
+ */
+export function parseJsonTranscript(body: string): ParsedTranscript | null {
+    let doc: any;
+    try { doc = JSON.parse(body); } catch { return null; }
+
+    const segs: any[] = Array.isArray(doc) ? doc
+        : Array.isArray(doc?.segments) ? doc.segments
+            : Array.isArray(doc?.results) ? doc.results
+                : Array.isArray(doc?.transcript) ? doc.transcript
+                    : [];
+    if (!segs.length) return null;
+
+    const num = speakerNumberer();
+    const items: { start: number; end: number; text: string; speaker?: number }[] = [];
+    for (const s of segs) {
+        const text = String(s?.body ?? s?.text ?? s?.word ?? '').trim();
+        if (!text) continue;
+        const start = s?.startTime ?? s?.start ?? s?.startMs;
+        const end = s?.endTime ?? s?.end ?? s?.endMs;
+        if (!finite(start)) continue;                     // untimed segment: unusable
+        // some publishers emit milliseconds; treat implausibly large values as ms
+        const st = start > 100_000 ? start / 1000 : start;
+        const en = finite(end) ? (end > 100_000 ? end / 1000 : end) : st;
+        items.push({ start: st, end: Math.max(en, st), text, speaker: num(s?.speaker ?? s?.speaker_id) });
     }
+    // require timing on effectively all of it, not just a lucky prefix
+    if (!items.length || items.length < segs.length * 0.8) return null;
+
+    items.sort((a, b) => a.start - b.start);
+    const avgWords = items.reduce((n, i) => n + i.text.split(/\s+/).filter(Boolean).length, 0) / items.length;
+    const wordLevel = avgWords <= WORD_LEVEL_MAX_AVG;
+
+    const rawTranscript = items.map(i => i.text).join(' ').replace(/\s+/g, ' ').trim();
+    if (!rawTranscript) return null;
 
     return {
-        cues,
-        format: isVtt ? 'vtt' : 'srt',
-        rawTranscript: cues.map(c => c.text).join(' ').replace(/\s+/g, ' ').trim(),
-        timestampedTranscript: blocks
-            .map(b => `${stamp(b.start)} ${b.speaker ? `${b.speaker}: ` : ''}${b.text}`)
-            .join('\n\n'),
+        kind: 'json',
+        granularity: wordLevel ? 'word' : 'cue',
+        rawTranscript,
+        timestampedTranscript: toBlocks(items),
+        wordTimestamps: wordLevel
+            ? items.map(i => ({ word: i.text, start: i.start, end: i.end, speaker: i.speaker }))
+            : undefined,
     };
+}
+
+// --------------------------------------------------------------- resolution
+
+async function fetchText(url: string, fetchImpl: typeof fetch): Promise<string | null> {
+    try {
+        const res = await fetchImpl(url, { headers: { 'User-Agent': 'Podcatch/1.0 (compatible; RSS Reader)' } });
+        if (!res.ok) return null;
+        const len = Number(res.headers.get('content-length') || 0);
+        if (len && len > MAX_BYTES) return null;
+        const text = await res.text();
+        return text.length > MAX_BYTES ? null : text;
+    } catch { return null; }
+}
+
+/**
+ * Try each candidate in preference order and return the first genuinely usable
+ * transcript. A phrase-level JSON is held back and only used if no VTT/SRT
+ * works, since cue-level VTT additionally carries speaker names.
+ *
+ * Returns null when nothing usable is on offer — the caller should transcribe.
+ */
+export async function resolvePublisherTranscript(
+    sources: TranscriptSource[],
+    fetchImpl: typeof fetch = fetch,
+): Promise<ParsedTranscript | null> {
+    let phraseLevelJson: ParsedTranscript | null = null;
+
+    for (const src of sources) {
+        const body = await fetchText(src.url, fetchImpl);
+        if (!body) continue;
+
+        if (src.kind === 'json') {
+            const parsed = parseJsonTranscript(body);
+            if (!parsed) continue;
+            if (parsed.granularity === 'word') return parsed;   // best available, stop
+            phraseLevelJson ??= parsed;                          // keep as a last resort
+            continue;
+        }
+
+        const parsed = parseCueTranscript(body);
+        if (parsed) return parsed;
+    }
+
+    return phraseLevelJson;
 }

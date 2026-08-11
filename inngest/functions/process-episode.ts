@@ -199,31 +199,34 @@ export const processEpisode = inngest.createFunction(
 
         transcriptData = await step.run('get-transcript', async () => {
             // Priority 1: publisher transcript from the RSS <podcast:transcript> tag.
-            // check-feeds only stores cue-timed formats (vtt/srt), but the content is
-            // validated here too — the URL may 404 or serve something unusable, and an
-            // untimed transcript would make the model invent [MM:SS] chapters.
-            if (episode.transcriptUrl) {
-                console.log('📄 Found publisher transcript:', episode.transcriptUrl);
+            // Candidates are ranked json -> vtt -> srt and each is fetched, parsed and
+            // validated in turn; word-level JSON wins because it yields wordTimestamps
+            // (animated transcript, silence skipper) without paying for transcription.
+            // Anything unusable — a 404, an empty file, untimed JSON — falls through.
+            const sources = Array.isArray(episode.transcriptSources)
+                ? (episode.transcriptSources as any[])
+                : episode.transcriptUrl
+                    ? [{ url: episode.transcriptUrl, kind: 'vtt' as const }]
+                    : [];
+
+            if (sources.length) {
                 try {
-                    const response = await fetch(episode.transcriptUrl, {
-                        headers: { 'User-Agent': 'Podcatch/1.0 (compatible; RSS Reader)' },
-                    });
-                    if (response.ok) {
-                        const { parseCueTranscript } = await import('@/lib/transcripts');
-                        const parsed = parseCueTranscript(await response.text());
-                        if (parsed) {
-                            console.log(`✅ Parsed ${parsed.cues.length} ${parsed.format.toUpperCase()} cues from publisher transcript`);
-                            return {
-                                rawTranscript: parsed.rawTranscript,
-                                timestampedTranscript: parsed.timestampedTranscript,
-                            };
-                        }
-                        console.warn('Publisher transcript had no usable cues; falling back to transcription.');
-                    } else {
-                        console.warn(`Publisher transcript unavailable (HTTP ${response.status}); falling back to transcription.`);
+                    const { resolvePublisherTranscript } = await import('@/lib/transcripts');
+                    const parsed = await resolvePublisherTranscript(sources as any);
+                    if (parsed) {
+                        console.log(
+                            `✅ Using publisher transcript (${parsed.kind.toUpperCase()}, ${parsed.granularity}-level` +
+                            `${parsed.wordTimestamps ? `, ${parsed.wordTimestamps.length} word timings` : ''})`
+                        );
+                        return {
+                            rawTranscript: parsed.rawTranscript,
+                            timestampedTranscript: parsed.timestampedTranscript,
+                            wordTimestamps: parsed.wordTimestamps,
+                        };
                     }
+                    console.warn('No usable publisher transcript; falling back to transcription.');
                 } catch (e) {
-                    console.error('Failed to fetch publisher transcript:', e);
+                    console.error('Failed to resolve publisher transcript:', e);
                     // Fallback to generation
                 }
             }
