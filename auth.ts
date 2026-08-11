@@ -65,8 +65,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 return true;
             }
 
-            // Return true if user is authenticated
-            return !!auth;
+            // Require an actual user, not merely a truthy auth object. Auth.js can
+            // populate `auth` with an error rather than a session on configuration
+            // failures, and `!!auth` would treat that as authenticated — failing open
+            // on every gated route (GHSA, fixed in next-auth 5.0.0-beta.32).
+            return !!auth?.user;
         },
         session({ session, user }) {
             session.user.id = user.id;
