@@ -367,9 +367,33 @@ export const processEpisode = inngest.createFunction(
                 return { rawTranscript, timestampedTranscript, wordTimestamps };
 
             } else if (episode.feed.type === 'YOUTUBE' && episode.videoUrl) {
-                // YouTube Video Processing - Direct URL Method
-                console.log('🎥 Processing YouTube Video via URL (Gemini Native):', episode.videoUrl);
-                // Return empty transcript, let Gemini analyze the video file directly in next step
+                // Priority 3 for video: Gemini watches it natively.
+                // Reached only when captions were unavailable, because video is billed
+                // per second of footage while captions are free. It is also the more
+                // thorough option — the model sees slides and on-screen text, not just
+                // the audio — so it is what we want when captions do not exist.
+                console.log('🎥 No captions; asking Gemini to watch the video:', episode.videoUrl);
+                const geminiApiKey = episode.feed.user?.geminiApiKey || process.env.GEMINI_API_KEY;
+                if (geminiApiKey) {
+                    try {
+                        const { transcribeVideoWithGemini } = await import('@/lib/ai/video');
+                        const video = await transcribeVideoWithGemini(episode.videoUrl!, geminiApiKey);
+                        if (video) {
+                            console.log(`✅ Gemini transcribed the video: ${video.lines} lines, through ${Math.floor(video.lastTimestamp / 60)}m`);
+                            return {
+                                rawTranscript: video.rawTranscript,
+                                timestampedTranscript: video.timestampedTranscript,
+                                fileUri: episode.videoUrl!,
+                            };
+                        }
+                        console.warn('Video transcription too thin to use; will analyse the video directly instead.');
+                    } catch (e) {
+                        console.error('Video transcription failed; will analyse the video directly instead:', e);
+                    }
+                }
+
+                // Last resort: no transcript, but the analysis step can still watch the
+                // video via a file part and produce insights from it.
                 return {
                     rawTranscript: '',
                     timestampedTranscript: '',
@@ -424,10 +448,27 @@ export const processEpisode = inngest.createFunction(
                         Transcript: ${transcriptData.timestampedTranscript || transcriptData.rawTranscript}`
                     });
                 } else if (transcriptData.fileUri) {
-                    // Video fallback: Pass URL in text (schema validation workaround for 'file' part)
+                    // Video fallback: hand Gemini the actual video as a file part. Naming
+                    // the URL in a text prompt does not make the model fetch it — it just
+                    // produces a confident answer about a video it never watched.
+                    const { videoPart } = await import('@/lib/ai/video');
                     messages.push({
                         role: 'user',
-                        content: `Watch this video: ${transcriptData.fileUri}\n\nProvide a detailed summary, key takeaways, and a list of links mentioned.`
+                        content: [
+                            {
+                                type: 'text',
+                                text: `You are analyzing a podcast/video. Watch it and extract insights.
+
+                        - Summary: Concise 2-3 sentences.
+                        - Key Takeaways: Exactly 5 bullet points.
+                        - Links: Extract all external URLs mentioned or shown on screen.
+                        - Books: Extract all books mentioned with title and author.
+                        - Social Content: Draft a viral tweet, a LinkedIn post, and a blog title.
+                        - Chapters: Identify 5-10 key chapters with titles and [MM:SS] timestamps.
+                        - Entities: Extract key People, Books, and Concepts discussed.`,
+                            },
+                            videoPart(transcriptData.fileUri),
+                        ],
                     });
                 } else {
                     throw new Error('No transcript or video URL available for analysis');
