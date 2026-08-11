@@ -198,23 +198,32 @@ export const processEpisode = inngest.createFunction(
         let transcriptData: { rawTranscript: string, timestampedTranscript: string, fileUri?: string, wordTimestamps?: { word: string; start: number; end: number; speaker?: number }[] } = { rawTranscript: '', timestampedTranscript: '' };
 
         transcriptData = await step.run('get-transcript', async () => {
-            // Priority 1: Existing Transcript URL (from RSS)
+            // Priority 1: publisher transcript from the RSS <podcast:transcript> tag.
+            // check-feeds only stores cue-timed formats (vtt/srt), but the content is
+            // validated here too — the URL may 404 or serve something unusable, and an
+            // untimed transcript would make the model invent [MM:SS] chapters.
             if (episode.transcriptUrl) {
-                console.log('📄 Found existing transcript URL:', episode.transcriptUrl);
+                console.log('📄 Found publisher transcript:', episode.transcriptUrl);
                 try {
-                    const response = await fetch(episode.transcriptUrl);
+                    const response = await fetch(episode.transcriptUrl, {
+                        headers: { 'User-Agent': 'Podcatch/1.0 (compatible; RSS Reader)' },
+                    });
                     if (response.ok) {
-                        const text = await response.text();
-                        // Naive parsing: If it's VTT/SRT, we should parse it. For now, assume simple text or raw format.
-                        // Ideally use srt-parser-2 if mime type matches.
-                        // Let's assume it's usable text.
-                        return {
-                            rawTranscript: text,
-                            timestampedTranscript: text // TODO: Parse timestamps if VTT
-                        };
+                        const { parseCueTranscript } = await import('@/lib/transcripts');
+                        const parsed = parseCueTranscript(await response.text());
+                        if (parsed) {
+                            console.log(`✅ Parsed ${parsed.cues.length} ${parsed.format.toUpperCase()} cues from publisher transcript`);
+                            return {
+                                rawTranscript: parsed.rawTranscript,
+                                timestampedTranscript: parsed.timestampedTranscript,
+                            };
+                        }
+                        console.warn('Publisher transcript had no usable cues; falling back to transcription.');
+                    } else {
+                        console.warn(`Publisher transcript unavailable (HTTP ${response.status}); falling back to transcription.`);
                     }
                 } catch (e) {
-                    console.error('Failed to fetch existing transcript:', e);
+                    console.error('Failed to fetch publisher transcript:', e);
                     // Fallback to generation
                 }
             }

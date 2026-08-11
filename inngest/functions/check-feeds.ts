@@ -1,6 +1,7 @@
 import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import Parser from 'rss-parser';
+import { selectTranscriptSource } from '@/lib/transcripts';
 
 
 export const checkFeeds = inngest.createFunction(
@@ -65,10 +66,13 @@ export const checkFeeds = inngest.createFunction(
                         }
                     }
 
-                    // Instantiate parser inside handler to ensure options are fresh
+                    // Instantiate parser inside handler to ensure options are fresh.
+                    // keepArray matters: an item commonly carries 3-5 <podcast:transcript>
+                    // tags (vtt, srt, json, plain, html) and without it rss-parser collapses
+                    // them to an arbitrary one, so we could not choose a cue-timed format.
                     const rssParser = new Parser({
                         customFields: {
-                            item: [['podcast:transcript', 'transcript']],
+                            item: [['podcast:transcript', 'transcript', { keepArray: true }]],
                         },
                     });
 
@@ -114,6 +118,16 @@ export const checkFeeds = inngest.createFunction(
                             continue;
                         }
 
+                        // Prefer a publisher transcript, but only in a cue-timed format.
+                        // rss-parser (xml2js) nests tag attributes under `$` — the previous
+                        // '@_url' lookup is fast-xml-parser's convention and always produced
+                        // undefined, which is why no episode ever had a transcriptUrl.
+                        // @ts-ignore - 'transcript' is added via customFields
+                        const rawTags = item.transcript;
+                        const tags = (Array.isArray(rawTags) ? rawTags : rawTags ? [rawTags] : [])
+                            .map((t: any) => ({ url: t?.$?.url ?? t?.url, type: t?.$?.type ?? t?.type }));
+                        const source = selectTranscriptSource(tags);
+
                         // Create new episode
                         const episode = await prisma.episode.create({
                             data: {
@@ -121,8 +135,7 @@ export const checkFeeds = inngest.createFunction(
                                 title: item.title || 'Untitled Episode',
                                 description: item.contentSnippet || item.content || null,
                                 audioUrl,
-                                // @ts-ignore - 'transcript' is added via customFields
-                                transcriptUrl: item.transcript ? (item.transcript['@_url'] || item.transcript.url || null) : null,
+                                transcriptUrl: source?.url ?? null,
                                 publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
                                 status: 'DISCOVERED',
                                 feedId: feed.id,
