@@ -3,12 +3,23 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getChannelDetails, getLatestVideos } from '@/lib/youtube';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { revalidatePath } from 'next/cache';
 
 export async function subscribeToYoutubeChannel(input: string) {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
+    }
+
+    // YouTube is a paid capability: Free is podcasts only.
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canIngestYouTube) {
+        return {
+            success: false,
+            error: 'YouTube channels are available on Basic and Pro. The Free plan supports podcasts.',
+            upgradeRequired: true,
+        };
     }
 
     try {

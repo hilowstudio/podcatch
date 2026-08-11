@@ -6,6 +6,7 @@ import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { insightSchema } from '@/lib/ai/schemas';
 import { MODELS } from '@/lib/ai/models';
+import { getPlanFeatures, getYouTubeUnderstanding } from '@/lib/permissions';
 
 // No stream/fs/ytdl imports needed for simplified YouTube flow
 import { PLANS } from '@/lib/stripe-config';
@@ -160,6 +161,12 @@ export const processEpisode = inngest.createFunction(
                 const limit = LIMITS[plan as keyof typeof LIMITS];
                 const currentUsage = usageMap.get(user.id) || 0;
 
+                // YouTube is a paid capability. A Free subscriber cannot fund a
+                // YouTube episode, so skip them and let a paid subscriber pay for it.
+                if (ep.feed.type === 'YOUTUBE' && !getPlanFeatures(plan).canIngestYouTube) {
+                    continue;
+                }
+
                 if (currentUsage < limit) {
                     console.log(`✅ Funded by ${plan} User: ${user.id} (${currentUsage}/${limit})`);
 
@@ -177,7 +184,9 @@ export const processEpisode = inngest.createFunction(
                         data: { status: 'PROCESSING' },
                     });
 
-                    return { ...ep, feed: { ...ep.feed, user: user } };
+                    // The funder's plan decides how a YouTube video is read
+                    // (captions vs. Gemini watching it), so carry it downstream.
+                    return { ...ep, feed: { ...ep.feed, user: user }, fundingPlan: plan };
                 }
             }
 
@@ -228,6 +237,37 @@ export const processEpisode = inngest.createFunction(
                 } catch (e) {
                     console.error('Failed to resolve publisher transcript:', e);
                     // Fallback to generation
+                }
+            }
+
+            // How this plan is entitled to read a YouTube video:
+            //   'video' (Pro)   — Gemini watches it, capturing on-screen content too
+            //   'audio' (Basic) — captions only
+            //   'none'  (Free)  — YouTube is not available
+            const understanding = getYouTubeUnderstanding((episode as any).fundingPlan);
+
+            // Pro watches the video outright: for visually-driven material the screen
+            // carries content that captions never mention, so captions are not a
+            // cheaper equivalent — they are a lossier source.
+            if (episode.feed.type === 'YOUTUBE' && episode.videoUrl && understanding === 'video') {
+                const geminiApiKey = episode.feed.user?.geminiApiKey || process.env.GEMINI_API_KEY;
+                if (geminiApiKey) {
+                    console.log('🎬 Pro plan: Gemini will watch the video:', episode.videoUrl);
+                    try {
+                        const { transcribeVideoWithGemini } = await import('@/lib/ai/video');
+                        const video = await transcribeVideoWithGemini(episode.videoUrl, geminiApiKey);
+                        if (video) {
+                            console.log(`✅ Watched video: ${video.lines} lines (${video.visualLines} on-screen), through ${Math.floor(video.lastTimestamp / 60)}m`);
+                            return {
+                                rawTranscript: video.rawTranscript,
+                                timestampedTranscript: video.timestampedTranscript,
+                                fileUri: episode.videoUrl,
+                            };
+                        }
+                        console.warn('Video transcription too thin; trying captions.');
+                    } catch (e) {
+                        console.error('Video understanding failed; trying captions:', e);
+                    }
                 }
             }
 
@@ -367,33 +407,20 @@ export const processEpisode = inngest.createFunction(
                 return { rawTranscript, timestampedTranscript, wordTimestamps };
 
             } else if (episode.feed.type === 'YOUTUBE' && episode.videoUrl) {
-                // Priority 3 for video: Gemini watches it natively.
-                // Reached only when captions were unavailable, because video is billed
-                // per second of footage while captions are free. It is also the more
-                // thorough option — the model sees slides and on-screen text, not just
-                // the audio — so it is what we want when captions do not exist.
-                console.log('🎥 No captions; asking Gemini to watch the video:', episode.videoUrl);
-                const geminiApiKey = episode.feed.user?.geminiApiKey || process.env.GEMINI_API_KEY;
-                if (geminiApiKey) {
-                    try {
-                        const { transcribeVideoWithGemini } = await import('@/lib/ai/video');
-                        const video = await transcribeVideoWithGemini(episode.videoUrl!, geminiApiKey);
-                        if (video) {
-                            console.log(`✅ Gemini transcribed the video: ${video.lines} lines, through ${Math.floor(video.lastTimestamp / 60)}m`);
-                            return {
-                                rawTranscript: video.rawTranscript,
-                                timestampedTranscript: video.timestampedTranscript,
-                                fileUri: episode.videoUrl!,
-                            };
-                        }
-                        console.warn('Video transcription too thin to use; will analyse the video directly instead.');
-                    } catch (e) {
-                        console.error('Video transcription failed; will analyse the video directly instead:', e);
-                    }
+                // Captions were unavailable. What happens next is a plan entitlement,
+                // not a fallback: watching the video is the Pro capability, so Basic
+                // must not receive it merely because captions happen to be missing.
+                if (understanding !== 'video') {
+                    throw new Error(
+                        `This video has no captions. Reading it requires video understanding, ` +
+                        `which is available on the Pro plan (current plan grants '${understanding}').`
+                    );
                 }
 
-                // Last resort: no transcript, but the analysis step can still watch the
-                // video via a file part and produce insights from it.
+                // Pro reached here only because the video attempt above failed. Let the
+                // analysis step watch the video directly and produce insights from it,
+                // even though there is no transcript to store.
+                console.warn('Video understanding produced no transcript; analysing the video directly.');
                 return {
                     rawTranscript: '',
                     timestampedTranscript: '',

@@ -8,7 +8,15 @@ export type Permission =
     | 'canIntegrate'
     | 'canUseCustomPrompts'
     | 'canChatEpisode'
-    | 'canUseStudio';
+    | 'canUseStudio'
+    | 'canIngestYouTube';
+
+/** How a plan reads a YouTube video. See PLANS for what each value means. */
+export type YouTubeUnderstanding = 'none' | 'audio' | 'video';
+
+export function getYouTubeUnderstanding(plan: string | null | undefined): YouTubeUnderstanding {
+    return getPlanFeatures(plan).youtubeUnderstanding as YouTubeUnderstanding;
+}
 
 export function getPlanFeatures(plan: string | null | undefined) {
     // Normalize plan string to PlanType

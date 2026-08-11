@@ -20,6 +20,9 @@ export type SubscriptionPlan = {
     canUseStudio: boolean;
     canUseCustomPrompts: boolean;
     canAutoProcess: boolean;
+    canIngestYouTube: boolean;
+    /** 'none' | 'audio' | 'video' — see PLANS in lib/stripe-config. */
+    youtubeUnderstanding: string;
     maxEpisodesPerMonth: number;
 };
 
@@ -40,6 +43,8 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
         canUseStudio: false,
         canUseCustomPrompts: false,
         canAutoProcess: false,
+        canIngestYouTube: false,
+        youtubeUnderstanding: 'none',
         maxEpisodesPerMonth: 3,
     };
 
@@ -131,6 +136,8 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
             canUseStudio: features.canUseStudio,
             canUseCustomPrompts: features.canUseCustomPrompts,
             canAutoProcess: features.canAutoProcess,
+            canIngestYouTube: features.canIngestYouTube,
+            youtubeUnderstanding: features.youtubeUnderstanding,
             maxEpisodesPerMonth: features.monthlyEpisodeLimit,
         };
     };

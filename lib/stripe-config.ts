@@ -5,7 +5,7 @@ export const PLANS = {
         priceId: 'price_1SorsuICURxkmpICuXXJgIBC',
         productId: 'prod_TmNSuTaiiK90ZS',
         amount: 0,
-        marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Web Access'],
+        marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Podcasts only', 'Web Access'],
         features: {
             monthlyEpisodeLimit: 3,
             canChatLibrary: false,
@@ -15,6 +15,12 @@ export const PLANS = {
             canChatEpisode: false,
             canUseStudio: false,
             canAutoProcess: false,
+            canIngestYouTube: false,
+            // 'none'  — YouTube channels cannot be subscribed to or processed
+            // 'audio' — captions only; cheap, but on-screen content is not captured
+            // 'video' — Gemini watches the video, capturing what is shown as well
+            //           as what is said; billed per second of footage
+            youtubeUnderstanding: 'none',
         }
     },
     basic: {
@@ -30,7 +36,7 @@ export const PLANS = {
             productId: 'prod_TmNVxilCkGOuEo',
             amount: 120,
         },
-        marketingFeatures: ['20 Episodes/mo', 'Deep Discovery', 'Email Support'],
+        marketingFeatures: ['20 Episodes/mo', 'Podcasts + YouTube', 'Deep Discovery', 'Email Support'],
         features: {
             monthlyEpisodeLimit: 20,
             canChatLibrary: false,
@@ -40,6 +46,8 @@ export const PLANS = {
             canChatEpisode: false,
             canUseStudio: true,
             canAutoProcess: true,
+            canIngestYouTube: true,
+            youtubeUnderstanding: 'audio',
         }
     },
     pro: {
@@ -55,7 +63,7 @@ export const PLANS = {
             productId: 'prod_TmNW2KWFOI84Ec',
             amount: 290,
         },
-        marketingFeatures: ['200 Episodes/mo', 'Priority AI Processing', 'Integration Sync (Notion/Claude)'],
+        marketingFeatures: ['200 Episodes/mo', 'Full Video Understanding', 'Priority AI Processing', 'Integration Sync (Notion/Claude)'],
         features: {
             monthlyEpisodeLimit: 200, // Effectively unlimited for normal use
             canChatLibrary: true,
@@ -65,6 +73,8 @@ export const PLANS = {
             canChatEpisode: true,
             canUseStudio: true,
             canAutoProcess: true,
+            canIngestYouTube: true,
+            youtubeUnderstanding: 'video',
         }
     }
 } as const;
