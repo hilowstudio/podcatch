@@ -37,9 +37,19 @@ export async function getOfflineDB() {
     return dbInstance;
 }
 
+/** Close the cached connection (call before deleting the DB, e.g. on sign-out). */
+export function closeOfflineDB() {
+    if (dbInstance) {
+        dbInstance.close();
+        dbInstance = null;
+    }
+}
+
 // ========================================
 // Transcript Caching
 // ========================================
+
+const MAX_CACHED_TRANSCRIPTS = 50;
 
 export async function cacheTranscript(episodeId: string, content: string): Promise<void> {
     const db = await getOfflineDB();
@@ -49,6 +59,17 @@ export async function cacheTranscript(episodeId: string, content: string): Promi
         cachedAt: Date.now(),
     };
     await db.put('transcripts', cached);
+
+    // Bound the cache so it can't grow until it hits the origin storage quota:
+    // evict the oldest entries beyond the cap.
+    const count = await db.count('transcripts');
+    if (count > MAX_CACHED_TRANSCRIPTS) {
+        const all = (await db.getAll('transcripts')) as CachedTranscript[];
+        all.sort((a, b) => a.cachedAt - b.cachedAt);
+        for (const t of all.slice(0, count - MAX_CACHED_TRANSCRIPTS)) {
+            await db.delete('transcripts', t.episodeId);
+        }
+    }
 }
 
 export async function getCachedTranscript(episodeId: string): Promise<string | null> {

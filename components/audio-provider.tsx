@@ -221,6 +221,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             audio.pause();
             audio.src = '';
         }
+        // Clear the OS media widget so it doesn't keep showing the closed episode
+        // with live (but now dead) play/pause controls.
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = null;
+            navigator.mediaSession.playbackState = 'none';
+            for (const action of ['play', 'pause', 'seekbackward', 'seekforward', 'seekto'] as const) {
+                try { navigator.mediaSession.setActionHandler(action, null); } catch { /* unsupported action */ }
+            }
+        }
         setCurrentEpisode(null);
         setIsPlaying(false);
         setCurrentTime(0);

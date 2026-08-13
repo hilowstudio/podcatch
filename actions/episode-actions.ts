@@ -14,6 +14,7 @@ export async function getEpisodesByFeed(feedId: string) {
         const episodes = await prisma.episode.findMany({
             where: { feedId },
             orderBy: { publishedAt: 'desc' },
+            take: 500, // safety bound — render the most recent 500 rather than an unbounded feed
             include: {
                 insight: {
                     select: {

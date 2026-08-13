@@ -67,6 +67,8 @@ export async function getGraphData(): Promise<GraphData> {
             status: 'COMPLETED',
             feed: { subscriptions: { some: { userId: session.user.id } } },
         },
+        orderBy: { publishedAt: 'desc' },
+        take: 1000, // safety bound — the co-occurrence edge build is O(entities²) per episode
         select: {
             id: true,
             title: true,

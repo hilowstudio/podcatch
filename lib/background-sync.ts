@@ -22,7 +22,13 @@ const MAX_RETRIES = 3;
 export function getQueuedRequests(): QueuedRequest[] {
     if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem(QUEUE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    try {
+        return JSON.parse(stored);
+    } catch {
+        localStorage.removeItem(QUEUE_KEY); // drop corrupt state instead of throwing on every load
+        return [];
+    }
 }
 
 /**

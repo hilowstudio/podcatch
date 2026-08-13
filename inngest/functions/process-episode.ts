@@ -10,6 +10,7 @@ import { getPlanFeatures, getYouTubeUnderstanding } from '@/lib/permissions';
 
 // No stream/fs/ytdl imports needed for simplified YouTube flow
 import { PLANS } from '@/lib/stripe-config';
+import { safeFetch } from '@/lib/ssrf';
 
 export const processEpisode = inngest.createFunction(
     {
@@ -26,9 +27,18 @@ export const processEpisode = inngest.createFunction(
             const episodeId = event?.data?.event?.data?.episodeId;
             if (!episodeId) return;
 
-            const episode = await prisma.episode.update({
-                where: { id: episodeId },
+            // Only downgrade an episode that hasn't already COMPLETED — a step can
+            // throw AFTER insights are saved (notifications, entities, integrations),
+            // and flipping a finished episode to FAILED tells users to retry (and
+            // re-charge/reprocess) something that actually succeeded.
+            const claimed = await prisma.episode.updateMany({
+                where: { id: episodeId, status: { not: 'COMPLETED' } },
                 data: { status: 'FAILED' },
+            }).catch(() => ({ count: 0 }));
+            if (!claimed.count) return;
+
+            const episode = await prisma.episode.findUnique({
+                where: { id: episodeId },
                 select: { id: true, title: true, feed: { select: { subscriptions: { select: { userId: true }, take: 10 } } } },
             }).catch(() => null);
             if (!episode) return;
@@ -173,6 +183,19 @@ export const processEpisode = inngest.createFunction(
                 const currentUsage = usageMap.get(user.id) || 0;
 
                 if (currentUsage < limit) {
+                    // Atomically claim the episode: only the run that flips it out of a
+                    // non-terminal state charges + processes. Closes the concurrent
+                    // double-charge / double-transcribe race (two events for one episode,
+                    // e.g. a double-click) that a read-then-write status update leaves open.
+                    const claim = await prisma.episode.updateMany({
+                        where: { id: episodeId, status: { in: ['DISCOVERED', 'FAILED'] } },
+                        data: { status: 'PROCESSING' },
+                    });
+                    if (claim.count === 0) {
+                        console.log('🏳️ Episode already claimed by a concurrent run; not charging.');
+                        return { ...ep, feed: { ...ep.feed, user: null }, skipped: true, alreadyClaimed: true };
+                    }
+
                     console.log(`✅ Funded by ${plan} User: ${user.id} (${currentUsage}/${limit})`);
 
                     // Log Usage (consumes the payer's own quota)
@@ -182,11 +205,6 @@ export const processEpisode = inngest.createFunction(
                             action: 'PROCESS_EPISODE',
                             targetId: episodeId,
                         }
-                    });
-
-                    await prisma.episode.update({
-                        where: { id: episodeId },
-                        data: { status: 'PROCESSING' },
                     });
 
                     // The payer's plan decides how a YouTube video is read
@@ -207,7 +225,14 @@ export const processEpisode = inngest.createFunction(
         }
 
         if (episode.skipped) {
-            return { skipped: true, reason: episode.outOfQuota ? 'Monthly episode limit reached' : 'No eligible payer' };
+            return {
+                skipped: true,
+                reason: episode.alreadyClaimed
+                    ? 'Already being processed by another run'
+                    : episode.outOfQuota
+                        ? 'Monthly episode limit reached'
+                        : 'No eligible payer',
+            };
         }
 
         console.log(`Processing episode: ${episode.title}`);
@@ -515,6 +540,7 @@ export const processEpisode = inngest.createFunction(
                     model: google(modelName),
                     schema: insightSchema,
                     messages: messages,
+                    maxOutputTokens: 16384, // bound runaway output (may fall back to the system key)
                 });
 
                 console.log('AI analysis complete');
@@ -577,38 +603,31 @@ export const processEpisode = inngest.createFunction(
                     data: { status: 'COMPLETED' },
                 });
 
-                // Upsert Entities (Knowledge Graph)
+                // Upsert Entities (Knowledge Graph), then connect them all in a SINGLE
+                // episode update — was two sequential round-trips per entity (~40-60
+                // queries/episode).
                 if (insights.entities && insights.entities.length > 0) {
                     console.log(`Processing ${insights.entities.length} entities...`);
 
-                    // We do this sequentially to ensure we can connect them properly
+                    const entityIds: string[] = [];
+                    const seen = new Set<string>();
                     for (const entity of insights.entities) {
-                        // clean name
                         const name = entity.name.trim();
-                        if (name.length < 2) continue;
+                        if (name.length < 2 || seen.has(name)) continue;
+                        seen.add(name);
 
-                        // Upsert Entity
                         const dbEntity = await prisma.entity.upsert({
-                            where: { name: name },
-                            create: {
-                                name: name,
-                                type: entity.type,
-                                description: entity.description
-                            },
-                            update: {
-                                // Optional: Update description if new one is better?
-                                // For now, keep original to avoid thrashing
-                            }
+                            where: { name },
+                            create: { name, type: entity.type, description: entity.description },
+                            update: {}, // keep original description to avoid thrashing
                         });
+                        entityIds.push(dbEntity.id);
+                    }
 
-                        // Connect to Episode
+                    if (entityIds.length > 0) {
                         await prisma.episode.update({
                             where: { id: episode.id },
-                            data: {
-                                entities: {
-                                    connect: { id: dbEntity.id }
-                                }
-                            }
+                            data: { entities: { connect: entityIds.map(id => ({ id })) } },
                         });
                     }
                 }
@@ -916,8 +935,9 @@ ${transcriptData.timestampedTranscript}
                 try {
                     console.log('Ingesting to Hi-Low Studio...');
                     const feedType = episode.feed.type;
-                    const res = await fetch(episode.feed.user!.hilowIngestUrl!, {
+                    const res = await safeFetch(episode.feed.user!.hilowIngestUrl!, {
                         method: 'POST',
+                        signal: AbortSignal.timeout(15000),
                         headers: {
                             'Authorization': `Bearer ${episode.feed.user!.hilowIngestKey!}`,
                             'Content-Type': 'application/json',

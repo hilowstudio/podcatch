@@ -2,6 +2,7 @@
 
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFetch } from '@/lib/ssrf';
 
 export async function shareToSlack(message: string) {
     const session = await auth();
@@ -16,8 +17,11 @@ export async function shareToSlack(message: string) {
         throw new Error("Slack not connected");
     }
 
-    const response = await fetch(user.slackWebhookUrl, {
+    // safeFetch: slackWebhookUrl is user-supplied — validate it isn't an internal
+    // / metadata address before POSTing (SSRF).
+    const response = await safeFetch(user.slackWebhookUrl, {
         method: 'POST',
+        signal: AbortSignal.timeout(10000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: message }),
     });

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/prisma/generated_new/client';
 import Parser from 'rss-parser';
 import { collectTranscriptSources } from '@/lib/transcripts';
+import { safeFetch } from '@/lib/ssrf';
 
 
 export const checkFeeds = inngest.createFunction(
@@ -79,14 +80,23 @@ export const checkFeeds = inngest.createFunction(
 
                     // Fetch with standard API to avoid url.parse deprecation in rss-parser
                     // Add User-Agent to avoid being blocked (which causes HTML responses => XML parse errors)
-                    const response = await fetch(feedUrl, {
+                    // safeFetch: feed URLs are user-supplied, so validate against
+                    // internal/metadata IPs (SSRF); the timeout + size cap stop a slow
+                    // or huge feed from stalling the sequential sweep or OOMing the worker.
+                    const MAX_FEED_BYTES = 15 * 1024 * 1024;
+                    const response = await safeFetch(feedUrl, {
+                        signal: AbortSignal.timeout(15000),
                         headers: {
                             'User-Agent': 'Podcatch/1.0 (compatible; RSS Reader)',
                         }
                     });
 
                     if (!response.ok) throw new Error(`Failed to fetch feed: ${response.statusText}`);
+                    if (Number(response.headers.get('content-length') || 0) > MAX_FEED_BYTES) {
+                        throw new Error('Feed exceeds size limit');
+                    }
                     xmlText = await response.text();
+                    if (xmlText.length > MAX_FEED_BYTES) throw new Error('Feed exceeds size limit');
                     const rssFeed = await rssParser.parseString(xmlText);
 
                     // Update feed metadata if not set

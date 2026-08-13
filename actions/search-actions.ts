@@ -48,21 +48,25 @@ export async function searchLibrary(query: string): Promise<SearchResult[]> {
         // 2. Perform Cosine Similarity Search
         // Note: Using <=> operator for cosine distance (smaller is better), so we order by it ASC.
         // We calculate similarity as 1 - distance.
+        // Scope to the user's own embeddings FIRST (MATERIALIZED CTE), then order by
+        // distance. Ordering over the global ivfflat index and applying the user
+        // filter afterwards (as the flat joined query did) lets the ANN LIMIT drop the
+        // user's relevant chunks before they're ever considered — silently
+        // under-returning. An exact sort over one user's library is correct and fast.
         const results = await prisma.$queryRawUnsafe<any[]>(
-            `SELECT 
-                e."id",
-                e."content",
-                e."episodeId",
-                ep."title" as "episodeTitle",
-                ep."publishedAt",
-                f."title" as "feedTitle",
-                1 - (e."vector" <=> $1::vector) as "similarity"
-             FROM "EpisodeEmbedding" e
-             JOIN "Episode" ep ON e."episodeId" = ep."id"
-             JOIN "Feed" f ON ep."feedId" = f."id"
-             JOIN "Subscription" s ON f."id" = s."feedId"
-             WHERE s."userId" = $2
-             ORDER BY e."vector" <=> $1::vector ASC
+            `WITH scoped AS MATERIALIZED (
+                SELECT e."id", e."content", e."episodeId", e."vector",
+                       ep."title" AS "episodeTitle", ep."publishedAt", f."title" AS "feedTitle"
+                FROM "EpisodeEmbedding" e
+                JOIN "Episode" ep ON e."episodeId" = ep."id"
+                JOIN "Feed" f ON ep."feedId" = f."id"
+                JOIN "Subscription" s ON f."id" = s."feedId"
+                WHERE s."userId" = $2
+             )
+             SELECT "id", "content", "episodeId", "episodeTitle", "publishedAt", "feedTitle",
+                    1 - ("vector" <=> $1::vector) AS "similarity"
+             FROM scoped
+             ORDER BY "vector" <=> $1::vector ASC
              LIMIT 10;`,
             vectorString,
             session.user.id

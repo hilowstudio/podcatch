@@ -1,6 +1,7 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
+import { clearClientData } from '@/lib/client-logout';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -92,7 +93,12 @@ export function UserMenu({ user, subscriptionPlan, usageCount = 0 }: UserMenuPro
                 )}
                 <DropdownMenuItem
                     className="cursor-pointer text-red-600"
-                    onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                    onClick={async () => {
+                        // Purge cached user data before redirecting, so nothing
+                        // bleeds to the next user on a shared device.
+                        await clearClientData();
+                        signOut({ callbackUrl: '/auth/signin' });
+                    }}
                 >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out

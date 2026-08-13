@@ -33,16 +33,23 @@ export function NotificationBell() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    // Poll for notifications every 30 seconds
+    // Poll the unread count every 30s, but only while the tab is visible —
+    // background tabs shouldn't keep hitting the server.
     useEffect(() => {
         const fetchCount = async () => {
+            if (typeof document !== 'undefined' && document.hidden) return;
             const c = await getUnreadCount();
             setCount(c);
         };
 
         fetchCount();
         const interval = setInterval(fetchCount, 30000);
-        return () => clearInterval(interval);
+        const onVisible = () => { if (!document.hidden) fetchCount(); };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
     }, []);
 
     const handleOpenChange = async (isOpen: boolean) => {

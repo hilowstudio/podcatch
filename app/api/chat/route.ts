@@ -202,6 +202,7 @@ export async function POST(req: Request) {
             model: google(MODELS.chat),
             messages,
             system: systemPrompt,
+            maxOutputTokens: 4096, // bound per-call cost (runs on the shared system key)
         });
 
         console.log('[Chat API] Returning stream response');

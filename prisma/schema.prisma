@@ -202,6 +202,7 @@ model Episode {
   @@index([feedId])
   @@index([status])
   @@index([publishedAt])
+  @@index([feedId, publishedAt]) // feed page: filter feedId + order by publishedAt
 }
 
 // Collections (Phase 3)
@@ -347,6 +348,7 @@ model UsageLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+  @@index([userId, action, createdAt]) // billing/quota hot path (funder groupBy)
 }
 
 // Rate Limiting
