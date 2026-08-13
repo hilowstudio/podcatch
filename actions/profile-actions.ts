@@ -3,6 +3,7 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 export async function updateIntegrations(data: {
     slackWebhookUrl?: string | null;
@@ -12,6 +13,11 @@ export async function updateIntegrations(data: {
 
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
+    }
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseIntegrations) {
+        throw new Error('Integrations require the Basic or Pro plan.');
     }
 
     await prisma.user.update({

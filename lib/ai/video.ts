@@ -42,8 +42,16 @@ export type VideoTranscribeOptions = {
     captureVisuals?: boolean;
 };
 
-const LINE = /^\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]\s*(.+)$/;
+const LINE = /^\[(\d{1,3}):(\d{2})(?::(\d{2}))?\]\s*(.+)$/;
 const VISUAL = /^\(on screen:/i;
+
+/** [H:MM:SS] past the hour, [MM:SS] under it — matched by the timestamp extractors. */
+const hms = (sec: number) => {
+    const s = Math.max(0, Math.floor(sec));
+    const p = (n: number) => n.toString().padStart(2, '0');
+    const h = Math.floor(s / 3600);
+    return h > 0 ? `[${h}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}]` : `[${p(Math.floor(s / 60))}:${p(s % 60)}]`;
+};
 
 /** Build the `file` part that actually carries the video to the model. */
 export function videoPart(videoUrl: string) {
@@ -125,7 +133,7 @@ export async function transcribeVideoWithGemini(
         // embeddable and available to chat, not discarded as presentation detail.
         rawTranscript: lines.map(l => l.text).join(' ').replace(/\s+/g, ' ').trim(),
         timestampedTranscript: lines
-            .map(l => `[${Math.floor(l.at / 60).toString().padStart(2, '0')}:${(l.at % 60).toString().padStart(2, '0')}] ${l.text}`)
+            .map(l => `${hms(l.at)} ${l.text}`)
             .join('\n'),
     };
 }

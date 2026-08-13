@@ -4,12 +4,18 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { MODELS } from '@/lib/ai/models';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 // --- Custom Prompts ---
 
 export async function createCustomPrompt(title: string, prompt: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseCustomPrompts) {
+        return { success: false, error: 'Custom prompts require the Pro plan.' };
+    }
 
     try {
         await prisma.customPrompt.create({
@@ -61,15 +67,27 @@ export async function runCustomPromptOnEpisode(promptId: string, episodeId: stri
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
 
+    // Custom prompts are a Pro feature — gate here, not just in the UI.
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseCustomPrompts) {
+        return { success: false, error: 'Custom prompts require the Pro plan.' };
+    }
+
     try {
-        // 1. Fetch Prompt and Episode
+        // 1. Fetch the prompt (scoped to the caller) and the episode. The episode
+        //    lookup is scoped to a feed the caller subscribes to, so a user can
+        //    only run a prompt against transcripts they actually have access to —
+        //    previously any episode id would return its full transcript.
         const promptData = await prisma.customPrompt.findUnique({
             where: { id: promptId, userId: session.user.id },
         });
 
-        const episode = await prisma.episode.findUnique({
-            where: { id: episodeId },
-            include: { insight: true }
+        const episode = await prisma.episode.findFirst({
+            where: {
+                id: episodeId,
+                feed: { subscriptions: { some: { userId: session.user.id } } },
+            },
+            include: { insight: true },
         });
 
         if (!promptData || !episode) {
@@ -79,8 +97,7 @@ export async function runCustomPromptOnEpisode(promptId: string, episodeId: stri
         // 2. Prepare Context (prefer full transcript if available)
         const transcript = episode.insight?.transcript || episode.insight?.summary || 'No transcript available.';
 
-        // 3. Prepare Prompt
-        // Replace {{transcript}} if it exists, otherwise append
+        // 3. Prepare Prompt — replace {{transcript}} if present, otherwise append.
         let finalPrompt = promptData.prompt;
         if (finalPrompt.includes('{{transcript}}')) {
             finalPrompt = finalPrompt.replace('{{transcript}}', transcript);
@@ -88,29 +105,26 @@ export async function runCustomPromptOnEpisode(promptId: string, episodeId: stri
             finalPrompt = `${finalPrompt}\n\nContext:\n${transcript}`;
         }
 
-        // 4. Inject Brand Voice
-        const brandVoice = await prisma.user.findUnique({
+        // 4. Load the user's own Gemini key and brand voice. The session only
+        //    carries the user id, so the key must come from the DB — reading it
+        //    off the session always yielded undefined and silently billed the
+        //    system key.
+        const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { brandVoice: true }
-        }).then(u => u?.brandVoice);
-
-        let systemInstruction = "";
-        if (brandVoice) {
-            systemInstruction = `Use the following Brand Voice/Style Guide for all output:\n${brandVoice}\n\n---\n`;
-        }
+            select: { geminiApiKey: true, brandVoice: true },
+        });
 
         // 5. Call AI
         const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
         const { generateText } = await import('ai');
 
-        const user = session.user as any;
-        const geminiApiKey = user.geminiApiKey || process.env.GEMINI_API_KEY;
+        const geminiApiKey = user?.geminiApiKey || process.env.GEMINI_API_KEY;
         const google = createGoogleGenerativeAI({ apiKey: geminiApiKey });
         const model = google(MODELS.synthesis);
 
         const { text } = await generateText({
             model,
-            system: brandVoice ? brandVoice : undefined,
+            system: user?.brandVoice || undefined,
             prompt: finalPrompt,
         });
 

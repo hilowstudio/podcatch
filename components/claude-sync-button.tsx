@@ -29,8 +29,8 @@ export function ClaudeSyncButton({ episodeId, isConfigured = true }: ClaudeSyncB
         try {
             const result = await syncToClaudeAction(episodeId);
             if (result.success) {
-                toast.success('Sent to Claude Project', {
-                    description: 'Transcript and insights added to your project.'
+                toast.success('Uploaded to Claude', {
+                    description: 'Transcript and insights saved to your Claude workspace.'
                 });
             } else {
                 toast.error(result.error || 'Failed to sync');

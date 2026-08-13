@@ -1,24 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BLOCKED_HOSTNAMES = new Set([
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    '::1',
-    '169.254.169.254', // Cloud metadata (AWS/GCP)
-    'metadata.google.internal',
-]);
-
-function isPrivateIP(hostname: string): boolean {
-    if (BLOCKED_HOSTNAMES.has(hostname)) return true;
-    // Block private IPv4 ranges
-    if (/^10\./.test(hostname)) return true;
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true;
-    if (/^192\.168\./.test(hostname)) return true;
-    // Block link-local
-    if (/^169\.254\./.test(hostname)) return true;
-    return false;
-}
+import { safeFetch } from '@/lib/ssrf';
 
 export async function GET(request: NextRequest) {
     const url = request.nextUrl.searchParams.get('url');
@@ -27,37 +8,34 @@ export async function GET(request: NextRequest) {
         return new NextResponse('Missing url parameter', { status: 400 });
     }
 
+    let target: string;
     try {
-        // Validate URL
-        const parsedUrl = new URL(url);
+        target = new URL(url).toString();
+    } catch {
+        return new NextResponse('Invalid URL', { status: 400 });
+    }
 
-        // Only allow http/https protocols
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return new NextResponse('Invalid URL protocol', { status: 400 });
-        }
+    try {
+        const range = request.headers.get('range');
 
-        // Block internal/private network access (SSRF protection)
-        if (isPrivateIP(parsedUrl.hostname)) {
-            return new NextResponse('Invalid URL', { status: 400 });
-        }
-
-        // Fetch the audio with streaming and timeout
-        const response = await fetch(url, {
+        // safeFetch validates the resolved IP and re-validates every redirect hop,
+        // so a URL that resolves or redirects to an internal / metadata address is
+        // refused (SSRF defense). /api/* is exempt from middleware, so this route
+        // is otherwise unauthenticated.
+        const response = await safeFetch(target, {
             signal: AbortSignal.timeout(30000),
             headers: {
                 'User-Agent': 'Podcatch/1.0',
+                ...(range ? { Range: range } : {}),
             },
         });
 
-        if (!response.ok) {
+        if (!response.ok && response.status !== 206) {
             return new NextResponse(`Upstream error: ${response.status}`, { status: response.status });
         }
 
-        // Get content type from upstream response
         const contentType = response.headers.get('content-type') || 'audio/mpeg';
-        const contentLength = response.headers.get('content-length');
 
-        // Create response headers with CORS
         const headers = new Headers({
             'Content-Type': contentType,
             'Access-Control-Allow-Origin': '*',
@@ -67,29 +45,20 @@ export async function GET(request: NextRequest) {
             'Cache-Control': 'public, max-age=3600',
         });
 
-        if (contentLength) {
-            headers.set('Content-Length', contentLength);
-        }
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) headers.set('Content-Length', contentLength);
+        const acceptRanges = response.headers.get('accept-ranges');
+        if (acceptRanges) headers.set('Accept-Ranges', acceptRanges);
+        const contentRange = response.headers.get('content-range');
+        if (contentRange) headers.set('Content-Range', contentRange);
 
-        // Support range requests for audio seeking
-        const range = request.headers.get('range');
-        if (range && response.headers.get('accept-ranges') === 'bytes') {
-            headers.set('Accept-Ranges', 'bytes');
-            const contentRange = response.headers.get('content-range');
-            if (contentRange) {
-                headers.set('Content-Range', contentRange);
-            }
-        }
-
-        // Stream the response
         return new NextResponse(response.body, {
             status: response.status,
             headers,
         });
-
     } catch (error) {
         console.error('Audio proxy error:', error);
-        return new NextResponse('Failed to fetch audio', { status: 500 });
+        return new NextResponse('Failed to fetch audio', { status: 502 });
     }
 }
 

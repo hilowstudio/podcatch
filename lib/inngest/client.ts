@@ -10,6 +10,8 @@ type Events = {
     'episode/process.requested': {
         data: {
             episodeId: string;
+            /** The requesting user, whose quota funds this run (manual/import). */
+            userId?: string;
         };
     };
 };

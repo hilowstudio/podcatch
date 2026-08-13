@@ -4,10 +4,16 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 export async function updateBrandVoice(voice: string) {
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseBrandVoice) {
+        return { success: false, error: 'Brand voice requires the Basic or Pro plan.' };
+    }
 
     try {
         await prisma.user.update({

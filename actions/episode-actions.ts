@@ -8,6 +8,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function getEpisodesByFeed(feedId: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.id) return [];
+
         const episodes = await prisma.episode.findMany({
             where: { feedId },
             orderBy: { publishedAt: 'desc' },
@@ -97,44 +100,13 @@ export async function getPublicEpisodeWithInsight(episodeId: string) {
 }
 
 /**
- * Get recent episodes across all feeds
- */
-export async function getRecentEpisodes(limit: number = 10) {
-    try {
-        const episodes = await prisma.episode.findMany({
-            take: limit,
-            orderBy: { publishedAt: 'desc' },
-            where: {
-                status: 'COMPLETED',
-            },
-            include: {
-                feed: {
-                    select: {
-                        id: true,
-                        title: true,
-                        image: true,
-                    },
-                },
-                insight: {
-                    select: {
-                        summary: true,
-                    },
-                },
-            },
-        });
-
-        return episodes;
-    } catch (error) {
-        console.error('Error fetching recent episodes:', error);
-        return [];
-    }
-}
-
-/**
  * Get simple episode status (for polling)
  */
 export async function getEpisodeStatus(episodeId: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.id) return null;
+
         const episode = await prisma.episode.findUnique({
             where: { id: episodeId },
             select: { status: true },
@@ -150,6 +122,9 @@ export async function getEpisodeStatus(episodeId: string) {
  */
 export async function getEpisodeForPlayer(episodeId: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.id) return null;
+
         const episode = await prisma.episode.findUnique({
             where: { id: episodeId },
             include: {

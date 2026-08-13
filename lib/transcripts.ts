@@ -57,7 +57,11 @@ export function collectTranscriptSources(tags: TranscriptTag[]): TranscriptSourc
         for (const t of tags) {
             if (!t?.url) continue;
             const matches = (t.type && type.test(t.type)) || (!t.type && ext.test(t.url)) || ext.test(t.url);
-            if (matches && !out.some(o => o.url === t.url)) out.push({ url: t.url, type: t.type, kind });
+            // Dedupe per (url, kind): when a tag's declared type and its extension
+            // disagree (e.g. a .vtt served as application/json), keep BOTH candidates
+            // so a failed json parse still falls through to the vtt attempt instead
+            // of discarding a usable transcript.
+            if (matches && !out.some(o => o.url === t.url && o.kind === kind)) out.push({ url: t.url, type: t.type, kind });
         }
     }
     return out;
@@ -69,8 +73,16 @@ export function selectTranscriptSource(tags: TranscriptTag[]): { url: string; fo
     return first ? { url: first.url, format: first.kind } : null;
 }
 
-const stamp = (sec: number) =>
-    `[${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}]`;
+const stamp = (sec: number) => {
+    const s = Math.max(0, Math.floor(sec));
+    const p = (n: number) => n.toString().padStart(2, '0');
+    const h = Math.floor(s / 3600);
+    // Emit [H:MM:SS] past the hour so timestamps past ~100 minutes don't collapse
+    // to 3-digit minutes ([120:30]) that the [MM:SS]/[HH:MM:SS] extractors can't parse.
+    return h > 0
+        ? `[${h}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}]`
+        : `[${p(Math.floor(s / 60))}:${p(s % 60)}]`;
+};
 
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
 
@@ -189,12 +201,20 @@ export function parseJsonTranscript(body: string): ParsedTranscript | null {
     for (const s of segs) {
         const text = String(s?.body ?? s?.text ?? s?.word ?? '').trim();
         if (!text) continue;
+        // `*Ms` fields are explicitly milliseconds → always convert. `start` /
+        // `startTime` are ambiguous (seconds or ms), so only for those do we fall
+        // back to the magnitude heuristic. Applying that heuristic to a known-ms
+        // value below 100_000 (e.g. 50000ms = 50s) is what scrambled the first
+        // ~100s of ms-format publisher transcripts.
+        const startIsMs = !finite(s?.startTime) && !finite(s?.start) && finite(s?.startMs);
+        const endIsMs = !finite(s?.endTime) && !finite(s?.end) && finite(s?.endMs);
         const start = s?.startTime ?? s?.start ?? s?.startMs;
         const end = s?.endTime ?? s?.end ?? s?.endMs;
         if (!finite(start)) continue;                     // untimed segment: unusable
-        // some publishers emit milliseconds; treat implausibly large values as ms
-        const st = start > 100_000 ? start / 1000 : start;
-        const en = finite(end) ? (end > 100_000 ? end / 1000 : end) : st;
+        const st = startIsMs ? start / 1000 : (start > 100_000 ? start / 1000 : start);
+        const en = !finite(end) ? st
+            : endIsMs ? end / 1000
+                : (end > 100_000 ? end / 1000 : end);
         items.push({ start: st, end: Math.max(en, st), text, speaker: num(s?.speaker ?? s?.speaker_id) });
     }
     // require timing on effectively all of it, not just a lucky prefix

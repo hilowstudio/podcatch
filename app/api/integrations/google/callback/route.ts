@@ -1,8 +1,6 @@
-
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getTokens } from '@/lib/drive';
-import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -14,9 +12,16 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state');
 
     if (error) {
         return new NextResponse(`Google Auth Error: ${error}`, { status: 400 });
+    }
+
+    // CSRF defense: the state must match the nonce set on the initiate request.
+    const expectedState = req.cookies.get('google_oauth_state')?.value;
+    if (!state || !expectedState || state !== expectedState) {
+        return new NextResponse('Invalid OAuth state', { status: 400 });
     }
 
     if (!code) {
@@ -32,16 +37,13 @@ export async function GET(req: NextRequest) {
                 data: { googleDriveRefreshToken: tokens.refresh_token },
             });
         }
-
-        // Ideally we also save the access_token, but for this "occasional" job,
-        // using the refresh token to get a fresh access token on demand is safer/easier.
-        // Google doesn't always return a refresh token unless 'access_type=offline' 
-        // and 'prompt=consent' are set (which we did).
-
     } catch (e) {
         console.error('Failed to exchange Google token:', e);
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 
-    redirect('/settings?google_drive=connected');
+    // Clear the one-time state cookie and redirect back to settings.
+    const response = NextResponse.redirect(new URL('/settings?google_drive=connected', req.nextUrl.origin));
+    response.cookies.delete('google_oauth_state');
+    return response;
 }

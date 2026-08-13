@@ -4,12 +4,18 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { dispatchWebhook } from '@/lib/webhooks';
 import { revalidatePath } from 'next/cache';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 export async function updateWebhookUrl(webhookUrl: string) {
     const session = await auth();
 
     if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
+    }
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseIntegrations) {
+        return { success: false, error: 'Integrations require the Basic or Pro plan.' };
     }
 
     try {
@@ -33,6 +39,11 @@ export async function updateReadwiseApiKey(apiKey: string) {
         return { success: false, error: 'Unauthorized' };
     }
 
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseIntegrations) {
+        return { success: false, error: 'Integrations require the Basic or Pro plan.' };
+    }
+
     try {
         await prisma.user.update({
             where: { id: session.user.id },
@@ -52,6 +63,11 @@ export async function updateNotionSettings(accessToken: string, pageId: string) 
 
     if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
+    }
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseIntegrations) {
+        return { success: false, error: 'Integrations require the Basic or Pro plan.' };
     }
 
     try {
@@ -75,6 +91,11 @@ export async function testWebhook(webhookUrl: string) {
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseIntegrations) {
+        return { success: false, error: 'Integrations require the Basic or Pro plan.' };
+    }
+
     // Simulate a payload
     const dummyPayload = {
         event: 'test.ping',
@@ -94,6 +115,11 @@ export async function updateTanaToken(token: string) {
         const session = await auth();
         if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
+        const plan = await getUserSubscriptionPlan();
+        if (!plan.canUseIntegrations) {
+            return { success: false, error: 'Integrations require the Basic or Pro plan.' };
+        }
+
         await prisma.user.update({
             where: { id: session.user.id },
             data: { tanaApiToken: token || null }
@@ -110,6 +136,11 @@ export async function updateLogseqGraph(graphName: string) {
     try {
         const session = await auth();
         if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const plan = await getUserSubscriptionPlan();
+        if (!plan.canUseIntegrations) {
+            return { success: false, error: 'Integrations require the Basic or Pro plan.' };
+        }
 
         await prisma.user.update({
             where: { id: session.user.id },

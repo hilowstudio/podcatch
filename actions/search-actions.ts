@@ -17,7 +17,7 @@ export interface SearchResult {
 
 // Extract timestamp from text like "[12:34]" or "[1:23:45]"
 function extractTimestamp(text: string): number | undefined {
-    const match = text.match(/\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]/);
+    const match = text.match(/\[(\d{1,3}):(\d{2})(?::(\d{2}))?\]/);
     if (!match) return undefined;
 
     if (match[3]) {

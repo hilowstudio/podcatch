@@ -52,51 +52,17 @@ export const processEpisode = inngest.createFunction(
     },
     { event: 'episode/process.requested' },
     async ({ event, step }) => {
-        const { episodeId } = event.data;
+        const { episodeId, userId } = event.data;
 
         const episode = await step.run('fetch-episode', async () => {
 
-            console.log('🚀 Starting process-episode-shared (Usage Limit Version)');
+            console.log('🚀 Starting process-episode-shared (clicker-pays)');
 
             const ep = await prisma.episode.findUnique({
                 where: { id: episodeId },
                 include: {
-                    feed: {
-                        include: {
-                            subscriptions: {
-                                take: 50,
-                                orderBy: [
-                                    { user: { stripePriceId: 'asc' } },
-                                    { createdAt: 'asc' }
-                                ],
-                                include: {
-                                    user: {
-                                        select: {
-                                            id: true,
-                                            geminiApiKey: true,
-                                            deepgramApiKey: true,
-                                            claudeApiKey: true,
-                                            claudeProjectId: true,
-                                            autoSyncToClaude: true,
-                                            stripePriceId: true,
-                                            stripeCurrentPeriodEnd: true,
-                                            webhookUrl: true,
-                                            readwiseApiKey: true,
-                                            notionAccessToken: true,
-                                            notionPageId: true,
-                                            googleDriveRefreshToken: true,
-                                            openaiKey: true,
-                                            openaiAssistantId: true,
-                                            openaiVectorStoreId: true,
-                                            hilowIngestUrl: true,
-                                            hilowIngestKey: true,
-                                            brandVoice: true,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
+                    insight: { select: { id: true } },
+                    feed: true,
                 },
             });
 
@@ -104,20 +70,62 @@ export const processEpisode = inngest.createFunction(
                 throw new Error(`Episode ${episodeId} not found`);
             }
 
-            // Funding Logic:
-            // 1. Look for a Pro User (Limit 200)
-            // 2. Look for a Basic User (Limit 20)
-            // 3. Look for a Free User (Limit 3)
+            // Whoever processes an episode first processes it for everyone. Once it
+            // is COMPLETED with insights, a later request just serves the stored
+            // result — no reprocessing, and nobody is charged again.
+            if (ep.status === 'COMPLETED' && ep.insight) {
+                console.log('✅ Already processed; serving stored insights, charging no one.');
+                return { ...ep, alreadyProcessed: true };
+            }
+
+            // Only the user(s) who actually requested this episode may fund it, so a
+            // request can never spend the quota of a stranger who happens to share
+            // the feed.
+            const userSelect = {
+                id: true,
+                geminiApiKey: true,
+                deepgramApiKey: true,
+                claudeApiKey: true,
+                claudeProjectId: true,
+                autoSyncToClaude: true,
+                stripePriceId: true,
+                stripeCurrentPeriodEnd: true,
+                webhookUrl: true,
+                readwiseApiKey: true,
+                notionAccessToken: true,
+                notionPageId: true,
+                googleDriveRefreshToken: true,
+                openaiKey: true,
+                openaiAssistantId: true,
+                openaiVectorStoreId: true,
+                hilowIngestUrl: true,
+                hilowIngestKey: true,
+                brandVoice: true,
+            } satisfies Prisma.UserSelect;
+
+            // Only the requester funds this run, and only if they are actually
+            // subscribed to the feed. Processing is manual/user-initiated (an import
+            // counts as the importing user requesting it); there is no auto-process.
+            const candidates = userId
+                ? await prisma.subscription.findUnique({
+                    where: { userId_feedId: { userId, feedId: ep.feedId } },
+                    include: { user: { select: userSelect } },
+                }).then(sub => (sub ? [sub] : []))
+                : [];
+
+            if (candidates.length === 0) {
+                console.log('🚫 No eligible payer (requester not subscribed, or no opted-in funder).');
+                return { ...ep, feed: { ...ep.feed, user: null }, skipped: true };
+            }
 
             const DAY_IN_MS = 86_400_000;
             const now = Date.now();
 
-            // Usage limits
             // Usage limits from centralized config
             const LIMITS = {
                 PRO: PLANS.pro.features.monthlyEpisodeLimit,
                 BASIC: PLANS.basic.features.monthlyEpisodeLimit,
-                FREE: PLANS.free.features.monthlyEpisodeLimit
+                FREE: PLANS.free.features.monthlyEpisodeLimit,
             };
 
             // Helper to check plan status
@@ -134,15 +142,12 @@ export const processEpisode = inngest.createFunction(
                 return 'FREE'; // Default fallback
             };
 
-            // Batch Funding Check Strategy (Optimized to avoid N+1 queries)
-            // 1. Get all subscriber IDs
-            const subscriberIds = ep.feed.subscriptions.map(s => s.user.id);
-
-            // 2. Fetch usage counts for all in one query
+            // Fetch this month's usage for the candidate payers in one query.
+            const candidateIds = candidates.map(s => s.user.id);
             const usageCounts = await prisma.usageLog.groupBy({
                 by: ['userId'],
                 where: {
-                    userId: { in: subscriberIds },
+                    userId: { in: candidateIds },
                     action: 'PROCESS_EPISODE',
                     createdAt: { gte: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)) }
                 },
@@ -152,25 +157,25 @@ export const processEpisode = inngest.createFunction(
             const usageMap = new Map<string, number>();
             usageCounts.forEach(u => usageMap.set(u.userId, u._count._all));
 
-            // 3. Find the first eligible funder
-            for (const sub of ep.feed.subscriptions) {
+            // Charge the first candidate with remaining quota.
+            for (const sub of candidates) {
                 const user = sub.user;
                 if (!user) continue;
 
                 const plan = getPlanType(user);
-                const limit = LIMITS[plan as keyof typeof LIMITS];
-                const currentUsage = usageMap.get(user.id) || 0;
 
-                // YouTube is a paid capability. A Free subscriber cannot fund a
-                // YouTube episode, so skip them and let a paid subscriber pay for it.
+                // YouTube is a paid capability; the payer's own plan must grant it.
                 if (ep.feed.type === 'YOUTUBE' && !getPlanFeatures(plan).canIngestYouTube) {
                     continue;
                 }
 
+                const limit = LIMITS[plan as keyof typeof LIMITS];
+                const currentUsage = usageMap.get(user.id) || 0;
+
                 if (currentUsage < limit) {
                     console.log(`✅ Funded by ${plan} User: ${user.id} (${currentUsage}/${limit})`);
 
-                    // Log Usage (Consumes quota)
+                    // Log Usage (consumes the payer's own quota)
                     await prisma.usageLog.create({
                         data: {
                             userId: user.id,
@@ -184,20 +189,25 @@ export const processEpisode = inngest.createFunction(
                         data: { status: 'PROCESSING' },
                     });
 
-                    // The funder's plan decides how a YouTube video is read
+                    // The payer's plan decides how a YouTube video is read
                     // (captions vs. Gemini watching it), so carry it downstream.
                     return { ...ep, feed: { ...ep.feed, user: user }, fundingPlan: plan };
                 }
             }
 
-            // If we get here, no one has quota
-            console.log('🚫 No eligible users found to fund processing.');
-            return { ...ep, feed: { ...ep.feed, user: null }, skipped: true };
+            // Requester(s) present but out of quota.
+            console.log('🚫 Requester has no remaining quota.');
+            return { ...ep, feed: { ...ep.feed, user: null }, skipped: true, outOfQuota: true };
 
         }) as any;
 
-        if ((episode as any).skipped) {
-            return { skipped: true, reason: 'Upgrade to Pro to process episodes' };
+        // `episode` is typed `any` (step result cast above), so these flags read directly.
+        if (episode.alreadyProcessed) {
+            return { skipped: true, reason: 'already-processed' };
+        }
+
+        if (episode.skipped) {
+            return { skipped: true, reason: episode.outOfQuota ? 'Monthly episode limit reached' : 'No eligible payer' };
         }
 
         console.log(`Processing episode: ${episode.title}`);
@@ -775,41 +785,11 @@ ${transcriptData.timestampedTranscript}
         }
 
 
-        // Step 10: Upload to Gemini Store (Phase 2 Integration) for Chat RAG
-        // If it's a VIDEO, we already uploaded it to Gemini in Step 2.
-        // We should save that URI.
-        await step.run('upload-to-gemini-store', async () => {
-            if (transcriptData.fileUri) {
-                // Video case: Already uploaded
-                await prisma.insight.update({
-                    where: { episodeId: episode.id },
-                    data: { geminiFileUri: transcriptData.fileUri }
-                });
-                return;
-            }
-
-            // RSS Case: Upload text transcript
-            if (!transcriptData.timestampedTranscript) return;
-
-            try {
-                const { uploadToGemini } = await import('@/lib/gemini-rag');
-                console.log('Uploading partial transcript to Gemini Files...');
-
-                const result = await uploadToGemini(transcriptData.timestampedTranscript, `episode-${episode.id}.txt`);
-
-                if (result.success && result.fileUri) {
-                    console.log(`✅ Uploaded to Gemini: ${result.fileUri}`);
-                    await prisma.insight.update({
-                        where: { episodeId: episode.id },
-                        data: { geminiFileUri: result.fileUri }
-                    });
-                } else {
-                    console.error('Failed to upload to Gemini:', result.error);
-                }
-            } catch (e) {
-                console.error('Error in Gemini Store step:', e);
-            }
-        });
+        // (Removed) The "upload to Gemini Store" step wrote Insight.geminiFileUri,
+        // which nothing reads — chat stuffs raw transcripts rather than the file,
+        // and Gemini expires uploaded files after ~48h anyway. It was a per-episode
+        // upload + storage cost on the hot path for a dead column. Re-add here if a
+        // Gemini-file-backed RAG path is ever wired up.
 
         // Step 12: Generate Embeddings (Phase 2)
         await step.run('generate-embeddings', async () => {
@@ -843,6 +823,14 @@ ${transcriptData.timestampedTranscript}
             const texts = textToEmbed.map(t => t.content);
             try {
                 const vectors = await generateEmbeddings(texts);
+
+                // Reprocessing must not stack a second set of vectors on top of the
+                // old ones (searchLibrary reads these via pgvector), so clear this
+                // episode's existing embeddings before inserting the fresh batch.
+                await prisma.$executeRawUnsafe(
+                    `DELETE FROM "EpisodeEmbedding" WHERE "episodeId" = $1`,
+                    episode.id
+                );
 
                 // Save to DB using raw SQL (Prisma doesn't support vector writes natively yet)
                 // We execute sequentially to avoid connection pool exhaustion

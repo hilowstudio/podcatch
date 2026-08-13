@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { MODELS } from '@/lib/ai/models';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 export async function createCollection(title: string, description?: string) {
     const session = await auth();
@@ -133,6 +134,11 @@ export async function synthesizeCollection(collectionId: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
 
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseStudio) {
+        return { success: false, error: 'Collection synthesis requires the Basic or Pro plan.' };
+    }
+
     try {
         // 1. Fetch episodes
         const collection = await prisma.collection.findUnique({
@@ -164,9 +170,13 @@ Key Takeaways: ${(ep.insight?.keyTakeaways as string[])?.join('\n') || 'N/A'}
         const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
         const { generateText } = await import('ai');
 
-        // Use user's key or system key
-        const user = session.user as any;
-        const geminiApiKey = user.geminiApiKey || process.env.GEMINI_API_KEY;
+        // Use the user's own key (loaded from the DB — the session only carries
+        // the user id, so reading the key off it always fell back to the system key)
+        const dbUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { geminiApiKey: true },
+        });
+        const geminiApiKey = dbUser?.geminiApiKey || process.env.GEMINI_API_KEY;
         const google = createGoogleGenerativeAI({ apiKey: geminiApiKey });
         const model = google(MODELS.synthesis);
 

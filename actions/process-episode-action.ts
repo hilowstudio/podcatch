@@ -51,6 +51,8 @@ export async function processEpisodeAction(formData: FormData) {
             name: 'episode/process.requested',
             data: {
                 episodeId,
+                // Clicker pays: this run is funded by the requesting user's quota.
+                userId: session.user.id,
             },
         });
 

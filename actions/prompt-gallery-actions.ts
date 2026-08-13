@@ -3,6 +3,7 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 export async function getPublicPrompts(category?: string) {
     const where: any = { isPublic: true };
@@ -24,6 +25,11 @@ export async function clonePrompt(promptId: string) {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: 'Not authenticated' };
+    }
+
+    const plan = await getUserSubscriptionPlan();
+    if (!plan.canUseCustomPrompts) {
+        return { success: false, error: 'Custom prompts require the Pro plan.' };
     }
 
     const source = await prisma.customPrompt.findUnique({

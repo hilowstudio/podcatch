@@ -11,12 +11,13 @@ function getOAuthClient() {
     );
 }
 
-export function getAuthUrl() {
+export function getAuthUrl(state?: string) {
     const oauth2Client = getOAuthClient();
     return oauth2Client.generateAuthUrl({
         access_type: 'offline', // Force refresh token
         prompt: 'consent',
         scope: SCOPES,
+        state, // anti-CSRF nonce; validated in the callback
     });
 }
 

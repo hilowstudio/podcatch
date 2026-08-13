@@ -87,7 +87,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
                     await syncSubscription(user.id, subscription);
                     isPlanActive = true;
                     user.stripePriceId = subscription.items.data[0].price.id;
-                    user.stripeCurrentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+                    user.stripeCurrentPeriodEnd = new Date(subscription.items.data[0].current_period_end * 1000);
                 }
             }
 
@@ -106,7 +106,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
                     await syncSubscription(user.id, activeSub as any);
                     isPlanActive = true;
                     user.stripePriceId = activeSub.items.data[0].price.id;
-                    user.stripeCurrentPeriodEnd = new Date((activeSub as any).current_period_end * 1000);
+                    user.stripeCurrentPeriodEnd = new Date(activeSub.items.data[0].current_period_end * 1000);
                 }
             }
         } catch (error) {
@@ -180,7 +180,7 @@ async function syncSubscription(userId: string, subscription: any) {
             stripeSubscriptionId: subscription.id,
             stripeCustomerId: subscription.customer as string,
             stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000), // Ensure this is treated as number
+            stripeCurrentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000),
         },
     });
 }

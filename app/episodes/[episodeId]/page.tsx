@@ -173,7 +173,7 @@ export default async function EpisodePage({ params }: PageProps) {
 
                             {/* Actions */}
                             <div className="flex items-center gap-4 pt-4">
-                                {isDiscovered && (
+                                {(isDiscovered || isFailed) && (
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
                                 <AddToCollectionButton episodeId={episode.id} />

@@ -84,14 +84,11 @@ function getQueuedUntilTime(startStr: string, endStr: string, timezone: string):
     const month = parseInt(dateParts.find(p => p.type === 'month')?.value || '1') - 1;
     const day = parseInt(dateParts.find(p => p.type === 'day')?.value || '1');
 
-    // Create end time in the user's local date
-    let endDate = new Date(Date.UTC(year, month, day, endH, endM));
-
-    // Adjust for timezone offset
-    const utcNow = now.getTime();
-    const localNow = new Date(now.toLocaleString('en-US', { timeZone: timezone })).getTime();
-    const offset = localNow - utcNow;
-    endDate = new Date(endDate.getTime() - offset);
+    // Resolve "endH:endM on year/month/day in `timezone`" to a real UTC instant,
+    // independent of the server's own timezone. (The previous localNow/utcNow diff
+    // only cancelled correctly when the server clock itself happened to be UTC.)
+    const naiveUtc = Date.UTC(year, month, day, endH, endM);
+    let endDate = new Date(naiveUtc - tzOffsetMs(new Date(naiveUtc), timezone));
 
     // If end is before now (overnight case), add a day
     if (endDate <= now) {
@@ -99,4 +96,21 @@ function getQueuedUntilTime(startStr: string, endStr: string, timezone: string):
     }
 
     return endDate;
+}
+
+/**
+ * Offset in ms of `timeZone` from UTC at `date`, derived purely from Intl
+ * formatting so it does not depend on the server's own timezone.
+ */
+function tzOffsetMs(date: Date, timeZone: string): number {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(date);
+    const m: Record<string, number> = {};
+    for (const p of parts) if (p.type !== 'literal') m[p.type] = parseInt(p.value);
+    const asUtc = Date.UTC(m.year, m.month - 1, m.day, m.hour, m.minute, m.second);
+    return asUtc - date.getTime();
 }

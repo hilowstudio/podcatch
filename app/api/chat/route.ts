@@ -4,6 +4,7 @@ import { streamText } from 'ai';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { MODELS } from '@/lib/ai/models';
+import { getUserSubscriptionPlan } from '@/lib/subscription';
 
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -20,6 +21,18 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         const { messages: rawMessages, episodeId, entityName, collectionId } = body;
+
+        // Chat is a paid capability. The UI hides it, but the route must enforce
+        // it too — episode chat and library/entity/collection chat are gated
+        // independently by plan.
+        const plan = await getUserSubscriptionPlan();
+        const allowed = episodeId ? plan.canChatAboutEpisode : plan.canChatWithLibrary;
+        if (!allowed) {
+            return new Response(
+                JSON.stringify({ error: 'Chat is a Pro feature. Upgrade to chat with your episodes and library.' }),
+                { status: 403, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
 
         // Convert from new AI SDK format (parts[]) to standard format (content string)
         const messages = rawMessages.map((msg: any) => {

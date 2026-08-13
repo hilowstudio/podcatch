@@ -36,6 +36,14 @@ export async function POST(req: Request) {
 
         console.log(`[WEBHOOK] Updating subscription for user ${session.metadata.userId}`);
 
+        const item = subscription.items.data[0];
+        // current_period_end moved onto the subscription *item* in recent API
+        // versions; reading it off the Subscription object yields undefined -> an
+        // Invalid Date, which makes this write throw so the plan never persists.
+        const currentPeriodEnd = item?.current_period_end
+            ? new Date(item.current_period_end * 1000)
+            : null;
+
         await prisma.user.update({
             where: {
                 id: session.metadata.userId,
@@ -43,10 +51,8 @@ export async function POST(req: Request) {
             data: {
                 stripeSubscriptionId: subscription.id,
                 stripeCustomerId: subscription.customer as string,
-                stripePriceId: subscription.items.data[0].price.id,
-                stripeCurrentPeriodEnd: new Date(
-                    (subscription as any).current_period_end * 1000
-                ),
+                stripePriceId: item.price.id,
+                stripeCurrentPeriodEnd: currentPeriodEnd,
             },
         });
 
@@ -55,24 +61,33 @@ export async function POST(req: Request) {
 
     if (event.type === 'invoice.payment_succeeded') {
         const invoice = event.data.object as any;
-        const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string,
-            { expand: ['items.data.price'] }
-        ) as Stripe.Subscription;
+        // One-off invoices carry no subscription; skip rather than throw on null.
+        if (invoice.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(
+                invoice.subscription as string,
+                { expand: ['items.data.price'] }
+            ) as Stripe.Subscription;
 
-        await prisma.user.update({
-            where: {
-                stripeSubscriptionId: subscription.id,
-            },
-            data: {
-                stripePriceId: subscription.items.data[0].price.id,
-                stripeCurrentPeriodEnd: new Date(
-                    (subscription as any).current_period_end * 1000
-                ),
-            },
-        });
+            const item = subscription.items.data[0];
+            const currentPeriodEnd = item?.current_period_end
+                ? new Date(item.current_period_end * 1000)
+                : null;
 
-        revalidatePath('/', 'layout');
+            // updateMany (not update): a renewal webhook that arrives before the
+            // subscription id is stored becomes a no-op instead of a P2025 throw
+            // that 500s and makes Stripe retry forever.
+            await prisma.user.updateMany({
+                where: {
+                    stripeSubscriptionId: subscription.id,
+                },
+                data: {
+                    stripePriceId: item.price.id,
+                    stripeCurrentPeriodEnd: currentPeriodEnd,
+                },
+            });
+
+            revalidatePath('/', 'layout');
+        }
     }
 
     return new NextResponse(null, { status: 200 });

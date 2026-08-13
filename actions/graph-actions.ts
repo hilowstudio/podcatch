@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export interface GraphEntity {
     id: string;
@@ -41,9 +42,31 @@ export interface GraphData {
     };
 }
 
+const EMPTY_GRAPH: GraphData = {
+    entities: [],
+    edges: [],
+    stats: {
+        totalEntities: 0,
+        totalEdges: 0,
+        personCount: 0,
+        bookCount: 0,
+        conceptCount: 0,
+        organizationCount: 0,
+        technologyCount: 0,
+    },
+};
+
 export async function getGraphData(): Promise<GraphData> {
+    const session = await auth();
+    if (!session?.user?.id) return EMPTY_GRAPH;
+
+    // Scope to the caller's own subscribed feeds — the graph must not expose
+    // entities or episode titles from other users' libraries.
     const episodes = await prisma.episode.findMany({
-        where: { status: 'COMPLETED' },
+        where: {
+            status: 'COMPLETED',
+            feed: { subscriptions: { some: { userId: session.user.id } } },
+        },
         select: {
             id: true,
             title: true,

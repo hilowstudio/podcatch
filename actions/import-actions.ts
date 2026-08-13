@@ -108,7 +108,8 @@ export async function importMP3Batch(
                 // Trigger processing
                 await inngest.send({
                     name: 'episode/process.requested',
-                    data: { episodeId: episode.id },
+                    // Importer pays: fund processing from the importing user's quota.
+                    data: { episodeId: episode.id, userId: session.user.id },
                 });
 
                 imported++;

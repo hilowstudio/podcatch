@@ -96,8 +96,18 @@ export async function saveToNotion(accessToken: string, payload: NotionPayload):
                 }
             },
             // @ts-ignore
-            children: children
+            children: children.slice(0, 100)
         });
+
+        // Notion caps `children` at 100 blocks per create request; a long
+        // transcript easily exceeds that (and previously failed the whole save).
+        // Append the overflow in further batches of 100.
+        for (let i = 100; i < children.length; i += 100) {
+            await notion.blocks.children.append({
+                block_id: response.id,
+                children: children.slice(i, i + 100) as any,
+            });
+        }
 
         return { success: true, url: (response as any).url };
 
