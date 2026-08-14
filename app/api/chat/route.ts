@@ -34,6 +34,26 @@ export async function POST(req: Request) {
             );
         }
 
+        // Meter chat against the plan's monthly quota — it runs on the shared
+        // system key, so it needs a per-user ceiling.
+        const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+        const chatUsage = await prisma.usageLog.count({
+            where: { userId: session.user.id, action: 'CHAT_MESSAGE', createdAt: { gte: monthStart } },
+        });
+        if (chatUsage >= plan.monthlyChatLimit) {
+            return new Response(
+                JSON.stringify({ error: `You've reached your monthly chat limit (${plan.monthlyChatLimit} messages). It resets at the start of next month.` }),
+                { status: 429, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        await prisma.usageLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'CHAT_MESSAGE',
+                targetId: episodeId || collectionId || entityName || null,
+            },
+        });
+
         // Convert from new AI SDK format (parts[]) to standard format (content string)
         const messages = rawMessages.map((msg: any) => {
             // If message already has content string, use it

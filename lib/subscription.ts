@@ -24,6 +24,7 @@ export type SubscriptionPlan = {
     /** 'none' | 'audio' | 'video' — see PLANS in lib/stripe-config. */
     youtubeUnderstanding: string;
     maxEpisodesPerMonth: number;
+    monthlyChatLimit: number;
 };
 
 export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
@@ -46,6 +47,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
         canIngestYouTube: false,
         youtubeUnderstanding: 'none',
         maxEpisodesPerMonth: 3,
+        monthlyChatLimit: 0,
     };
 
     if (!session?.user?.id) {
@@ -139,6 +141,7 @@ export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
             canIngestYouTube: features.canIngestYouTube,
             youtubeUnderstanding: features.youtubeUnderstanding,
             maxEpisodesPerMonth: features.monthlyEpisodeLimit,
+            monthlyChatLimit: features.monthlyChatLimit,
         };
     };
 

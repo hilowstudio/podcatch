@@ -8,6 +8,7 @@ export const PLANS = {
         marketingFeatures: ['3 Episodes/mo', 'Basic AI Summary', 'Podcasts only', 'Web Access'],
         features: {
             monthlyEpisodeLimit: 3,
+            monthlyChatLimit: 0,
             canChatLibrary: false,
             canUseGraph: false,
             canIntegrate: false,
@@ -39,6 +40,7 @@ export const PLANS = {
         marketingFeatures: ['20 Episodes/mo', 'Podcasts + YouTube', 'Deep Discovery', 'Email Support'],
         features: {
             monthlyEpisodeLimit: 20,
+            monthlyChatLimit: 0,
             canChatLibrary: false,
             canUseGraph: true,
             canIntegrate: true,
@@ -66,6 +68,7 @@ export const PLANS = {
         marketingFeatures: ['200 Episodes/mo', 'Full Video Understanding', 'Priority AI Processing', 'Integration Sync (Notion/Claude)'],
         features: {
             monthlyEpisodeLimit: 200, // Effectively unlimited for normal use
+            monthlyChatLimit: 500,
             canChatLibrary: true,
             canUseGraph: true,
             canIntegrate: true,
