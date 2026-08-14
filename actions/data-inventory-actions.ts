@@ -43,7 +43,7 @@ export async function getDataInventory() {
         prisma.snip.count({ where: { userId } }),
         prisma.notification.count({ where: { userId } }),
         prisma.entity.count({
-            where: { episodes: { some: { feed: { subscriptions: { some: { userId } } } } } },
+            where: { episode: { feed: { subscriptions: { some: { userId } } } } },
         }),
         prisma.usageLog.count({
             where: {

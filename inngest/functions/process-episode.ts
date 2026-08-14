@@ -609,25 +609,19 @@ export const processEpisode = inngest.createFunction(
                 if (insights.entities && insights.entities.length > 0) {
                     console.log(`Processing ${insights.entities.length} entities...`);
 
-                    const entityIds: string[] = [];
+                    // Per-episode entities: each belongs to this episode (the graph is
+                    // per-user, derived from the user's own episodes). Upsert by
+                    // (episodeId, name) so reprocessing the same episode is idempotent.
                     const seen = new Set<string>();
                     for (const entity of insights.entities) {
                         const name = entity.name.trim();
                         if (name.length < 2 || seen.has(name)) continue;
                         seen.add(name);
 
-                        const dbEntity = await prisma.entity.upsert({
-                            where: { name },
-                            create: { name, type: entity.type, description: entity.description },
-                            update: {}, // keep original description to avoid thrashing
-                        });
-                        entityIds.push(dbEntity.id);
-                    }
-
-                    if (entityIds.length > 0) {
-                        await prisma.episode.update({
-                            where: { id: episode.id },
-                            data: { entities: { connect: entityIds.map(id => ({ id })) } },
+                        await prisma.entity.upsert({
+                            where: { episodeId_name: { episodeId: episode.id, name } },
+                            create: { episodeId: episode.id, name, type: entity.type, description: entity.description },
+                            update: {}, // keep original to avoid thrashing
                         });
                     }
                 }

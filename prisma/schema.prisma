@@ -253,14 +253,20 @@ model CustomPrompt {
 // Entities (Knowledge Graph)
 model Entity {
   id          String   @id @default(cuid())
-  name        String   @unique
+  name        String
   type        String // PERSON, BOOK, CONCEPT
   description String?  @db.Text
   image       String?
+  episodeId   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  episodes Episode[]
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  // Entities are per-episode (the knowledge graph is per-user, built from the
+  // user's own episodes) — not a global name-unique table shared across tenants.
+  @@unique([episodeId, name])
+  @@index([episodeId])
 }
 
 // AI-generated insights

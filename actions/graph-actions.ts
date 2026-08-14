@@ -85,47 +85,44 @@ export async function getGraphData(): Promise<GraphData> {
         }
     });
 
-    // Build entity map: accumulate episodes per entity
+    // Build the entity map keyed by NAME (lowercased) so the user's own graph
+    // merges the same entity across their episodes. Entities are per-episode rows
+    // now, so a name in one user's library is independent of another's.
     const entityMap = new Map<string, GraphEntity>();
 
     for (const ep of episodes) {
         for (const entity of ep.entities) {
-            const existing = entityMap.get(entity.id);
+            const key = entity.name.trim().toLowerCase();
+            if (!key) continue;
+            const epRef = { id: ep.id, title: ep.title, feedTitle: ep.feed.title, feedImage: ep.feed.image };
+            const existing = entityMap.get(key);
             if (existing) {
                 existing.episodeCount++;
-                existing.episodes.push({
-                    id: ep.id,
-                    title: ep.title,
-                    feedTitle: ep.feed.title,
-                    feedImage: ep.feed.image,
-                });
+                existing.episodes.push(epRef);
+                if (!existing.description && entity.description) existing.description = entity.description;
+                if (!existing.image && entity.image) existing.image = entity.image;
             } else {
-                entityMap.set(entity.id, {
-                    id: entity.id,
+                entityMap.set(key, {
+                    id: key,
                     name: entity.name,
                     type: entity.type as GraphEntity['type'],
                     description: entity.description,
                     image: entity.image,
                     episodeCount: 1,
-                    episodes: [{
-                        id: ep.id,
-                        title: ep.title,
-                        feedTitle: ep.feed.title,
-                        feedImage: ep.feed.image,
-                    }],
+                    episodes: [epRef],
                 });
             }
         }
     }
 
-    // Build co-occurrence edges
+    // Build co-occurrence edges between entity NAMES.
     const edgeMap = new Map<string, GraphEdge>();
 
     for (const ep of episodes) {
-        const entityIds = ep.entities.map(e => e.id);
-        for (let i = 0; i < entityIds.length; i++) {
-            for (let j = i + 1; j < entityIds.length; j++) {
-                const [a, b] = [entityIds[i], entityIds[j]].sort();
+        const names = [...new Set(ep.entities.map(e => e.name.trim().toLowerCase()).filter(Boolean))];
+        for (let i = 0; i < names.length; i++) {
+            for (let j = i + 1; j < names.length; j++) {
+                const [a, b] = [names[i], names[j]].sort();
                 const key = `${a}::${b}`;
                 const existing = edgeMap.get(key);
                 if (existing) {
