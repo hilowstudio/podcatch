@@ -1,6 +1,6 @@
 'use client';
 
-import { useAudio } from '@/components/audio-provider';
+import { useAudio, useAudioTime } from '@/components/audio-provider';
 import { cn } from '@/lib/utils';
 import { PlayCircle } from 'lucide-react';
 
@@ -35,7 +35,8 @@ function parseTimestamp(timestamp: string): number {
 }
 
 export function ChapterList({ chapters, episode }: ChapterListProps) {
-    const { currentEpisode, play, seek, currentTime } = useAudio();
+    const { currentEpisode, play, seek } = useAudio();
+    const currentTime = useAudioTime();
 
     const handleChapterClick = (timestamp: string) => {
         const seconds = parseTimestamp(timestamp);

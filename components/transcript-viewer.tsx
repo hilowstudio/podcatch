@@ -1,6 +1,6 @@
 'use client';
 
-import { useAudio } from '@/components/audio-provider';
+import { useAudio, useAudioTime } from '@/components/audio-provider';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef } from 'react';
 
@@ -16,7 +16,8 @@ interface TranscriptSegment {
 }
 
 export function TranscriptViewer({ transcript, className }: TranscriptViewerProps) {
-    const { seek, currentTime } = useAudio();
+    const { seek } = useAudio();
+    const currentTime = useAudioTime();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Parse transcript: Look for [MM:SS] patterns

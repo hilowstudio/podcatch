@@ -1,7 +1,7 @@
 'use client';
 
 import { createSnip } from '@/actions/snip-actions';
-import { useAudio } from '@/components/audio-provider';
+import { useAudio, useAudioTime } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, X, SkipBack, SkipForward, Scissors, Volume2, VolumeX } from 'lucide-react';
@@ -10,7 +10,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export function StickyPlayer() {
-    const { currentEpisode, isPlaying, toggle, currentTime, duration, seek, close, playbackRate, setPlaybackRate, volume, setVolume, silenceSkip, setSilenceSkip } = useAudio();
+    const { currentEpisode, isPlaying, toggle, duration, seek, close, playbackRate, setPlaybackRate, volume, setVolume, silenceSkip, setSilenceSkip } = useAudio();
+    const currentTime = useAudioTime();
     const [isSnipping, setIsSnipping] = useState(false);
 
     if (!currentEpisode) return null;

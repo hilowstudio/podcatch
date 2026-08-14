@@ -1,6 +1,6 @@
 'use client';
 
-import { useAudio } from '@/components/audio-provider';
+import { useAudio, useAudioTime } from '@/components/audio-provider';
 import { useEffect, useMemo } from 'react';
 import { computeSilenceRegions } from '@/lib/silence-regions';
 
@@ -9,7 +9,8 @@ interface SilenceSkipperProps {
 }
 
 export function SilenceSkipper({ wordTimestamps }: SilenceSkipperProps) {
-    const { currentTime, seek, silenceSkip } = useAudio();
+    const { seek, silenceSkip } = useAudio();
+    const currentTime = useAudioTime();
 
     const silenceRegions = useMemo(
         () => computeSilenceRegions(wordTimestamps),

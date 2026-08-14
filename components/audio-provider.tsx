@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
 interface Episode {
     id: string;
@@ -18,7 +18,6 @@ export interface PlayHistoryEntry {
 interface AudioContextType {
     currentEpisode: Episode | null;
     isPlaying: boolean;
-    currentTime: number;
     duration: number;
     playbackRate: number;
     volume: number;
@@ -53,6 +52,9 @@ function saveHistory(entries: PlayHistoryEntry[]) {
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
+// currentTime lives in its own context so components that don't need the live
+// position don't re-render ~4x/sec during playback.
+const AudioTimeContext = createContext<number>(0);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
@@ -177,7 +179,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         try { localStorage.setItem('podcatch_silence_skip', String(enabled)); } catch {}
     }, []);
 
-    const play = (episode: Episode) => {
+    const play = useCallback((episode: Episode) => {
         const audio = audioRef.current;
         if (!audio) return;
 
@@ -192,9 +194,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         audio.play()
             .then(() => setIsPlaying(true))
             .catch(e => console.error("Playback failed:", e));
-    };
+    }, [currentEpisode, playbackRate, addToHistory]);
 
-    const toggle = () => {
+    const toggle = useCallback(() => {
         const audio = audioRef.current;
         if (!audio || !currentEpisode) return;
 
@@ -206,16 +208,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 .then(() => setIsPlaying(true))
                 .catch(e => console.error("Playback failed:", e));
         }
-    };
+    }, [currentEpisode, isPlaying]);
 
-    const seek = (time: number) => {
+    const seek = useCallback((time: number) => {
         const audio = audioRef.current;
         if (!audio) return;
         audio.currentTime = time;
         setCurrentTime(time);
-    };
+    }, []);
 
-    const close = () => {
+    const close = useCallback(() => {
         const audio = audioRef.current;
         if (audio) {
             audio.pause();
@@ -234,11 +236,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setIsPlaying(false);
         setCurrentTime(0);
         setDuration(0);
-    };
+    }, []);
+
+    // Memoized so the value only changes on real state changes (episode, play/
+    // pause, rate, volume, history) — not on every currentTime tick.
+    const value = useMemo<AudioContextType>(() => ({
+        currentEpisode, isPlaying, duration, playbackRate, volume, playHistory,
+        play, toggle, seek, close, setPlaybackRate, setVolume, silenceSkip, setSilenceSkip,
+    }), [currentEpisode, isPlaying, duration, playbackRate, volume, playHistory, play, toggle, seek, close, setPlaybackRate, setVolume, silenceSkip, setSilenceSkip]);
 
     return (
-        <AudioContext.Provider value={{ currentEpisode, isPlaying, currentTime, duration, playbackRate, volume, playHistory, play, toggle, seek, close, setPlaybackRate, setVolume, silenceSkip, setSilenceSkip }}>
-            {children}
+        <AudioContext.Provider value={value}>
+            <AudioTimeContext.Provider value={currentTime}>
+                {children}
+            </AudioTimeContext.Provider>
         </AudioContext.Provider>
     );
 }
@@ -249,4 +260,10 @@ export function useAudio() {
         throw new Error('useAudio must be used within an AudioProvider');
     }
     return context;
+}
+
+/** Subscribe to the live playback position separately from useAudio(), so
+ *  components that don't need it don't re-render ~4x/sec during playback. */
+export function useAudioTime() {
+    return useContext(AudioTimeContext);
 }
