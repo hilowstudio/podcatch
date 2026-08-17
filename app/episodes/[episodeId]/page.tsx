@@ -11,13 +11,15 @@ import { EpisodePlayerButton } from '@/components/episode-player-button';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle, ArrowLeft, Calendar, ExternalLink, Lightbulb, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors, Crown, Bot, Wand2 } from 'lucide-react';
+import { PlayCircle, ArrowLeft, Calendar, ExternalLink, MessageSquare, FileText, Loader2, Sparkles, Share2, Scissors, Crown, Bot, Wand2 } from 'lucide-react';
 import { OfflineTranscriptViewer } from '@/components/offline-transcript-viewer';
 import { AnimatedTranscriptViewer } from '@/components/animated-transcript-viewer';
 import { SilenceSkipper } from '@/components/silence-skipper';
 import { ChapterList } from '@/components/chapter-list';
 import { ClipEditor } from '@/components/clip-editor';
 import { CustomPromptRunner } from '@/components/custom-prompt-runner';
+import { EpisodeInsight } from '@/components/episode-insight';
+import { getPreferredLanguage } from '@/actions/language-actions';
 import { AutoSeek } from '@/components/auto-seek';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -34,10 +36,11 @@ type PageProps = {
 export default async function EpisodePage({ params }: PageProps) {
     const { episodeId } = await params;
 
-    const [episode, session, plan] = await Promise.all([
+    const [episode, session, plan, preferredLanguage] = await Promise.all([
         getEpisodeWithInsight(episodeId),
         auth(),
-        getUserSubscriptionPlan()
+        getUserSubscriptionPlan(),
+        getPreferredLanguage()
     ]);
 
     if (!episode) {
@@ -252,40 +255,13 @@ ${episode.insight?.transcript}
                         {/* AI Insights (Summary, Key Takeaways, etc.) */}
                         {hasInsights && episode.insight && (
                             <>
-                                {/* Summary */}
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5 text-primary" />
-                                            <CardTitle>AI Summary</CardTitle>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-lg leading-relaxed">{episode.insight.summary}</p>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Key Takeaways */}
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex items-center gap-2">
-                                            <Lightbulb className="h-5 w-5 text-primary" />
-                                            <CardTitle>Key Takeaways</CardTitle>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <ul className="space-y-3">
-                                            {(episode.insight.keyTakeaways as string[]).map((takeaway, index) => (
-                                                <li key={index} className="flex gap-3">
-                                                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                                                        {index + 1}
-                                                    </span>
-                                                    <span className="leading-relaxed">{takeaway}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
+                                {/* Summary + Key Takeaways (with on-demand translation) */}
+                                <EpisodeInsight
+                                    episodeId={episode.id}
+                                    summary={episode.insight.summary}
+                                    keyTakeaways={(episode.insight.keyTakeaways as string[]) || []}
+                                    defaultLanguage={preferredLanguage}
+                                />
 
                                 {/* Links Mentioned */}
                                 {episode.insight.links && (episode.insight.links as string[]).length > 0 && (

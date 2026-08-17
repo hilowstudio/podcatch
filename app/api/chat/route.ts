@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { MODELS } from '@/lib/ai/models';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { generateEmbedding } from '@/lib/ai/embedding';
+import { languageName } from '@/lib/languages';
 
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -258,6 +259,17 @@ export async function POST(req: Request) {
             Use citations for timestamps in this format: [MM:SS|id:EPISODE_ID].
             Example: "As mentioned in the intro [02:30|id:123-abc]...".
             If the Episode ID is not clear, fallback to [MM:SS].`;
+        }
+
+        // Localize responses to the user's preferred language (source material and
+        // the system prompt stay English; Gemini answers in the target language).
+        const userPref = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { preferredLanguage: true },
+        });
+        const targetLang = languageName(userPref?.preferredLanguage);
+        if (targetLang) {
+            systemPrompt += `\n\nAlways respond in ${targetLang}, regardless of the language of the source material. Keep timestamp citations exactly as instructed.`;
         }
 
         console.log('[Chat API] Sending request to Gemini');

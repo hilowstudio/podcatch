@@ -80,6 +80,7 @@ model User {
   lastDigestAt    DateTime?
   rewindEnabled   Boolean        @default(true) // Weekly "Rewind" resurfacing of saved highlights (paid, and only if already receiving email)
   lastRewindAt    DateTime?
+  preferredLanguage String?      // IETF code (e.g. "es", "fr"); null/"en" = English. Localizes chat + on-demand summary translation.
   timezone           String?  // IANA timezone e.g. "America/New_York"
   digestDeliveryTime String?  // "HH:mm" format, default "08:00"
   quietHoursStart    String?  // "HH:mm" e.g. "22:00"
@@ -300,6 +301,7 @@ model Insight {
   socialContent Json? // { tweet, linkedin, blogTitle }
   chapters       Json? // [{ title, start, end }]
   wordTimestamps Json? // [{ word, start, end, speaker }] for animated transcript
+  translations   Json? // { [langCode]: { summary, keyTakeaways } } — on-demand, cached; shared across viewers
   geminiFileUri  String? // URI of the file uploaded to Gemini for RAG
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

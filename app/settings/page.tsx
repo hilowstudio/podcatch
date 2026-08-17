@@ -6,6 +6,7 @@ import { ConnectedAccounts } from '@/components/profile/connected-accounts';
 import { NotificationSettings } from '@/components/profile/notification-settings';
 import { UsageCard } from '@/components/profile/usage-card';
 import { DigestSettings } from '@/components/digest-settings';
+import { LanguageSettings } from '@/components/language-settings';
 import { ScheduleSettings } from '@/components/schedule-settings';
 import { DataExportButton } from '@/components/data-export-button';
 import { DeleteAccountButton } from '@/components/delete-account-button';
@@ -57,6 +58,14 @@ export default async function SettingsAccountPage() {
                     Get notified when your episodes finish processing.
                 </p>
                 <NotificationSettings />
+            </section>
+
+            <section>
+                <h2 className="text-xl font-semibold mb-4">Language</h2>
+                <p className="text-muted-foreground mb-6">
+                    Read summaries and chat in your language. Powered by Gemini.
+                </p>
+                <LanguageSettings initialLanguage={user.preferredLanguage} />
             </section>
 
             <section>
