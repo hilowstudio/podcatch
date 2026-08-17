@@ -316,8 +316,10 @@ model Snip {
   episodeId String
   startTime Int // Seconds
   endTime   Int // Seconds
-  content   String?  @db.Text
+  content   String?  @db.Text // Transcript quote for this range, sliced from word timestamps at capture
   note      String?  @db.Text
+  title     String? // Optional user-given label for the highlight
+  isPublic  Boolean  @default(false) // Exposed at /snip/[id] for sharing when true
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
