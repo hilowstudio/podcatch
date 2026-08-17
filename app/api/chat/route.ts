@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { MODELS } from '@/lib/ai/models';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { generateEmbedding } from '@/lib/ai/embedding';
 
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -131,29 +132,73 @@ export async function POST(req: Request) {
             });
             episodes = collection?.episodes || [];
         } else {
-            // Library-wide mode: fetch recent episodes
-            console.log(`[Chat API] Fetching library context`);
-            episodes = await prisma.episode.findMany({
-                where: {
-                    feed: {
-                        subscriptions: {
-                            some: { userId: session.user.id }
-                        }
+            // Library-wide mode: retrieve the episodes most RELEVANT to the
+            // question via vector search — not just the newest ones. The user's
+            // library can span hundreds of episodes; "5 most recent" silently
+            // ignored everything older, so a question about an older episode got
+            // no context. Fall back to recent episodes if embedding/vector search
+            // is unavailable or finds nothing (e.g. no embeddings yet).
+            console.log(`[Chat API] Retrieving library context via vector search`);
+            const latestUserMessage = [...messages].reverse().find((m: any) => m.role === 'user')?.content?.trim();
+
+            let episodeIds: string[] = [];
+            if (latestUserMessage) {
+                try {
+                    const queryVector = await generateEmbedding(latestUserMessage);
+                    const vectorString = `[${queryVector.join(',')}]`;
+                    // Rank the user's own episodes by their single closest chunk to
+                    // the query. Scope FIRST (MATERIALIZED CTE) so the per-user
+                    // filter can't be dropped by an ANN limit — same reasoning as
+                    // searchLibrary in actions/search-actions.ts.
+                    const rows = await prisma.$queryRawUnsafe<{ episodeId: string }[]>(
+                        `WITH scoped AS MATERIALIZED (
+                            SELECT e."episodeId", e."vector"
+                            FROM "EpisodeEmbedding" e
+                            JOIN "Episode" ep ON e."episodeId" = ep."id"
+                            JOIN "Feed" f ON ep."feedId" = f."id"
+                            JOIN "Subscription" s ON f."id" = s."feedId"
+                            WHERE s."userId" = $2 AND ep."status" = 'COMPLETED'
+                         )
+                         SELECT "episodeId", MIN("vector" <=> $1::vector) AS distance
+                         FROM scoped
+                         GROUP BY "episodeId"
+                         ORDER BY distance ASC
+                         LIMIT 6;`,
+                        vectorString,
+                        session.user.id
+                    );
+                    episodeIds = rows.map(r => r.episodeId);
+                } catch (err) {
+                    console.error('[Chat API] Vector retrieval failed, falling back to recent episodes', err);
+                }
+            }
+
+            if (episodeIds.length > 0) {
+                const found = await prisma.episode.findMany({
+                    where: {
+                        id: { in: episodeIds },
+                        feed: { subscriptions: { some: { userId: session.user.id } } },
+                        status: 'COMPLETED',
+                        insight: { isNot: null },
                     },
-                    status: 'COMPLETED',
-                    insight: {
-                        isNot: null
-                    }
-                },
-                include: {
-                    insight: true,
-                    feed: true
-                },
-                orderBy: {
-                    publishedAt: 'desc'
-                },
-                take: 5
-            });
+                    include: { insight: true, feed: true },
+                });
+                // Preserve the relevance order the vector search returned.
+                const order = new Map(episodeIds.map((id, i) => [id, i]));
+                episodes = found.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+            } else {
+                // Fallback: recent episodes (no embeddings yet, or empty query).
+                episodes = await prisma.episode.findMany({
+                    where: {
+                        feed: { subscriptions: { some: { userId: session.user.id } } },
+                        status: 'COMPLETED',
+                        insight: { isNot: null },
+                    },
+                    include: { insight: true, feed: true },
+                    orderBy: { publishedAt: 'desc' },
+                    take: 5,
+                });
+            }
         }
 
         console.log(`[Chat API] Found ${episodes.length} episodes for context`);
