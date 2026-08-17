@@ -6,7 +6,6 @@ import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, User, Bot, PlayCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
@@ -213,9 +212,9 @@ function ChatContent() {
                 </p>
             </div>
 
-            <Card className="flex-1 overflow-hidden flex flex-col border-2 shadow-sm">
-                <CardContent className="flex-1 p-0 flex flex-col">
-                    <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+            <Card className="flex-1 min-h-0 overflow-hidden flex flex-col border-2 shadow-sm">
+                <CardContent className="flex-1 min-h-0 p-0 flex flex-col">
+                    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4">
                         <div className="space-y-6">
                             {messages.length === 0 && (
                                 <div className="text-center text-muted-foreground mt-20">
@@ -265,7 +264,7 @@ function ChatContent() {
                                 </div>
                             )}
                         </div>
-                    </ScrollArea>
+                    </div>
 
                     <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
                         <form onSubmit={handleFormSubmit} className="flex gap-2">
