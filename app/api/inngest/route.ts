@@ -3,6 +3,7 @@ import { inngest } from '@/lib/inngest/client';
 import { checkFeeds } from '@/inngest/functions/check-feeds';
 import { processEpisode } from '@/inngest/functions/process-episode';
 import { sendDigest } from '@/inngest/functions/send-digest';
+import { sendRewind } from '@/inngest/functions/send-rewind';
 
 // Register all Inngest functions
 export const { GET, POST, PUT } = serve({
@@ -11,5 +12,6 @@ export const { GET, POST, PUT } = serve({
         checkFeeds,
         processEpisode,
         sendDigest,
+        sendRewind,
     ],
 });

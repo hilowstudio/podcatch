@@ -77,6 +77,8 @@ model User {
   brandVoice      String?        @db.Text
   digestFrequency String         @default("NONE") // NONE, DAILY, WEEKLY
   lastDigestAt    DateTime?
+  rewindEnabled   Boolean        @default(true) // Weekly "Rewind" resurfacing of saved highlights (paid, and only if already receiving email)
+  lastRewindAt    DateTime?
   timezone           String?  // IANA timezone e.g. "America/New_York"
   digestDeliveryTime String?  // "HH:mm" format, default "08:00"
   quietHoursStart    String?  // "HH:mm" e.g. "22:00"

@@ -35,6 +35,21 @@ export async function getDigestPreference() {
     return user?.digestFrequency || 'NONE';
 }
 
+export async function setRewindEnabled(enabled: boolean) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: { rewindEnabled: enabled },
+    });
+
+    revalidatePath('/settings');
+    return { success: true };
+}
+
 export async function updateScheduleSettings(settings: {
     timezone: string;
     deliveryTime: string;

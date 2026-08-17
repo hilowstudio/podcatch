@@ -64,7 +64,7 @@ export default async function SettingsAccountPage() {
                 <p className="text-muted-foreground mb-6">
                     Receive summaries of newly processed episodes.
                 </p>
-                <DigestSettings initialFrequency={user.digestFrequency || 'NONE'} />
+                <DigestSettings initialFrequency={user.digestFrequency || 'NONE'} initialRewindEnabled={user.rewindEnabled} />
             </section>
 
             <section>

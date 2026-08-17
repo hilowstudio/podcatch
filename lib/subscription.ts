@@ -27,6 +27,23 @@ export type SubscriptionPlan = {
     monthlyChatLimit: number;
 };
 
+/**
+ * Resolve a user's plan tier from their stored Stripe fields alone — no session,
+ * no Stripe round-trip. For server contexts that iterate over many users (crons)
+ * where the self-healing path in getUserSubscriptionPlan doesn't apply.
+ */
+export function resolvePlanKey(
+    stripePriceId?: string | null,
+    stripeCurrentPeriodEnd?: Date | null,
+): PlanType {
+    const active =
+        !!stripePriceId && (stripeCurrentPeriodEnd?.getTime() ?? 0) + DAY_IN_MS > Date.now();
+    if (!active) return 'free';
+    if (stripePriceId === PLANS.pro.monthly.priceId || stripePriceId === PLANS.pro.annual.priceId) return 'pro';
+    if (stripePriceId === PLANS.basic.monthly.priceId || stripePriceId === PLANS.basic.annual.priceId) return 'basic';
+    return 'free';
+}
+
 export async function getUserSubscriptionPlan(): Promise<SubscriptionPlan> {
     const session = await auth();
 
