@@ -74,7 +74,6 @@ model User {
   snips         Snip[]
   collections   Collection[]
   customPrompts CustomPrompt[]
-  recommendations Recommendation[]
   briefings     Briefing[]
   brandVoice      String?        @db.Text
   digestFrequency String         @default("NONE") // NONE, DAILY, WEEKLY
@@ -206,28 +205,11 @@ model Episode {
   embeddings      EpisodeEmbedding[]
   entities        Entity[]
   collections     Collection[]
-  recommendations Recommendation[]
 
   @@index([feedId])
   @@index([status])
   @@index([publishedAt])
   @@index([feedId, publishedAt]) // feed page: filter feedId + order by publishedAt
-}
-
-// Cached per-user "For You" episode picks, ranked by cosine distance to the
-// user's taste centroid and refreshed nightly (compute-recommendations cron).
-model Recommendation {
-  id        String   @id @default(cuid())
-  userId    String
-  episodeId String
-  score     Float // cosine distance to taste centroid — lower is a closer match
-  createdAt DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, episodeId])
-  @@index([userId])
 }
 
 // Collections (Phase 3)

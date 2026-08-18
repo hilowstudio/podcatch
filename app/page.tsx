@@ -10,7 +10,6 @@ import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteFooter } from '@/components/site-footer';
 import { RecentlyPlayed } from '@/components/recently-played';
-import { ForYou } from '@/components/for-you';
 import { Check, Search, MessageSquare, Zap, Star, Clock, TrendingDown, Lock } from 'lucide-react';
 import { IntegrationsCarousel } from '@/components/landing/integrations-carousel';
 import Link from 'next/link';
@@ -255,10 +254,6 @@ export default async function Home() {
         </div>
 
         <RecentlyPlayed />
-
-        <Suspense fallback={null}>
-          <ForYou />
-        </Suspense>
 
         <Suspense fallback={<FeedListSkeleton />}>
           <FeedList userId={session.user.id} />
