@@ -5,6 +5,7 @@ import { processEpisode } from '@/inngest/functions/process-episode';
 import { sendDigest } from '@/inngest/functions/send-digest';
 import { sendRewind } from '@/inngest/functions/send-rewind';
 import { computeRecommendations } from '@/inngest/functions/compute-recommendations';
+import { generateBriefing } from '@/inngest/functions/generate-briefing';
 
 // Register all Inngest functions
 export const { GET, POST, PUT } = serve({
@@ -15,5 +16,6 @@ export const { GET, POST, PUT } = serve({
         sendDigest,
         sendRewind,
         computeRecommendations,
+        generateBriefing,
     ],
 });

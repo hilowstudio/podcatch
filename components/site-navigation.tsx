@@ -102,6 +102,13 @@ export function SiteNavigation({ user, subscriptionPlan, usageCount = 0 }: SiteN
                                     >
                                         Highlights
                                     </Link>
+                                    <Link
+                                        href="/briefings"
+                                        className="px-4 py-2 hover:bg-muted rounded-md font-medium"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        Audio Briefings
+                                    </Link>
                                     <UpgradeTrigger isUnlocked={!!subscriptionPlan?.canChatWithLibrary} requiredTier="PRO">
                                         <div className={!!subscriptionPlan?.canChatWithLibrary ? "" : "pointer-events-none"}>
                                             <Link
