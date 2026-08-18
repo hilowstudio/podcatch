@@ -12,6 +12,15 @@ import { setBriefingEnabled, regenerateFeedToken, generateBriefingNow } from '@/
 
 type Briefing = { id: string; audioUrl: string; durationSec: number; createdAt: string };
 
+// In-app playback goes through the same-origin audio proxy (like episodes and
+// snips do): R2's custom domain sends no CORS headers, so a direct cross-origin
+// request yields an opaque response the PWA service worker's audio cache can't
+// handle. The RSS enclosure still uses the direct R2 URL, so podcast apps
+// download straight from R2 (zero egress) — only in-app plays use the proxy.
+function proxied(url: string): string {
+    return `/api/audio-proxy?url=${encodeURIComponent(url)}`;
+}
+
 function fmtDate(iso: string): string {
     return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
@@ -159,7 +168,7 @@ export function BriefingsView({ isPro, initialEnabled, initialRssUrl, briefings 
                         {briefings.map(b => (
                             <li key={b.id} className="flex items-center gap-4 rounded-xl border bg-card p-4">
                                 <button
-                                    onClick={() => play({ id: b.id, title: `Weekly Briefing — ${fmtDate(b.createdAt)}`, audioUrl: b.audioUrl, feedTitle: 'Podcatch Briefing' })}
+                                    onClick={() => play({ id: b.id, title: `Weekly Briefing — ${fmtDate(b.createdAt)}`, audioUrl: proxied(b.audioUrl), feedTitle: 'Podcatch Briefing' })}
                                     aria-label="Play briefing"
                                     className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow transition-transform hover:scale-105 active:scale-95"
                                 >

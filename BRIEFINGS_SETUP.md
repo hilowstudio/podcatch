@@ -95,6 +95,7 @@ Default voice is `Kore` (warm, neutral). Other prebuilt voices (e.g. `Puck`, `Ch
 - **Idempotency:** the cron skips any user who already has a briefing in the last 6 days, so retries never double-charge TTS.
 - **Feed token:** read-only and revocable — users can reset it from `/briefings` (invalidates the old URL).
 - **Retention:** briefings are kept indefinitely today. If you want to cap storage, add a cleanup step that deletes `Briefing` rows + R2 objects older than N weeks.
+- **In-app playback proxies through `/api/audio-proxy`** because R2's custom domain sends no CORS headers, which the PWA service worker's audio cache can't handle for a cross-origin file. Podcast-app delivery (via the RSS enclosure) still hits R2 directly, so zero-egress is preserved for the bulk of traffic. *Optional optimization:* add a CORS policy to the R2 bucket (`AllowedOrigins: https://www.podcatch.app`, `AllowedMethods: GET`) and in-app playback could go direct too, saving the small amount of Vercel egress from proxied plays.
 
 ---
 
