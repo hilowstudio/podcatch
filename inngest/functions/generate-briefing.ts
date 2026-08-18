@@ -68,6 +68,7 @@ export const generateBriefing = inngest.createFunction(
 
         for (const user of candidates) {
             const done = await step.run(`brief-${user.id}`, async () => {
+              try {
                 // Idempotency guard: if a briefing already exists for this user this
                 // week (e.g. a retry after a partial failure), don't regenerate —
                 // TTS is billed, so never double-charge.
@@ -139,6 +140,12 @@ export const generateBriefing = inngest.createFunction(
                 ]);
 
                 return true;
+              } catch (err) {
+                // One user's failure (TTS/model access, R2, etc.) must not sink the
+                // whole batch — log and move on; they'll be retried next week.
+                console.error(`[briefing] failed for ${user.id}`, err);
+                return false;
+              }
             });
 
             if (done) built++;
