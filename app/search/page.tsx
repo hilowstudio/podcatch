@@ -1,5 +1,6 @@
 import { LibrarySearch } from '@/components/library-search';
 import { PodcastDiscovery } from '@/components/podcast-discovery';
+import { ExpandYourBrain } from '@/components/expand-your-brain';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
@@ -32,8 +33,14 @@ export default function SearchPage() {
                     </Suspense>
                 </TabsContent>
 
-                <TabsContent value="discover">
-                    <PodcastDiscovery />
+                <TabsContent value="discover" className="space-y-10">
+                    <ExpandYourBrain />
+                    <div>
+                        <div className="mb-4 flex items-center gap-2">
+                            <h2 className="text-lg font-semibold">Search all podcasts</h2>
+                        </div>
+                        <PodcastDiscovery />
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>

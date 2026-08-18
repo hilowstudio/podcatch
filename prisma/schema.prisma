@@ -84,6 +84,8 @@ model User {
   briefingEnabled Boolean        @default(false) // Opt-in: weekly TTS audio briefing (Pro; each run costs TTS + storage)
   lastBriefingAt  DateTime?
   apiToken        String?        @unique // opaque token in the private podcast-feed URL; read-only + revocable
+  discoveryTopics   Json?        // Cached topic seeds for "Expand your brain" discovery (from graph, or LLM-extracted from insights)
+  discoveryTopicsAt DateTime?    // When discoveryTopics was last computed (refreshed weekly)
   timezone           String?  // IANA timezone e.g. "America/New_York"
   digestDeliveryTime String?  // "HH:mm" format, default "08:00"
   quietHoursStart    String?  // "HH:mm" e.g. "22:00"
