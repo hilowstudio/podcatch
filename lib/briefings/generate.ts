@@ -65,7 +65,11 @@ export async function generateBriefingForUser(userId: string, since: Date): Prom
             `mention a saved highlight if relevant, and close with a short sign-off. ` +
             `Plain spoken prose only — no headings, no markdown, no stage directions, no speaker labels. ${langLine}\n\n` +
             `MATERIAL:\n${material}`,
-        maxOutputTokens: 2048,
+        // gemini-3.1-pro is a thinking model — reasoning tokens share this budget,
+        // so it must be generous or the visible script gets cut off mid-sentence
+        // (a 2048 cap yielded ~70 words). The insights pipeline uses 16384 for the
+        // same reason; 8192 is ample for a ~650-word script plus thinking.
+        maxOutputTokens: 8192,
     });
     if (!script.trim()) return { built: false, reason: 'empty-script' };
 
