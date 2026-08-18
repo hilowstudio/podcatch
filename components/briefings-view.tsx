@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAudio } from '@/components/audio-provider';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Play, Rss, Copy, Headphones, Crown, RefreshCw } from 'lucide-react';
+import { Play, Rss, Copy, Headphones, Crown, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { setBriefingEnabled, regenerateFeedToken } from '@/actions/briefing-actions';
+import { setBriefingEnabled, regenerateFeedToken, generateBriefingNow } from '@/actions/briefing-actions';
 
 type Briefing = { id: string; audioUrl: string; durationSec: number; createdAt: string };
 
@@ -31,7 +32,9 @@ export function BriefingsView({ isPro, initialEnabled, initialRssUrl, briefings 
     const [enabled, setEnabled] = useState(initialEnabled);
     const [rssUrl, setRssUrl] = useState(initialRssUrl);
     const [busy, setBusy] = useState(false);
+    const [generating, setGenerating] = useState(false);
     const { play } = useAudio();
+    const router = useRouter();
 
     if (!isPro) {
         return (
@@ -69,6 +72,18 @@ export function BriefingsView({ isPro, initialEnabled, initialRssUrl, briefings 
             toast.success('Private feed URL copied');
         } catch {
             toast.error('Copy failed');
+        }
+    }
+
+    async function generateNow() {
+        setGenerating(true);
+        const res = await generateBriefingNow();
+        setGenerating(false);
+        if (res.success) {
+            toast.success('Briefing generated');
+            router.refresh();
+        } else {
+            toast.error(res.error);
         }
     }
 
@@ -118,7 +133,18 @@ export function BriefingsView({ isPro, initialEnabled, initialRssUrl, briefings 
             )}
 
             <div>
-                <h3 className="mb-3 font-medium">Past briefings</h3>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="font-medium">Past briefings</h3>
+                    <Button size="sm" className="gap-1.5" onClick={generateNow} disabled={generating}>
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                        {generating ? 'Generating…' : 'Generate now'}
+                    </Button>
+                </div>
+                {generating && (
+                    <p className="mb-3 text-xs text-muted-foreground">
+                        Drafting and narrating your briefing — this takes up to a minute. You can leave this page.
+                    </p>
+                )}
                 {briefings.length === 0 ? (
                     <div className="rounded-xl border-2 border-dashed py-12 text-center">
                         <Headphones className="mx-auto h-10 w-10 text-muted-foreground/40" />

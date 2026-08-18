@@ -1,12 +1,9 @@
 import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { resolvePlanKey } from '@/lib/subscription';
-import { languageName } from '@/lib/languages';
-import { isTtsConfigured, textToMp3 } from '@/lib/tts';
-import { isR2Configured, uploadToR2 } from '@/lib/r2';
-import { MODELS } from '@/lib/ai/models';
-
-const MAX_SCRIPT_EPISODES = 12;
+import { isTtsConfigured } from '@/lib/tts';
+import { isR2Configured } from '@/lib/r2';
+import { generateBriefingForUser } from '@/lib/briefings/generate';
 
 /**
  * Weekly per-user "Audio Briefing": a ~3–4 minute narrated recap of the week's
@@ -78,68 +75,10 @@ export const generateBriefing = inngest.createFunction(
                 });
                 if (recent) return false;
 
-                const since = user.lastBriefingAt || new Date(today.getTime() - 7 * 86_400_000);
-                const [episodes, snips] = await Promise.all([
-                    prisma.episode.findMany({
-                        where: {
-                            status: 'COMPLETED',
-                            updatedAt: { gte: since },
-                            insight: { isNot: null },
-                            feed: { subscriptions: { some: { userId: user.id } } },
-                        },
-                        orderBy: { publishedAt: 'desc' },
-                        take: MAX_SCRIPT_EPISODES,
-                        select: { title: true, feed: { select: { title: true } }, insight: { select: { summary: true } } },
-                    }),
-                    prisma.snip.findMany({
-                        where: { userId: user.id, content: { not: null }, createdAt: { gte: since } },
-                        orderBy: { createdAt: 'desc' },
-                        take: 5,
-                        select: { content: true },
-                    }),
-                ]);
-
-                if (episodes.length === 0 && snips.length === 0) return false;
-
-                const material = [
-                    ...episodes.map(e => `• ${e.feed.title} — ${e.title}\n${e.insight?.summary ?? ''}`),
-                    ...(snips.length ? [`Highlights the listener saved:\n${snips.map(s => `- "${s.content}"`).join('\n')}`] : []),
-                ].join('\n\n');
-
-                const langName = languageName(user.preferredLanguage);
-                const langLine = langName ? `Write the script in ${langName}.` : '';
-
-                // 1. Draft the spoken script.
-                const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
-                const { generateText } = await import('ai');
-                const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-                const { text: script } = await generateText({
-                    model: google(MODELS.synthesis),
-                    prompt:
-                        `You are the host of a personal weekly audio briefing for one listener, recapping their podcast week. ` +
-                        `Using the material below, write a warm, natural spoken-word script of about 450–650 words. ` +
-                        `Open with a brief friendly greeting, weave the episodes into 2–4 themes rather than listing them, ` +
-                        `mention a saved highlight if relevant, and close with a short sign-off. ` +
-                        `Plain spoken prose only — no headings, no markdown, no stage directions, no speaker labels. ${langLine}\n\n` +
-                        `MATERIAL:\n${material}`,
-                    maxOutputTokens: 2048,
-                });
-
-                if (!script.trim()) return false;
-
-                // 2. Narrate → MP3, 3. store on R2.
-                const { mp3, durationSec } = await textToMp3(script);
-                const key = `briefings/${user.id}/${today.getTime()}.mp3`;
-                const audioUrl = await uploadToR2(key, mp3, 'audio/mpeg');
-
-                // 4. Record + meter + mark, atomically.
-                await prisma.$transaction([
-                    prisma.briefing.create({ data: { userId: user.id, audioUrl, script, durationSec } }),
-                    prisma.usageLog.create({ data: { userId: user.id, action: 'BRIEFING', targetId: null } }),
-                    prisma.user.update({ where: { id: user.id }, data: { lastBriefingAt: new Date() } }),
-                ]);
-
-                return true;
+                // lastBriefingAt is a string here (Inngest serializes step results).
+                const since = user.lastBriefingAt ? new Date(user.lastBriefingAt) : new Date(today.getTime() - 7 * 86_400_000);
+                const result = await generateBriefingForUser(user.id, since);
+                return result.built;
               } catch (err) {
                 // One user's failure (TTS/model access, R2, etc.) must not sink the
                 // whole batch — log and move on; they'll be retried next week.

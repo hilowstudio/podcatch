@@ -5,6 +5,12 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
+import { isTtsConfigured } from '@/lib/tts';
+import { isR2Configured } from '@/lib/r2';
+import { generateBriefingForUser } from '@/lib/briefings/generate';
+
+const ONDEMAND_MIN_HOURS = 20; // one on-demand briefing per ~day, to bound TTS cost
+const ONDEMAND_LOOKBACK_DAYS = 30; // wider window than the weekly cron so a manual run finds content
 
 function appUrl(): string {
     return (process.env.NEXTAUTH_URL || 'https://www.podcatch.app').replace(/\/$/, '');
@@ -76,6 +82,44 @@ export async function regenerateFeedToken() {
     await prisma.user.update({ where: { id: session.user.id }, data: { apiToken: token } });
     revalidatePath('/briefings');
     return { success: true as const, rssUrl: rssUrlFor(token) };
+}
+
+/** Generate a briefing on demand (the "Generate now" button). Pro-only, rate-limited. */
+export async function generateBriefingNow(): Promise<{ success: true } | { success: false; error: string }> {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+    const plan = await getUserSubscriptionPlan();
+    if (plan.name !== 'Pro') return { success: false, error: 'Audio briefings are a Pro feature.' };
+
+    if (!isTtsConfigured() || !isR2Configured()) {
+        return { success: false, error: 'Briefings aren’t configured yet. Try again once setup is complete.' };
+    }
+
+    // Rate limit: no more than one on-demand briefing per ~day.
+    const recent = await prisma.briefing.findFirst({
+        where: { userId: session.user.id, createdAt: { gte: new Date(Date.now() - ONDEMAND_MIN_HOURS * 3_600_000) } },
+        select: { id: true },
+    });
+    if (recent) {
+        return { success: false, error: 'You already generated a briefing recently — try again tomorrow.' };
+    }
+
+    try {
+        const since = new Date(Date.now() - ONDEMAND_LOOKBACK_DAYS * 86_400_000);
+        const result = await generateBriefingForUser(session.user.id, since);
+        if (!result.built) {
+            const msg = result.reason === 'no-content'
+                ? 'No recent episodes or highlights to brief on yet. Process an episode first.'
+                : 'Couldn’t generate a briefing right now. Please try again.';
+            return { success: false, error: msg };
+        }
+        revalidatePath('/briefings');
+        return { success: true };
+    } catch (error) {
+        console.error('generateBriefingNow failed:', error);
+        return { success: false, error: 'Briefing generation failed. Please try again.' };
+    }
 }
 
 export async function listBriefings() {
