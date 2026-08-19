@@ -77,6 +77,7 @@ export async function getGraphData(): Promise<GraphData> {
                 select: {
                     id: true,
                     name: true,
+                    canonicalName: true,
                     type: true,
                     description: true,
                     image: true,
@@ -92,7 +93,10 @@ export async function getGraphData(): Promise<GraphData> {
 
     for (const ep of episodes) {
         for (const entity of ep.entities) {
-            const key = entity.name.trim().toLowerCase();
+            // Group by the canonical form so variants ("Jesus" / "Jesus Christ")
+            // collapse to one node; fall back to the raw name when uncanonicalized.
+            const display = entity.canonicalName || entity.name;
+            const key = display.trim().toLowerCase();
             if (!key) continue;
             const epRef = { id: ep.id, title: ep.title, feedTitle: ep.feed.title, feedImage: ep.feed.image };
             const existing = entityMap.get(key);
@@ -104,7 +108,7 @@ export async function getGraphData(): Promise<GraphData> {
             } else {
                 entityMap.set(key, {
                     id: key,
-                    name: entity.name,
+                    name: display,
                     type: entity.type as GraphEntity['type'],
                     description: entity.description,
                     image: entity.image,
@@ -119,7 +123,7 @@ export async function getGraphData(): Promise<GraphData> {
     const edgeMap = new Map<string, GraphEdge>();
 
     for (const ep of episodes) {
-        const names = [...new Set(ep.entities.map(e => e.name.trim().toLowerCase()).filter(Boolean))];
+        const names = [...new Set(ep.entities.map(e => (e.canonicalName || e.name).trim().toLowerCase()).filter(Boolean))];
         for (let i = 0; i < names.length; i++) {
             for (let j = i + 1; j < names.length; j++) {
                 const [a, b] = [names[i], names[j]].sort();

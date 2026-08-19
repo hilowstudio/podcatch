@@ -261,14 +261,15 @@ model CustomPrompt {
 
 // Entities (Knowledge Graph)
 model Entity {
-  id          String   @id @default(cuid())
-  name        String
-  type        String // PERSON, BOOK, CONCEPT
-  description String?  @db.Text
-  image       String?
-  episodeId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  canonicalName String? // Merged form for variants of the same entity (e.g. "Jesus Christ" -> "Jesus"); the graph aggregates by this. Raw `name` is preserved.
+  type          String // PERSON, BOOK, CONCEPT
+  description   String?  @db.Text
+  image         String?
+  episodeId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 

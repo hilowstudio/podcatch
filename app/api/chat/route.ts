@@ -110,7 +110,9 @@ export async function POST(req: Request) {
                     },
                     status: 'COMPLETED',
                     insight: { isNot: null },
-                    entities: { some: { name: entityName } }
+                    // Match the canonical group (what the graph links by) as well as
+                    // the raw name, so variants merged under one node are all included.
+                    entities: { some: { OR: [{ canonicalName: entityName }, { name: entityName }] } }
                 },
                 include: {
                     insight: true,

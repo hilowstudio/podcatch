@@ -115,10 +115,13 @@ async function getTopics(userId: string): Promise<string[]> {
         return user.discoveryTopics as string[];
     }
 
-    let topics = await topicsFromEntities(userId);
+    // Insights first: LLM-extracted topics ("Christian Spiritual Formation") make
+    // sharper catalog searches than raw graph entities ("Jesus", "God"), and the
+    // call is cached weekly so the cost is negligible. Entities are the fallback.
+    let topics = await topicsFromInsights(userId);
     if (topics.length < 3) {
-        const fromInsights = await topicsFromInsights(userId);
-        if (fromInsights.length > topics.length) topics = fromInsights;
+        const fromEntities = await topicsFromEntities(userId);
+        if (fromEntities.length > topics.length) topics = fromEntities;
     }
 
     if (topics.length > 0) {
