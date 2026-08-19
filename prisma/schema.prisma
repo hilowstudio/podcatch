@@ -206,6 +206,7 @@ model Episode {
   snips           Snip[]
   embeddings      EpisodeEmbedding[]
   entities        Entity[]
+  entityRelations EntityRelation[]
   collections     Collection[]
 
   @@index([feedId])
@@ -277,6 +278,22 @@ model Entity {
   // Entities are per-episode (the knowledge graph is per-user, built from the
   // user's own episodes) — not a global name-unique table shared across tenants.
   @@unique([episodeId, name])
+  @@index([episodeId])
+}
+
+// Typed relationships between entities within an episode (e.g. AUTHORED, FOUNDED,
+// HEALS). Extracted from full transcripts; the graph can render these real edges
+// instead of (or alongside) co-occurrence. source/target are entity names.
+model EntityRelation {
+  id        String   @id @default(cuid())
+  episodeId String
+  source    String
+  relation  String
+  target    String
+  createdAt DateTime @default(now())
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
   @@index([episodeId])
 }
 
