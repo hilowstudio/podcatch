@@ -20,10 +20,10 @@ export const insightSchema = z.object({
         reason: z.string().describe('Why this segment is important')
     })).describe('Key segments/chapters with timestamps'),
     entities: z.array(z.object({
-        name: z.string().describe('Name of the person, book, or concept'),
+        name: z.string().describe('Name of the person, book, or concept. Use the fullest form used (e.g. first and last name).'),
         type: z.enum(['PERSON', 'BOOK', 'CONCEPT', 'ORGANIZATION', 'TECHNOLOGY']).describe('Type of entity'),
         description: z.string().describe('Brief context about why this entity was mentioned')
-    })).describe('List of people, books, key concepts, organizations, and technologies mentioned')
+    })).describe('List of people, books, key concepts, organizations, and technologies mentioned. Do NOT include incidental first-name-only references to non-public individuals (e.g. a speaker\'s friend or relative named in a personal anecdote). Include a person by first name alone only when they are a well-known public figure or a biblical/historical figure (e.g. "Cher", "Abraham").')
 });
 
 export type InsightData = z.infer<typeof insightSchema>;

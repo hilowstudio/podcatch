@@ -36,7 +36,7 @@ function normUrl(u: string): string {
 async function topicsFromEntities(userId: string): Promise<string[]> {
     const grouped = await prisma.entity.groupBy({
         by: ['name'],
-        where: { episode: { status: 'COMPLETED', feed: { subscriptions: { some: { userId } } } } },
+        where: { excluded: false, episode: { status: 'COMPLETED', feed: { subscriptions: { some: { userId } } } } },
         _count: { name: true },
         orderBy: { _count: { name: 'desc' } },
         take: 24,

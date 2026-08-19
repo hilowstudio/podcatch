@@ -74,6 +74,7 @@ export async function getGraphData(): Promise<GraphData> {
             title: true,
             feed: { select: { title: true, image: true } },
             entities: {
+                where: { excluded: false }, // hide incidental / filtered entities
                 select: {
                     id: true,
                     name: true,
