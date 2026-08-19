@@ -266,6 +266,7 @@ model Entity {
   name          String
   canonicalName String? // Merged form for variants of the same entity (e.g. "Jesus Christ" -> "Jesus"); the graph aggregates by this. Raw `name` is preserved.
   excluded      Boolean  @default(false) // Hidden from the graph (e.g. incidental first-name references to private individuals). Non-destructive; row is kept.
+  salience      Float? // 0-1 centrality to its episode (from full-transcript extraction); used for node sizing.
   type          String // PERSON, BOOK, CONCEPT
   description   String?  @db.Text
   image         String?

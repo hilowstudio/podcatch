@@ -9,6 +9,7 @@ export interface GraphEntity {
     type: 'PERSON' | 'BOOK' | 'CONCEPT' | 'ORGANIZATION' | 'TECHNOLOGY';
     description: string | null;
     image: string | null;
+    salience: number; // 0-1, peak centrality across episodes — for node sizing
     episodeCount: number;
     episodes: {
         id: string;
@@ -22,6 +23,7 @@ export interface GraphEdge {
     source: string;
     target: string;
     weight: number;
+    relations: string[]; // typed relationship labels (AUTHORED, HEALS, ...); empty for co-occurrence edges
     sharedEpisodes: {
         id: string;
         title: string;
@@ -82,8 +84,12 @@ export async function getGraphData(): Promise<GraphData> {
                     type: true,
                     description: true,
                     image: true,
+                    salience: true,
                 }
-            }
+            },
+            entityRelations: {
+                select: { source: true, relation: true, target: true },
+            },
         }
     });
 
@@ -100,10 +106,12 @@ export async function getGraphData(): Promise<GraphData> {
             const key = display.trim().toLowerCase();
             if (!key) continue;
             const epRef = { id: ep.id, title: ep.title, feedTitle: ep.feed.title, feedImage: ep.feed.image };
+            const salience = entity.salience ?? 0;
             const existing = entityMap.get(key);
             if (existing) {
                 existing.episodeCount++;
                 existing.episodes.push(epRef);
+                if (salience > existing.salience) existing.salience = salience;
                 if (!existing.description && entity.description) existing.description = entity.description;
                 if (!existing.image && entity.image) existing.image = entity.image;
             } else {
@@ -113,6 +121,7 @@ export async function getGraphData(): Promise<GraphData> {
                     type: entity.type as GraphEntity['type'],
                     description: entity.description,
                     image: entity.image,
+                    salience,
                     episodeCount: 1,
                     episodes: [epRef],
                 });
@@ -120,26 +129,45 @@ export async function getGraphData(): Promise<GraphData> {
         }
     }
 
-    // Build co-occurrence edges between entity NAMES.
+    // Resolve any entity name (raw or canonical) to its canonical node key.
+    const nameToKey = new Map<string, string>();
+    for (const ep of episodes) {
+        for (const e of ep.entities) {
+            const canonKey = (e.canonicalName || e.name).trim().toLowerCase();
+            nameToKey.set(e.name.trim().toLowerCase(), canonKey);
+            if (e.canonicalName) nameToKey.set(e.canonicalName.trim().toLowerCase(), canonKey);
+        }
+    }
+
     const edgeMap = new Map<string, GraphEdge>();
+    const addEdge = (a: string, b: string, ep: { id: string; title: string }, relation?: string) => {
+        if (!a || !b || a === b) return;
+        const [s, t] = [a, b].sort();
+        const key = `${s}::${t}`;
+        let edge = edgeMap.get(key);
+        if (!edge) {
+            edge = { source: s, target: t, weight: 0, relations: [], sharedEpisodes: [] };
+            edgeMap.set(key, edge);
+        }
+        edge.weight++;
+        edge.sharedEpisodes.push({ id: ep.id, title: ep.title });
+        if (relation && !edge.relations.includes(relation)) edge.relations.push(relation);
+    };
 
     for (const ep of episodes) {
-        const names = [...new Set(ep.entities.map(e => (e.canonicalName || e.name).trim().toLowerCase()).filter(Boolean))];
-        for (let i = 0; i < names.length; i++) {
-            for (let j = i + 1; j < names.length; j++) {
-                const [a, b] = [names[i], names[j]].sort();
-                const key = `${a}::${b}`;
-                const existing = edgeMap.get(key);
-                if (existing) {
-                    existing.weight++;
-                    existing.sharedEpisodes.push({ id: ep.id, title: ep.title });
-                } else {
-                    edgeMap.set(key, {
-                        source: a,
-                        target: b,
-                        weight: 1,
-                        sharedEpisodes: [{ id: ep.id, title: ep.title }],
-                    });
+        // Prefer the extracted, typed relationships. Fall back to co-occurrence
+        // only for episodes that have none (e.g. feeds still on the old extraction).
+        if (ep.entityRelations.length > 0) {
+            for (const rel of ep.entityRelations) {
+                const a = nameToKey.get(rel.source.trim().toLowerCase());
+                const b = nameToKey.get(rel.target.trim().toLowerCase());
+                if (a && b) addEdge(a, b, ep, rel.relation);
+            }
+        } else {
+            const names = [...new Set(ep.entities.map(e => (e.canonicalName || e.name).trim().toLowerCase()).filter(Boolean))];
+            for (let i = 0; i < names.length; i++) {
+                for (let j = i + 1; j < names.length; j++) {
+                    addEdge(names[i], names[j], ep);
                 }
             }
         }
