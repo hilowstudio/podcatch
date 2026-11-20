@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { EmailLink } from '@/components/email-link';
 
 export default function TermsPage() {
     return (
@@ -109,14 +110,14 @@ export default function TermsPage() {
                         <strong>8.2 End-of-Life:</strong> Before deprecating any version, we will provide at least 90 days advance notice via email and changelog. During that period, all features including data export will remain functional.
                     </p>
                     <p>
-                        <strong>8.3 Support Response:</strong> We aim to respond to all support requests within 2 business days. Contact us at support@podcatch.app.
+                        <strong>8.3 Support Response:</strong> We aim to respond to all support requests within 2 business days. Contact us at <EmailLink address="support@podcatch.app" className="text-primary underline" />.
                     </p>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-semibold">9. Contact Us</h2>
                     <p>
-                        If you have any questions about these Terms, please contact us at support@podcatch.app.
+                        If you have any questions about these Terms, please contact us at <EmailLink address="support@podcatch.app" className="text-primary underline" />.
                     </p>
                 </section>
             </article>

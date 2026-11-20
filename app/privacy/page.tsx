@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { EmailLink } from '@/components/email-link';
 
 export default function PrivacyPage() {
     return (
@@ -101,7 +102,7 @@ export default function PrivacyPage() {
                 <section>
                     <h2 className="text-2xl font-semibold">8. Contact Details</h2>
                     <p>
-                        If you have any questions about this privacy policy or our privacy practices, please contact us at support@podcatch.app.
+                        If you have any questions about this privacy policy or our privacy practices, please contact us at <EmailLink address="support@podcatch.app" className="text-primary underline" />.
                     </p>
                 </section>
             </article>

@@ -1,10 +1,10 @@
 import Link from 'next/link';
+import { EmailLink } from '@/components/email-link';
 
 const LINKS = [
     { href: '/pricing', label: 'Pricing' },
     { href: '/privacy', label: 'Privacy' },
     { href: '/terms', label: 'Terms' },
-    { href: 'mailto:support@podcatch.app', label: 'Contact' },
 ];
 
 export function SiteFooter() {
@@ -24,6 +24,13 @@ export function SiteFooter() {
                                 </Link>
                             </li>
                         ))}
+                        <li>
+                            <EmailLink
+                                address="support@podcatch.app"
+                                label="Contact"
+                                className="inline-flex min-h-11 items-center px-2 hover:text-foreground"
+                            />
+                        </li>
                     </ul>
                 </nav>
             </div>
