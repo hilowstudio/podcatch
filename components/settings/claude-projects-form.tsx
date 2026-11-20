@@ -60,7 +60,7 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
     return (
         <Card className="border-indigo-500/20 shadow-sm">
             <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         <CardTitle>Claude Projects</CardTitle>
                         <Badge variant="outline" className="text-xs border-status-warning/50 text-status-warning">Experimental</Badge>
@@ -122,6 +122,8 @@ export function ClaudeProjectsForm({ userId, initialSettings }: ClaudeProjectsFo
                                 size="sm"
                                 className="absolute right-0 top-0 h-full px-3"
                                 onClick={() => setShowApiKey(!showApiKey)}
+                                aria-label={showApiKey ? 'Hide key' : 'Show key'}
+                                aria-pressed={showApiKey}
                             >
                                 {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>

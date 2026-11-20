@@ -26,11 +26,11 @@ export function GatedFeature({ title, description, requiredTier }: GatedFeatureP
                     </div>
 
                     <div className="pt-4">
-                        <Link href={`/pricing?tier=${requiredTier.toLowerCase()}`}>
-                            <Button size="lg" className="w-full">
-                                Upgrade to {requiredTier}
-                            </Button>
-                        </Link>
+                        <Button asChild size="lg" className="w-full">
+                            <Link href={`/pricing?tier=${requiredTier.toLowerCase()}`}>
+                                See plans
+                            </Link>
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles } from 'lucide-react';
 import { CreatePromptForm } from '@/components/create-prompt-form';
 import { DeletePromptButton } from '@/components/delete-prompt-button';
-import { SharePromptToggle } from '@/components/share-prompt-toggle';
 
 export default async function PromptSettingsPage() {
     const prompts = await getUserPrompts();
@@ -12,8 +11,8 @@ export default async function PromptSettingsPage() {
         <div>
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h2 className="text-xl font-semibold">Prompt Library</h2>
-                    <p className="text-muted-foreground mt-1">Create custom AI prompts to run on your episodes.</p>
+                    <h2 className="text-xl font-semibold">Your prompts</h2>
+                    <p className="text-muted-foreground mt-1">Instructions you write once and run on any episode, such as “List every book they recommend.”</p>
                 </div>
                 <CreatePromptForm />
             </div>
@@ -24,7 +23,7 @@ export default async function PromptSettingsPage() {
                         <Sparkles className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="text-lg font-medium">No custom prompts yet</h3>
                         <p className="text-muted-foreground max-w-sm mx-auto mt-2 mb-6">
-                            Create a prompt like "Extract all book recommendations" or "Write a haiku about this".
+                            Try one like “List every book they recommend” or “Write five discussion questions.”
                         </p>
                     </div>
                 ) : (
@@ -34,12 +33,8 @@ export default async function PromptSettingsPage() {
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <CardTitle>{prompt.title}</CardTitle>
-                                        <CardDescription className="font-mono text-xs mt-1">ID: {prompt.id}</CardDescription>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <SharePromptToggle promptId={prompt.id} initialValue={prompt.isPublic} />
-                                        <DeletePromptButton promptId={prompt.id} />
-                                    </div>
+                                    <DeletePromptButton promptId={prompt.id} />
                                 </div>
                             </CardHeader>
                             <CardContent>

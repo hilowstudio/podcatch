@@ -60,7 +60,7 @@ const Paragraph = memo(function Paragraph({
                         onClick={() => seek(word.start)}
                         className={cn(
                             "cursor-pointer transition-colors duration-150 hover:bg-primary/10 rounded-sm px-0.5",
-                            isActive && "bg-primary/20 text-primary font-medium",
+                            isActive && "bg-highlight text-foreground font-medium",
                             isPlayed && "text-muted-foreground"
                         )}
                     >

@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FeedEpisodeList } from '@/components/feed-episode-list';
 
 type PageProps = {
-    params: { feedId: string };
+    params: Promise<{ feedId: string }>;
 };
 
 export default async function FeedPage({ params }: PageProps) {
@@ -38,7 +38,7 @@ export default async function FeedPage({ params }: PageProps) {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8">
                 {/* Feed Header */}
                 <div className="mb-8 flex items-start gap-6">
                     {feed.image && (
@@ -55,7 +55,7 @@ export default async function FeedPage({ params }: PageProps) {
                 </div>
 
                 <FeedEpisodeList episodes={episodes} />
-            </main>
+            </div>
         </div>
     );
 }

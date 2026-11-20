@@ -37,9 +37,9 @@ export function UserMenu({ user, subscriptionPlan, usageCount = 0 }: UserMenuPro
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Button variant="ghost" className="relative size-11 rounded-full" aria-label="Account and settings">
                     <Avatar>
-                        <AvatarImage src={user.image || ''} alt={user.name || ''} />
+                        <AvatarImage src={user.image || ''} alt="" />
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                 </Button>
@@ -69,30 +69,31 @@ export function UserMenu({ user, subscriptionPlan, usageCount = 0 }: UserMenuPro
                                     </div>
                                 )}
                                 <div className="flex flex-col space-y-1">
-                                    <span className="text-xs font-normal text-muted-foreground">Current Plan</span>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">{subscriptionPlan.name}</span>
-                                        {!subscriptionPlan.isPro && (
-                                            <Link href="/pricing" className="text-xs text-primary hover:underline ml-2">
-                                                Upgrade
-                                            </Link>
-                                        )}
-                                    </div>
+                                    <span className="text-xs font-normal text-muted-foreground">Plan</span>
+                                    <span className="text-sm font-medium">{subscriptionPlan.name}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuItem asChild>
                             <Link href="/pricing" className="cursor-pointer">
-                                <span className="flex items-center w-full">
-                                    {subscriptionPlan.isPro ? 'Manage Subscription' : 'Upgrade to Pro'}
-                                </span>
+                                Plans and billing
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                     </>
                 )}
+                <DropdownMenuItem asChild>
+                    <Link href="/privacy" className="cursor-pointer">Privacy</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/terms" className="cursor-pointer">Terms</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <a href="mailto:support@podcatch.app" className="cursor-pointer">Contact support</a>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                    className="cursor-pointer text-red-600"
+                    className="cursor-pointer"
                     onClick={async () => {
                         // Purge cached user data before redirecting, so nothing
                         // bleeds to the next user on a shared device.

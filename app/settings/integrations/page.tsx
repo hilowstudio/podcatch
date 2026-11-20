@@ -8,8 +8,6 @@ import {
     NotionCard,
     GoogleDriveCard,
     WebhookCard,
-    TanaCard,
-    LogseqCard
 } from '@/components/settings/integrations-form';
 import { prisma } from '@/lib/prisma';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
@@ -28,9 +26,7 @@ export default async function SettingsIntegrationsPage() {
                 notionAccessToken: true,
                 notionPageId: true,
                 googleDriveRefreshToken: true,
-                tanaApiToken: true,
-                logseqGraphName: true,
-                openaiApiKey: true,
+                openaiKey: true,
                 geminiApiKey: true,
                 claudeApiKey: true,
                 claudeProjectId: true,
@@ -43,8 +39,8 @@ export default async function SettingsIntegrationsPage() {
     if (!subscription.canUseIntegrations) {
         return (
             <GatedFeature
-                title="Integrations Locked"
-                description="Connect your knowledge base and AI models. Upgrade to Basic or Pro to unlock."
+                title="Sending notes is part of Basic and Pro"
+                description="Send each processed episode to Notion, Readwise, Google Drive or your own webhook."
                 requiredTier="BASIC"
             />
         );
@@ -54,7 +50,7 @@ export default async function SettingsIntegrationsPage() {
         <div className="space-y-10">
             {/* AI & Models */}
             <section>
-                <h2 className="text-xl font-semibold mb-4">AI Brain & Models</h2>
+                <h2 className="text-xl font-semibold mb-4">Claude and your own AI keys</h2>
                 <div className="grid gap-6 md:grid-cols-2">
                     <ClaudeProjectsForm
                         userId={session.user.id}
@@ -64,14 +60,14 @@ export default async function SettingsIntegrationsPage() {
                             autoSyncToClaude: user?.autoSyncToClaude || false
                         }}
                     />
-                    <ApiKeysForm initialOpenaiApiKey={user?.openaiApiKey} />
+                    <ApiKeysForm initialOpenaiApiKey={user?.openaiKey} />
                     <GeminiKeyForm initialGeminiApiKey={user?.geminiApiKey} />
                 </div>
             </section>
 
             {/* Knowledge Base Connections */}
             <section>
-                <h2 className="text-xl font-semibold mb-4">Knowledge Base</h2>
+                <h2 className="text-xl font-semibold mb-4">Send notes to</h2>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <ReadwiseCard initialValue={user?.readwiseApiKey} />
                     <NotionCard
@@ -81,14 +77,11 @@ export default async function SettingsIntegrationsPage() {
                     <GoogleDriveCard
                         isConnected={!!user?.googleDriveRefreshToken}
                     />
-                    <TanaCard initialValue={user?.tanaApiToken} />
-                    <LogseqCard initialValue={user?.logseqGraphName} />
                 </div>
             </section>
 
-            {/* Developer / Webhooks */}
             <section>
-                <h2 className="text-xl font-semibold mb-4">Developer & Automation</h2>
+                <h2 className="text-xl font-semibold mb-4">Webhook</h2>
                 <div className="max-w-xl">
                     <WebhookCard initialValue={user?.webhookUrl} />
                 </div>

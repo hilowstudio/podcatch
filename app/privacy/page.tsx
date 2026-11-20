@@ -4,7 +4,7 @@ export default function PrivacyPage() {
     return (
         <div className="container max-w-4xl mx-auto py-12 px-4 space-y-8">
             <div className="space-y-4">
-                <Link href="/" className="text-sm text-primary hover:underline">&larr; Back to Home</Link>
+                <Link href="/" className="inline-flex min-h-11 items-center text-sm text-primary hover:underline">&larr; Back to Podcatch</Link>
                 <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
                 <p className="text-muted-foreground">Last Updated: November 20, 2026</p>
             </div>

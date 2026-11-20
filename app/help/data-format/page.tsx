@@ -10,7 +10,7 @@ export default function DataFormatPage() {
     return (
         <div className="container max-w-3xl mx-auto py-12 px-4 space-y-8">
             <div className="space-y-4">
-                <Link href="/help" className="text-sm text-primary hover:underline">&larr; Back to Help</Link>
+                <Link href="/settings/my-data" className="inline-flex min-h-11 items-center text-sm text-primary hover:underline">&larr; Back to your data</Link>
                 <h1 className="text-4xl font-bold tracking-tight">Data Export Format</h1>
                 <p className="text-muted-foreground">
                     Complete documentation of the JSON file produced by &quot;Export My Data&quot; in Settings.

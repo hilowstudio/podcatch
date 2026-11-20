@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Plus, FolderOpen, Layers } from 'lucide-react';
 import { CreateCollectionDialog } from '@/components/create-collection-dialog';
+import { LibraryTabs } from '@/components/library-tabs';
 
 export const metadata = {
     title: 'Collections - Podcatch',
@@ -14,14 +15,13 @@ export default async function CollectionsPage() {
     const collections = await getUserCollections();
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Collections</h1>
-                    <p className="text-muted-foreground mt-1">Organize and synthesize your library.</p>
-                </div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold tracking-tight">Library</h1>
                 <CreateCollectionDialog />
             </div>
+            <LibraryTabs className="mb-4" />
+            <p className="mb-8 text-muted-foreground">Group episodes for a project, a lesson or a talk, and get one summary across them.</p>
 
             {collections.length === 0 ? (
                 <div className="text-center py-20 border-2 border-dashed rounded-lg bg-muted/50">

@@ -1,30 +1,38 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Lora } from "next/font/google";
+import { IBM_Plex_Mono, Libre_Baskerville, Public_Sans, Vollkorn } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { AudioProvider } from "@/components/audio-provider";
 import { StickyPlayer } from "@/components/sticky-player";
-import { getUserSubscriptionPlan } from "@/lib/subscription";
-import { OnboardingGuard } from "@/components/onboarding-guard";
 import { InstallPrompt } from "@/components/install-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { NetworkStatus } from "@/components/network-status";
-import { auth } from "@/auth";
 import { SerwistProvider } from "@/components/serwist-provider";
+import { ThemeScript } from "@/components/theme-script";
+import { SiteFooter } from "@/components/site-footer";
+import { auth } from "@/auth";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Hi Low type, self-hosted by next/font (no requests to Google at runtime)
+const publicSans = Public_Sans({
+  variable: "--font-public-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const vollkorn = Vollkorn({
+  variable: "--font-vollkorn",
   subsets: ["latin"],
 });
 
-const lora = Lora({
-  variable: "--font-lora",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
+const libreBaskerville = Libre_Baskerville({
+  variable: "--font-libre-baskerville",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -47,7 +55,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f8f5f0' },
-    { media: '(prefers-color-scheme: dark)', color: '#1c1a17' },
+    { media: '(prefers-color-scheme: dark)', color: '#16181c' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -61,16 +69,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // A new account starts on Free and can use the app at once; nobody is held
+  // on the pricing page before they've listened to anything.
   const session = await auth();
-  const subscriptionPlan = await getUserSubscriptionPlan();
-
-  // If user is logged in BUT has no stripePriceId (and getUserSubscriptionPlan returns falsy for it), they need onboarding.
-  // Note: getUserSubscriptionPlan returns a default object if no user, so we must check session.user too.
-  const needsOnboarding = !!session?.user && !subscriptionPlan.stripePriceId;
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <ThemeScript />
         {/* iOS PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -86,7 +92,7 @@ export default async function RootLayout({
               prerender: [
                 {
                   where: {
-                    href_matches: ["/search", "/chat", "/collections", "/profile", "/pricing"]
+                    href_matches: ["/search", "/snips", "/collections"]
                   },
                   eagerness: "moderate"
                 }
@@ -104,18 +110,20 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} antialiased min-h-screen flex flex-col`}
+        className={`${publicSans.variable} ${vollkorn.variable} ${plexMono.variable} ${libreBaskerville.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
         <SerwistProvider>
           <AudioProvider>
             <NetworkStatus />
-            <OnboardingGuard shouldOnboard={needsOnboarding} />
             <SiteHeader />
-            <div className="flex-1 mb-20 pt-12"> {/* Add margin for sticky player and padded top for header spacing */}
+            {/* Signed in: room at the bottom for the player and, on phones, the
+                bottom bar. Signed out: the footer with Privacy, Terms, Contact. */}
+            <main id="main" className={session?.user ? "flex-1 pb-40 md:pb-28" : "flex-1 pb-12"}>
               {children}
-            </div>
+            </main>
+            {!session?.user && <SiteFooter />}
             <StickyPlayer />
-            <BottomNav />
+            <BottomNav signedIn={!!session?.user} />
             <InstallPrompt />
           </AudioProvider>
         </SerwistProvider>

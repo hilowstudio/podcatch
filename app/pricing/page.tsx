@@ -83,6 +83,7 @@ function PricingContent() {
                     <Switch
                         checked={isAnnual}
                         onCheckedChange={setIsAnnual}
+                        aria-label="Bill yearly"
                         className="data-[state=checked]:bg-primary"
                     />
                     <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>

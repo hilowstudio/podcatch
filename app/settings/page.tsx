@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { ConnectedAccounts } from '@/components/profile/connected-accounts';
-import { NotificationSettings } from '@/components/profile/notification-settings';
 import { UsageCard } from '@/components/profile/usage-card';
+import { ThemeChoiceSetting } from '@/components/theme-choice';
 import { DigestSettings } from '@/components/digest-settings';
 import { LanguageSettings } from '@/components/language-settings';
 import { ScheduleSettings } from '@/components/schedule-settings';
@@ -32,20 +32,25 @@ export default async function SettingsAccountPage() {
     }
 
     return (
-        <div className="grid gap-10">
+        <div className="grid grid-cols-1 gap-10">
             <section>
                 <UsageCard userId={session.user.id} />
             </section>
 
             <section>
-                <h2 className="text-xl font-semibold mb-4">Personal Info</h2>
+                <h2 className="text-xl font-semibold mb-4">Appearance</h2>
+                <ThemeChoiceSetting />
+            </section>
+
+            <section>
+                <h2 className="text-xl font-semibold mb-4">Profile</h2>
                 <ProfileForm user={{ name: user.name, image: user.image }} />
             </section>
 
             <section>
-                <h2 className="text-xl font-semibold mb-4">Connected Accounts</h2>
+                <h2 className="text-xl font-semibold mb-4">Sign-in accounts</h2>
                 <p className="text-muted-foreground mb-6">
-                    Connect these accounts to sign in securely.
+                    Accounts you can use to sign in to Podcatch.
                 </p>
                 <ConnectedAccounts
                     accounts={user.accounts.map(acc => ({ provider: acc.provider }))}
@@ -53,69 +58,49 @@ export default async function SettingsAccountPage() {
             </section>
 
             <section>
-                <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
-                <p className="text-muted-foreground mb-6">
-                    Get notified when your episodes finish processing.
-                </p>
-                <NotificationSettings />
-            </section>
-
-            <section>
                 <h2 className="text-xl font-semibold mb-4">Language</h2>
                 <p className="text-muted-foreground mb-6">
-                    Read summaries and chat in your language. Powered by Gemini.
+                    Summaries and chat replies come back in this language.
                 </p>
                 <LanguageSettings initialLanguage={user.preferredLanguage} />
             </section>
 
             <section>
-                <h2 className="text-xl font-semibold mb-4">Email Digest</h2>
+                <h2 className="text-xl font-semibold mb-4">Email</h2>
                 <p className="text-muted-foreground mb-6">
-                    Receive summaries of newly processed episodes.
+                    Off unless you turn it on. A summary of the episodes you processed, sent at the time you choose.
                 </p>
-                <DigestSettings initialFrequency={user.digestFrequency || 'NONE'} initialRewindEnabled={user.rewindEnabled} />
+                <div className="space-y-6">
+                    <DigestSettings initialFrequency={user.digestFrequency || 'NONE'} initialRewindEnabled={user.rewindEnabled} />
+                    <ScheduleSettings
+                        initialTimezone={user.timezone}
+                        initialDeliveryTime={user.digestDeliveryTime}
+                    />
+                </div>
             </section>
 
             <section>
-                <h2 className="text-xl font-semibold mb-4">Schedule & Quiet Hours</h2>
+                <h2 className="text-xl font-semibold mb-4">Your data</h2>
                 <p className="text-muted-foreground mb-6">
-                    Set your timezone, preferred digest delivery time, and quiet hours when notifications are queued.
+                    Download everything you’ve added and made here (subscriptions, episodes, transcripts, summaries, highlights, collections, prompts) as one JSON file.
                 </p>
-                <ScheduleSettings
-                    initialTimezone={user.timezone}
-                    initialDeliveryTime={user.digestDeliveryTime}
-                    initialQuietStart={user.quietHoursStart}
-                    initialQuietEnd={user.quietHoursEnd}
-                />
-            </section>
-
-            <section>
-                <h2 className="text-xl font-semibold mb-4">Your Data</h2>
-                <p className="text-muted-foreground mb-6">
-                    Export all your data (subscriptions, episodes, transcripts, insights, collections, prompts) as a JSON file.
-                </p>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <DataExportButton />
-                    <Link href="/settings/my-data" className="text-sm text-primary hover:underline">
+                    <Link href="/settings/my-data" className="inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                         View data inventory
                     </Link>
                 </div>
             </section>
 
             <section className="border-t pt-10">
-                <h2 className="text-xl font-semibold mb-4 text-destructive">Danger Zone</h2>
+                <h2 className="text-xl font-semibold mb-4">Pause or delete your account</h2>
                 <p className="text-muted-foreground mb-6">
-                    Permanently delete your account and all associated data. This action cannot be undone.
+                    Pausing keeps everything and you can come back by signing in. Deleting removes your account and everything in it, cancels any paid plan, and can’t be undone.
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <DeactivateAccountButton />
                     <DeleteAccountButton />
                 </div>
-                <p className="text-xs text-muted-foreground mt-3">
-                    <strong>Deactivate:</strong> Pause your account. Data retained, reactivate anytime.
-                    <br />
-                    <strong>Delete:</strong> Permanent. All data destroyed immediately.
-                </p>
             </section>
         </div>
     );

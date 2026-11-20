@@ -2,91 +2,41 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Search, Library, User, Sparkles } from 'lucide-react';
+import { Library, Highlighter, Search, MessageCircleQuestion, type LucideIcon } from 'lucide-react';
+import { NAV_PLACES, isBareRoute } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 
-interface NavItem {
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    matchPaths?: string[];
-}
+const ICONS: Record<string, LucideIcon> = {
+    '/': Library,
+    '/snips': Highlighter,
+    '/search': Search,
+    '/chat': MessageCircleQuestion,
+};
 
-const navItems: NavItem[] = [
-    {
-        href: '/',
-        icon: Home,
-        label: 'Home',
-        matchPaths: ['/feeds', '/episodes']
-    },
-    {
-        href: '/search',
-        icon: Search,
-        label: 'Search'
-    },
-    {
-        href: '/chat',
-        icon: Sparkles,
-        label: 'Chat'
-    },
-    {
-        href: '/collections',
-        icon: Library,
-        label: 'Library'
-    },
-    {
-        href: '/profile',
-        icon: User,
-        label: 'Profile'
-    },
-];
-
-export function BottomNav() {
+// The phone's bottom bar: the same places as the laptop header, shown only to
+// people who are signed in.
+export function BottomNav({ signedIn }: { signedIn: boolean }) {
     const pathname = usePathname();
-
-    // Don't show on auth pages or public pages
-    if (
-        pathname.startsWith('/auth') ||
-        pathname === '/' ||
-        pathname.startsWith('/share') ||
-        pathname.startsWith('/pricing') ||
-        pathname.startsWith('/terms') ||
-        pathname.startsWith('/privacy')
-    ) {
-        return null;
-    }
-
-    const isActive = (item: NavItem) => {
-        if (pathname === item.href) return true;
-        if (item.matchPaths?.some(path => pathname.startsWith(path))) return true;
-        return false;
-    };
+    if (!signedIn || isBareRoute(pathname)) return null;
 
     return (
-        <nav
-            className="thumb-zone-nav md:hidden bg-background/95 backdrop-blur-md border-t"
-            role="navigation"
-            aria-label="Main navigation"
-        >
-            <div className="flex items-center justify-around h-16 safe-x">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item);
-
+        <nav aria-label="Main" className="thumb-zone-nav border-t bg-background/95 backdrop-blur-md md:hidden">
+            <div className="grid h-16 grid-cols-4 safe-x">
+                {NAV_PLACES.map((place) => {
+                    const Icon = ICONS[place.href];
+                    const current = place.match(pathname);
                     return (
                         <Link
-                            key={item.href}
-                            href={item.href}
+                            key={place.href}
+                            href={place.href}
+                            aria-current={current ? 'page' : undefined}
                             className={cn(
-                                "flex flex-col items-center justify-center touch-target gap-1 transition-colors",
-                                "text-muted-foreground hover:text-foreground",
-                                active && "text-primary"
+                                'flex min-h-11 flex-col items-center justify-center gap-1 text-xs transition-colors',
+                                current ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
                             )}
-                            aria-label={item.label}
-                            aria-current={active ? 'page' : undefined}
                         >
-                            <Icon className="h-5 w-5" />
-                            <span className="text-[10px] font-medium">{item.label}</span>
+                            <Icon className="size-5" aria-hidden />
+                            {place.label}
                         </Link>
                     );
                 })}

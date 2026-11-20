@@ -7,8 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { SiteFooter } from '@/components/site-footer';
 import { RecentlyPlayed } from '@/components/recently-played';
+import { LibraryTabs } from '@/components/library-tabs';
 import { Search, MessageSquare, Zap, Clock, TrendingDown, Lock } from 'lucide-react';
 import Link from 'next/link';
 
@@ -165,33 +165,31 @@ export default async function Home() {
 
             <div className="mt-16 text-center">
               <h3 className="text-2xl font-bold mb-4">Ready to upgrade your listening?</h3>
-              <Link href="/auth/signup">
-                <Button size="lg">Get Started Now</Button>
-              </Link>
+              <Button asChild size="lg" className="min-h-11">
+                <Link href="/auth/signup">Start free</Link>
+              </Button>
             </div>
           </div>
         </section>
-
-        <SiteFooter />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold tracking-tight">Your Podcasts</h2>
+    <div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold tracking-tight">Library</h1>
           <AddFeedDialog />
         </div>
+        <LibraryTabs className="mb-8" />
 
         <RecentlyPlayed />
 
         <Suspense fallback={<FeedListSkeleton />}>
           <FeedList userId={session.user.id} />
         </Suspense>
-      </main>
+      </div>
     </div>
   );
 }

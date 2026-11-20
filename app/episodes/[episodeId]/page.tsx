@@ -30,7 +30,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { CollapsibleDescription } from '@/components/collapsible-description';
 
 type PageProps = {
-    params: { episodeId: string };
+    params: Promise<{ episodeId: string }>;
 };
 
 export default async function EpisodePage({ params }: PageProps) {
@@ -89,8 +89,8 @@ export default async function EpisodePage({ params }: PageProps) {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-4 lg:py-8">
-                <div className="grid gap-8 lg:grid-cols-3">
+            <div className="container mx-auto px-4 py-4 lg:py-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column: Player & Metadata */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-8 space-y-6">
@@ -156,11 +156,11 @@ export default async function EpisodePage({ params }: PageProps) {
                     <div className="lg:col-span-2 space-y-6">
                         {/* YouTube Video Player - Top of Main Content */}
                         {episode.youtubeId && (
-                            <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl border bg-black">
+                            <div className="aspect-video w-full rounded-xl overflow-hidden border bg-black focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${episode.youtubeId}`}
+                                    src={`https://www.youtube-nocookie.com/embed/${episode.youtubeId}`}
                                     title={episode.title}
-                                    className="w-full h-full"
+                                    className="w-full h-full focus:outline-2 focus:outline-offset-2 focus:outline-ring"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
@@ -175,7 +175,7 @@ export default async function EpisodePage({ params }: PageProps) {
                             )}
 
                             {/* Actions */}
-                            <div className="flex items-center gap-4 pt-4">
+                            <div className="flex flex-wrap items-center gap-2 pt-4">
                                 {(isDiscovered || isFailed) && (
                                     <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
                                 )}
@@ -288,45 +288,6 @@ ${episode.insight?.transcript}
                                                     </li>
                                                 ))}
                                             </ul>
-                                        </CardContent>
-                                    </Card>
-                                )}
-
-                                {/* Creator Studio */}
-                                {(episode.insight.socialContent as any) && (
-                                    <Card className="border-accent/30 bg-accent/5">
-                                        <CardHeader>
-                                            <div className="flex items-center gap-2">
-                                                <Sparkles className="h-5 w-5 text-primary" />
-                                                <CardTitle>Creator Studio</CardTitle>
-                                            </div>
-                                            <CardDescription>AI-generated assets ready for social sharing</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="grid gap-4">
-                                            {(episode.insight.socialContent as any).tweet && (
-                                                <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
-                                                        <Share2 className="h-4 w-4" /> Viral Tweet
-                                                    </h4>
-                                                    <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).tweet}</p>
-                                                </div>
-                                            )}
-                                            {(episode.insight.socialContent as any).linkedin && (
-                                                <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
-                                                        <Share2 className="h-4 w-4" /> LinkedIn Post
-                                                    </h4>
-                                                    <p className="whitespace-pre-wrap text-sm">{(episode.insight.socialContent as any).linkedin}</p>
-                                                </div>
-                                            )}
-                                            {(episode.insight.socialContent as any).blogTitle && (
-                                                <div className="rounded-lg border bg-background p-4">
-                                                    <h4 className="flex items-center gap-2 font-semibold mb-2 text-sm text-muted-foreground">
-                                                        <FileText className="h-4 w-4" /> Blog Title Idea
-                                                    </h4>
-                                                    <p className="font-medium">{(episode.insight.socialContent as any).blogTitle}</p>
-                                                </div>
-                                            )}
                                         </CardContent>
                                     </Card>
                                 )}
@@ -561,7 +522,7 @@ ${episode.insight?.transcript}
                         )}
                     </div>
                 </div>
-            </main>
+            </div>
             <EpisodeStatusPoller episodeId={episode.id} initialStatus={episode.status} />
         </div>
     );

@@ -43,7 +43,7 @@ export function FeedGrid({ feeds }: FeedGridProps) {
         <>
             <div className="mb-6 flex items-center justify-between">
                 <p className="text-muted-foreground">
-                    {feeds.length} {feeds.length === 1 ? 'feed' : 'feeds'} • Automated intelligence extraction
+                    {feeds.length} {feeds.length === 1 ? 'show' : 'shows'}
                 </p>
                 <ViewToggle value={viewMode} onChange={handleViewChange} />
             </div>

@@ -62,10 +62,10 @@ export function EpisodeInsight({ episodeId, summary, keyTakeaways, defaultLangua
         <>
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5 text-primary" />
-                            <CardTitle>AI Summary</CardTitle>
+                            <MessageSquare className="h-5 w-5 text-primary" aria-hidden />
+                            <CardTitle>Summary</CardTitle>
                         </div>
                         <div className="flex items-center gap-2">
                             {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

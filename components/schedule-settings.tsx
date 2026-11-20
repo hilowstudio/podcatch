@@ -34,112 +34,56 @@ const COMMON_TIMEZONES = [
 interface ScheduleSettingsProps {
     initialTimezone: string | null;
     initialDeliveryTime: string | null;
-    initialQuietStart: string | null;
-    initialQuietEnd: string | null;
 }
 
-export function ScheduleSettings({
-    initialTimezone,
-    initialDeliveryTime,
-    initialQuietStart,
-    initialQuietEnd,
-}: ScheduleSettingsProps) {
+export function ScheduleSettings({ initialTimezone, initialDeliveryTime }: ScheduleSettingsProps) {
     const [timezone, setTimezone] = useState(initialTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     const [deliveryTime, setDeliveryTime] = useState(initialDeliveryTime || '08:00');
-    const [quietStart, setQuietStart] = useState(initialQuietStart || '');
-    const [quietEnd, setQuietEnd] = useState(initialQuietEnd || '');
     const [isPending, startTransition] = useTransition();
 
-    const save = (field: string, value: string) => {
-        const updated = {
-            timezone: field === 'timezone' ? value : timezone,
-            deliveryTime: field === 'deliveryTime' ? value : deliveryTime,
-            quietStart: field === 'quietStart' ? value : quietStart,
-            quietEnd: field === 'quietEnd' ? value : quietEnd,
-        };
-
+    const save = (next: { timezone: string; deliveryTime: string }) => {
         startTransition(async () => {
             try {
-                await updateScheduleSettings(updated);
-                toast.success('Schedule updated');
+                await updateScheduleSettings(next);
+                toast.success('Saved');
             } catch {
-                toast.error('Failed to save');
+                toast.error('That didn’t save. Try again.');
             }
         });
     };
 
     return (
-        <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                    <Label>Timezone</Label>
-                    <Select
-                        value={timezone}
-                        onValueChange={(v) => { setTimezone(v); save('timezone', v); }}
-                        disabled={isPending}
-                    >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            {COMMON_TIMEZONES.map(tz => (
-                                <SelectItem key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Digest delivery time</Label>
-                    <Select
-                        value={deliveryTime}
-                        onValueChange={(v) => { setDeliveryTime(v); save('deliveryTime', v); }}
-                        disabled={isPending}
-                    >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            {HOURS.map(h => (
-                                <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+                <Label htmlFor="digest-timezone">Time zone</Label>
+                <Select
+                    value={timezone}
+                    onValueChange={(v) => { setTimezone(v); save({ timezone: v, deliveryTime }); }}
+                    disabled={isPending}
+                >
+                    <SelectTrigger id="digest-timezone" className="min-h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {COMMON_TIMEZONES.map(tz => (
+                            <SelectItem key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
-            <div>
-                <Label className="mb-3 block">Quiet hours <span className="text-muted-foreground font-normal">(notifications queued, not lost)</span></Label>
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Start</Label>
-                        <Select
-                            value={quietStart}
-                            onValueChange={(v) => { setQuietStart(v); save('quietStart', v); }}
-                            disabled={isPending}
-                        >
-                            <SelectTrigger><SelectValue placeholder="Off" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="off">Off</SelectItem>
-                                {HOURS.map(h => (
-                                    <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">End</Label>
-                        <Select
-                            value={quietEnd}
-                            onValueChange={(v) => { setQuietEnd(v); save('quietEnd', v); }}
-                            disabled={isPending || !quietStart || quietStart === 'off'}
-                        >
-                            <SelectTrigger><SelectValue placeholder="Off" /></SelectTrigger>
-                            <SelectContent>
-                                {HOURS.map(h => (
-                                    <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+            <div className="space-y-2">
+                <Label htmlFor="digest-time">Send the email at</Label>
+                <Select
+                    value={deliveryTime}
+                    onValueChange={(v) => { setDeliveryTime(v); save({ timezone, deliveryTime: v }); }}
+                    disabled={isPending}
+                >
+                    <SelectTrigger id="digest-time" className="min-h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {HOURS.map(h => (
+                            <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
     );

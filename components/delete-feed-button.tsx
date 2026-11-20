@@ -44,8 +44,9 @@ export function DeleteFeedButton({ feedId, feedTitle }: DeleteFeedButtonProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    className="size-10 text-muted-foreground hover:text-destructive"
                     disabled={isDeleting}
+                    aria-label={`Unsubscribe from ${feedTitle}`}
                 >
                     {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

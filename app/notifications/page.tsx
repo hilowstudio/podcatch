@@ -17,7 +17,7 @@ export default async function NotificationsPage() {
     return (
         <div className="container max-w-3xl mx-auto py-8 px-4">
             <div className="mb-8">
-                <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">
+                <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-1 mb-2">
                     <ArrowLeft className="h-3 w-3" /> Back to Settings
                 </Link>
                 <h1 className="text-3xl font-bold tracking-tight mb-2">Notification History</h1>
@@ -34,7 +34,7 @@ export default async function NotificationsPage() {
                     </div>
                 ) : (
                     notifications.map(n => (
-                        <Card key={n.id} className={n.read ? 'opacity-60' : ''}>
+                        <Card key={n.id} className={n.read ? 'bg-muted/40 shadow-none' : ''}>
                             <CardContent className="flex items-start gap-3 p-4">
                                 <div className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${n.read ? 'bg-muted' : 'bg-primary'}`} />
                                 <div className="flex-1 min-w-0">

@@ -43,7 +43,7 @@ export function DeleteCollectionButton({ collectionId }: { collectionId: string 
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="icon" className="size-10 text-muted-foreground hover:text-destructive" aria-label="Delete collection">
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </AlertDialogTrigger>

@@ -31,7 +31,7 @@ export function DeletePromptButton({ promptId }: { promptId: string }) {
     }
 
     return (
-        <Button variant="ghost" size="icon" onClick={onDelete} disabled={isLoading} className="text-muted-foreground hover:text-destructive">
+        <Button variant="ghost" size="icon" onClick={onDelete} disabled={isLoading} className="size-10 text-muted-foreground hover:text-destructive" aria-label="Delete prompt">
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
         </Button>
     );

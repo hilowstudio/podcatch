@@ -16,7 +16,7 @@ import { Metadata } from 'next';
 import { auth } from '@/auth';
 
 type PageProps = {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -49,28 +49,9 @@ export default async function SharedEpisodePage({ params }: PageProps) {
     const hasInsights = episode.insight && episode.status === 'COMPLETED';
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-            {/* Header */}
-            <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                    <div className="flex items-center gap-2">
-                        <Link href="/" className="font-bold text-xl flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
-                                P
-                            </div>
-                            Podcatch
-                        </Link>
-                    </div>
-                    <Link href="/">
-                        <Button variant="outline" size="sm">
-                            Create Your Own Second Brain
-                        </Button>
-                    </Link>
-                </div>
-            </header>
-
-            <main className="container mx-auto px-4 py-8 pb-32">
-                <div className="grid gap-8 lg:grid-cols-3">
+        <div>
+            <div className="container mx-auto px-4 py-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column: Player & Metadata */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-8 space-y-6">
@@ -133,9 +114,9 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <Link href="/">
-                                        <Button className="w-full">Get Started for Free</Button>
-                                    </Link>
+                                    <Button asChild className="min-h-11 w-full">
+                                        <Link href="/auth/signup">Start free</Link>
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
@@ -145,11 +126,11 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                     <div className="lg:col-span-2 space-y-6">
                         {/* YouTube Video Player */}
                         {episode.youtubeId && (
-                            <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl border bg-black">
+                            <div className="aspect-video w-full rounded-xl overflow-hidden border bg-black focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${episode.youtubeId}`}
+                                    src={`https://www.youtube-nocookie.com/embed/${episode.youtubeId}`}
                                     title={episode.title}
-                                    className="w-full h-full"
+                                    className="w-full h-full focus:outline-2 focus:outline-offset-2 focus:outline-ring"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
@@ -291,7 +272,7 @@ export default async function SharedEpisodePage({ params }: PageProps) {
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
 
             {/* Sticky CTA for unauthenticated users */}
             <StickyCTA />

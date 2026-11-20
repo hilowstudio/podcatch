@@ -5,6 +5,7 @@ import Resend from 'next-auth/providers/resend';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import { Resend as ResendClient } from 'resend';
+import { needsSignIn } from '@/lib/route-access';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
@@ -47,21 +48,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         authorized: async ({ auth, request: { nextUrl } }) => {
             const pathname = nextUrl.pathname;
 
-            // Allow static assets (images, fonts, etc.)
-            if (pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|js|css|json|webmanifest)$/i)) {
-                return true;
-            }
-
-            // Allow public pages
-            if (
-                pathname === '/' ||
-                pathname.startsWith('/share') ||
-                pathname.startsWith('/auth') ||
-                pathname.startsWith('/pricing') ||
-                pathname.startsWith('/terms') ||
-                pathname.startsWith('/privacy') ||
-                pathname.startsWith('/api/register')
-            ) {
+            // Only the private routes need a signed-in person (lib/route-access.ts).
+            // Public pages, static files and unknown addresses pass through, so a
+            // wrong address reaches the 404 page and a shared highlight opens for
+            // whoever it was sent to.
+            if (!needsSignIn(pathname)) {
                 return true;
             }
 

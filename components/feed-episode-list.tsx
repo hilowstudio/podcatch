@@ -132,15 +132,17 @@ export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episo
             <div className="flex flex-wrap items-center gap-3">
                 {/* Sort */}
                 <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" aria-hidden />
+                    <label htmlFor="episode-sort" className="sr-only">Sort episodes</label>
                     <select
+                        id="episode-sort"
                         value={sort}
                         onChange={e => { setSort(e.target.value as SortOption); setPage(1); }}
-                        className="text-sm border rounded-md px-2 py-1.5 bg-background"
+                        className="min-h-11 text-sm border rounded-md px-2 bg-background"
                     >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="status">By Status</option>
+                        <option value="newest">Newest first</option>
+                        <option value="oldest">Oldest first</option>
+                        <option value="status">By status</option>
                     </select>
                 </div>
 
@@ -199,11 +201,13 @@ export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episo
                     <div key={episode.id} className="flex items-start gap-3">
                         {/* Checkbox for selectable episodes */}
                         {discoveredEpisodes.length > 0 && (
-                            <div className="pt-5 flex-shrink-0">
+                            <div className="pt-3 flex-shrink-0">
                                 {isSelectable ? (
                                     <button
                                         onClick={() => toggleSelect(episode.id)}
-                                        className="text-muted-foreground hover:text-foreground transition-colors"
+                                        aria-label={`Select ${episode.title}`}
+                                        aria-pressed={isSelected}
+                                        className="grid size-11 place-items-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {isSelected ? (
                                             <CheckSquare className="h-5 w-5 text-primary" />
@@ -212,7 +216,7 @@ export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episo
                                         )}
                                     </button>
                                 ) : (
-                                    <div className="w-5" />
+                                    <div className="w-11" />
                                 )}
                             </div>
                         )}
@@ -220,8 +224,8 @@ export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episo
                         <Link href={`/episodes/${episode.id}`} className="flex-1 min-w-0">
                             <Card className="group transition-all hover:shadow-md cursor-pointer">
                                 <CardHeader>
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-start justify-between gap-4">
+                                        <div className="flex-1 min-w-[12rem]">
                                             <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
                                                 {episode.title}
                                             </CardTitle>

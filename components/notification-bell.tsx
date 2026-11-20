@@ -84,10 +84,15 @@ export function NotificationBell() {
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative size-11"
+                    aria-label={count > 0 ? `Notifications, ${count} new` : 'Notifications'}
+                >
+                    <Bell className="h-5 w-5" aria-hidden />
                     {count > 0 && (
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-status-danger ring-2 ring-background" />
+                        <span aria-hidden className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
                     )}
                 </Button>
             </PopoverTrigger>

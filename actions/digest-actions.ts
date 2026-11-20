@@ -53,8 +53,6 @@ export async function setRewindEnabled(enabled: boolean) {
 export async function updateScheduleSettings(settings: {
     timezone: string;
     deliveryTime: string;
-    quietStart: string;
-    quietEnd: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -66,8 +64,6 @@ export async function updateScheduleSettings(settings: {
         data: {
             timezone: settings.timezone,
             digestDeliveryTime: settings.deliveryTime,
-            quietHoursStart: settings.quietStart === 'off' ? null : settings.quietStart || null,
-            quietHoursEnd: settings.quietStart === 'off' ? null : settings.quietEnd || null,
         },
     });
 

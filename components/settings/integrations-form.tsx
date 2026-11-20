@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook, updateTanaToken, updateLogseqGraph } from '@/actions/integrations';
+import { updateWebhookUrl, updateReadwiseApiKey, updateNotionSettings, testWebhook } from '@/actions/integrations';
 import { Loader2, CheckCircle2, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -211,92 +211,6 @@ export function GoogleDriveCard({ isConnected }: { isConnected: boolean }) {
                     })}
                 >
                     {isConnected ? 'Reconnect' : 'Connect'}
-                </Button>
-            </CardFooter>
-        </Card>
-    );
-}
-
-export function TanaCard({ initialValue }: IntegrationProps) {
-    const [token, setToken] = useState(initialValue || '');
-    const [isLoading, setIsLoading] = useState(false);
-
-    async function handleSave() {
-        setIsLoading(true);
-        const res = await updateTanaToken(token);
-        setIsLoading(false);
-        if (res.success) toast.success('Tana token saved');
-        else toast.error('Failed to save Tana token');
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle>Tana</CardTitle>
-                    <ConnectionBadge connected={!!initialValue} />
-                </div>
-                <CardDescription>Send nodes to Tana via Input API.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div className="space-y-1">
-                    <Label>API Token</Label>
-                    <Input
-                        type="password"
-                        placeholder="Tana Input API Token"
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                    />
-                </div>
-            </CardContent>
-            <CardFooter className="justify-end border-t pt-4">
-                <Button onClick={handleSave} disabled={isLoading} size="sm">
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Token
-                </Button>
-            </CardFooter>
-        </Card>
-    );
-}
-
-export function LogseqCard({ initialValue }: IntegrationProps) {
-    const [graphName, setGraphName] = useState(initialValue || '');
-    const [isLoading, setIsLoading] = useState(false);
-
-    async function handleSave() {
-        setIsLoading(true);
-        const res = await updateLogseqGraph(graphName);
-        setIsLoading(false);
-        if (res.success) toast.success('Logseq graph saved');
-        else toast.error('Failed to save Logseq graph');
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle>Logseq</CardTitle>
-                    <ConnectionBadge connected={!!initialValue} />
-                </div>
-                <CardDescription>Configure deep links to your local graph.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div className="space-y-1">
-                    <Label>Graph Name</Label>
-                    <Input
-                        placeholder="e.g. my-knowledge-base"
-                        value={graphName}
-                        onChange={(e) => setGraphName(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Your local graph name for <code>logseq://graph/NAME</code> links.
-                    </p>
-                </div>
-            </CardContent>
-            <CardFooter className="justify-end border-t pt-4">
-                <Button onClick={handleSave} disabled={isLoading} size="sm">
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Graph
                 </Button>
             </CardFooter>
         </Card>

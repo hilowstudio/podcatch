@@ -39,7 +39,7 @@ export async function UsageCard({ userId }: { userId: string }) {
                             of {limit} episodes
                         </span>
                     </div>
-                    <Progress value={usage} max={limit} />
+                    <Progress value={usage} max={limit} aria-label={`Episodes processed this month: ${usage} of ${limit}`} />
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">

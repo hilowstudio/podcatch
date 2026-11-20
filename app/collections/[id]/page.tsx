@@ -10,7 +10,7 @@ import { DeleteCollectionButton } from '@/components/delete-collection-button';
 import { SynthesizeButton } from '@/components/synthesize-button';
 
 interface PageProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export default async function CollectionDetailPage({ params }: PageProps) {
@@ -29,7 +29,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             <div className="mb-8">
                 <Link
                     href="/collections"
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
+                    className="inline-flex min-h-11 items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2 text-sm"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to Collections
                 </Link>
@@ -38,12 +38,12 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                         <h1 className="text-3xl font-bold tracking-tight">{collection.title}</h1>
                         <p className="text-muted-foreground mt-2 max-w-2xl text-lg">{collection.description}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Link href={`/chat?collection=${collection.id}&title=${encodeURIComponent(collection.title)}`}>
-                            <Button variant="outline" className="gap-2">
-                                <MessageSquare className="h-4 w-4" /> Chat
-                            </Button>
-                        </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button asChild variant="outline" className="gap-2">
+                            <Link href={`/chat?collection=${collection.id}&title=${encodeURIComponent(collection.title)}`}>
+                                <MessageSquare className="h-4 w-4" aria-hidden /> Ask about this collection
+                            </Link>
+                        </Button>
                         <DeleteCollectionButton collectionId={collection.id} />
                         <SynthesizeButton collectionId={collection.id} disabled={collection.episodes.length < 2} />
                     </div>

@@ -14,7 +14,7 @@ export default async function MyDataPage() {
 
     return (
         <div>
-            <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-6">
+            <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-1 mb-4">
                 <ArrowLeft className="h-3 w-3" /> Back to Settings
             </Link>
 
@@ -100,7 +100,7 @@ export default async function MyDataPage() {
             <div className="mt-8 flex gap-3 text-sm">
                 <Link href="/settings" className="text-primary hover:underline">Export my data</Link>
                 <span className="text-muted-foreground">|</span>
-                <Link href="/help/data-format" className="text-primary hover:underline">Export format docs</Link>
+                <Link href="/help/data-format" className="inline-flex min-h-11 items-center text-primary hover:underline">Export format docs</Link>
             </div>
         </div>
     );

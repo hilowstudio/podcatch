@@ -49,20 +49,8 @@ export default async function SnipPage({ params }: PageProps) {
         : null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-            <header className="border-b bg-background/95 backdrop-blur">
-                <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                    <Link href="/" className="flex items-center gap-2 text-xl font-bold">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">P</div>
-                        Podcatch
-                    </Link>
-                    <Link href="/">
-                        <Button variant="outline" size="sm">Create your own</Button>
-                    </Link>
-                </div>
-            </header>
-
-            <main className="container mx-auto max-w-2xl px-4 py-10 sm:py-16">
+        <div>
+            <div className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
                 {/* Provenance */}
                 <div className="mb-6 flex items-center gap-3">
                     {episode.feed.image && (
@@ -84,7 +72,7 @@ export default async function SnipPage({ params }: PageProps) {
                 <blockquote className="relative rounded-2xl border-2 bg-card p-6 shadow-sm sm:p-8">
                     <Quote className="mb-3 h-7 w-7 text-primary/40" aria-hidden />
                     {quote ? (
-                        <p className="text-xl font-medium leading-relaxed sm:text-2xl">{quote}</p>
+                        <p className="font-serif text-2xl leading-relaxed sm:text-3xl">{quote}</p>
                     ) : (
                         <p className="text-lg italic text-muted-foreground">{snip.note || 'A highlighted moment.'}</p>
                     )}
@@ -98,28 +86,28 @@ export default async function SnipPage({ params }: PageProps) {
                 {/* Playback */}
                 <div className="mt-6">
                     {youtubeUrl ? (
-                        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full gap-2">
-                                <Youtube className="h-4 w-4" />
+                        <Button asChild variant="outline" className="min-h-11 w-full gap-2">
+                            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
+                                <Youtube className="h-4 w-4" aria-hidden />
                                 Watch on YouTube at {fmtStamp(snip.startTime)}
-                            </Button>
-                        </a>
+                            </a>
+                        </Button>
                     ) : (
                         <SnipPlayer audioUrl={episode.audioUrl} start={snip.startTime} end={snip.endTime} />
                     )}
                 </div>
 
                 {/* CTA */}
-                <div className="mt-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center">
-                    <h2 className="text-lg font-bold">Turn your podcasts into a searchable second brain</h2>
+                <div className="mt-10 rounded-2xl border bg-card p-6 text-center">
+                    <h2 className="text-lg font-semibold">Shared from Podcatch</h2>
                     <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                        Podcatch transcribes every episode, surfaces the moments that matter, and lets you save and share highlights like this one.
+                        Podcatch is a podcast player that transcribes the episodes you choose, so you can search them and keep moments like this one.
                     </p>
-                    <Link href="/" className="mt-4 inline-block">
-                        <Button>Get started free</Button>
-                    </Link>
+                    <Button asChild className="mt-4 min-h-11">
+                        <Link href="/auth/signup">Start free</Link>
+                    </Button>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
