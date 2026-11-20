@@ -28,7 +28,11 @@ export function DeleteAccountButton() {
         try {
             const result = await deleteAccount();
             if (result.success) {
-                toast.success('Account deleted permanently');
+                toast.success(
+                    'cancelledPlan' in result && result.cancelledPlan
+                        ? 'Account deleted. Your paid plan was cancelled today and won’t renew.'
+                        : 'Account deleted permanently',
+                );
                 await signOut({ callbackUrl: '/' });
             } else {
                 toast.error(result.error || 'Failed to delete account');
@@ -55,7 +59,10 @@ export function DeleteAccountButton() {
                             This action is irreversible. All your data will be permanently destroyed, including:
                         </span>
                         <span className="block text-sm">
-                            Subscriptions, episodes, transcripts, AI insights, collections, custom prompts, brand voice, snips, and notification history.
+                            Podcast subscriptions, episodes, transcripts, AI insights, collections, custom prompts, brand voice, snips, and notification history.
+                        </span>
+                        <span className="block text-sm">
+                            If you pay for Basic or Pro, your plan is cancelled at once and won’t renew.
                         </span>
                         <span className="block font-medium text-foreground">
                             We recommend exporting your data first from the settings page.
