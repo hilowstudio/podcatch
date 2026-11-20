@@ -11,9 +11,9 @@ import Turnstile from 'react-turnstile';
 import { signIn } from 'next-auth/react';
 
 const features = [
-    "Transcribe unlimited podcasts",
-    "Chat with your audio library",
-    "Sync to Notion & Obsidian",
+    "Transcripts and summaries of your podcasts",
+    "Search everything you've processed",
+    "Send notes to Notion, Readwise or Google Drive",
     "3-day Pro trial included"
 ];
 

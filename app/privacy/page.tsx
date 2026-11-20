@@ -6,7 +6,7 @@ export default function PrivacyPage() {
             <div className="space-y-4">
                 <Link href="/" className="text-sm text-primary hover:underline">&larr; Back to Home</Link>
                 <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
-                <p className="text-muted-foreground">Last Updated: January 13, 2026</p>
+                <p className="text-muted-foreground">Last Updated: November 20, 2026</p>
             </div>
 
             <article className="prose prose-slate dark:prose-invert max-w-none space-y-6">
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                     <ul className="list-disc pl-6 space-y-1">
                         <li><strong>What we collect:</strong> Your name, email, and the podcast content you process (transcripts, notes, prompts). We also collect basic technical data like your browser type.</li>
                         <li><strong>Why we collect it:</strong> To run the service — manage your account, process episodes, display your library, and handle payments through Stripe.</li>
-                        <li><strong>Who can see it:</strong> Only our AI providers (Google, Anthropic) see your transcripts to generate insights. Stripe sees your payment info. We never sell your data to advertisers.</li>
+                        <li><strong>Who receives it:</strong> Google (Gemini) and Deepgram process your episodes to make transcripts, summaries, search and audio briefings. Stripe handles payments, and Resend sends your sign-in and digest emails. Vercel, Supabase, Cloudflare and Inngest host and run the service. Apps you connect yourself, such as Notion, Readwise, Google Drive, Claude or OpenAI, receive what you choose to send them. We never sell your data.</li>
                         <li><strong>How long we keep it:</strong> We keep your data as long as your account is active. After you cancel a subscription, your data stays accessible for 90 days. After account deletion, all data is permanently destroyed.</li>
                         <li><strong>How to delete it:</strong> Go to Settings and click "Delete Account" to permanently remove all your data. You can also export your data as JSON first from the same page.</li>
                     </ul>
@@ -58,8 +58,15 @@ export default function PrivacyPage() {
                         We may share your data with the following third parties:
                     </p>
                     <ul className="list-disc pl-6 space-y-1 mt-2">
-                        <li><strong>AI Service Providers:</strong> We send podcast transcripts and prompts to third-party AI providers (such as Anthropic and Google) to generate summaries and insights. These providers are bound by confidentiality agreements.</li>
-                        <li><strong>Service Providers:</strong> Companies that provide IT and system administration services.</li>
+                        <li><strong>Google (Gemini):</strong> transcripts and prompts, to write summaries, insights, chat answers, search embeddings, video understanding and audio briefings.</li>
+                        <li><strong>Deepgram:</strong> episode audio, to make transcripts.</li>
+                        <li><strong>YouTube:</strong> video details and captions, when you add a YouTube channel.</li>
+                        <li><strong>Stripe:</strong> your payment details and subscription. We never see or store your card.</li>
+                        <li><strong>Resend:</strong> your email address, to send sign-in links, digests and the weekly Rewind.</li>
+                        <li><strong>Google and GitHub sign-in:</strong> your name and email, if you sign in with them.</li>
+                        <li><strong>Hosting:</strong> Vercel runs the app, Supabase stores the database, Cloudflare stores audio files (R2), carries traffic to the site and checks sign-ups for bots (Turnstile), and Inngest runs episode processing.</li>
+                        <li><strong>Page counts:</strong> Cloudflare Web Analytics counts page views without cookies. The only cookies we set are the ones sign-in needs.</li>
+                        <li><strong>Apps you connect:</strong> Notion, Readwise, Google Drive, Claude (Anthropic), OpenAI and any webhook you set up receive the episode notes you choose to send, using your own account or key.</li>
                         <li><strong>Professional Advisers:</strong> Lawyers, bankers, auditors and insurers.</li>
                     </ul>
                 </section>
