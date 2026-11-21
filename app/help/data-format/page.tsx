@@ -28,7 +28,7 @@ export default function DataFormatPage() {
                 <section>
                     <h2 className="text-2xl font-semibold">Top-Level Structure</h2>
                     <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto">{`{
-  "exportVersion": "1.0",
+  "exportVersion": "1.1",
   "exportDate": "2026-03-28T12:00:00.000Z",
   "product": "Podcatch",
   "user": { ... },
@@ -37,7 +37,10 @@ export default function DataFormatPage() {
   "collections": [ ... ],
   "customPrompts": [ ... ],
   "snips": [ ... ],
-  "notifications": [ ... ]
+  "notifications": [ ... ],
+  "listening": [ ... ],
+  "upNext": [ ... ],
+  "playerSettings": { ... }
 }`}</pre>
                 </section>
 
@@ -68,6 +71,7 @@ export default function DataFormatPage() {
                             <tr><td><code>feedTitle</code></td><td>string | null</td><td>Podcast name</td></tr>
                             <tr><td><code>feedType</code></td><td>string</td><td>RSS or YOUTUBE</td></tr>
                             <tr><td><code>autoProcess</code></td><td>boolean</td><td>Whether new episodes auto-process</td></tr>
+                            <tr><td><code>playbackRate</code></td><td>number | null</td><td>This show’s own playback speed, if you set one</td></tr>
                             <tr><td><code>subscribedAt</code></td><td>ISO 8601</td><td>Subscription date</td></tr>
                         </tbody>
                     </table>
@@ -85,7 +89,7 @@ export default function DataFormatPage() {
                             <tr><td><code>summary</code></td><td>string | null</td><td>AI-generated 2-3 sentence summary</td></tr>
                             <tr><td><code>keyTakeaways</code></td><td>string[]</td><td>5 key bullet points</td></tr>
                             <tr><td><code>links</code></td><td>string[]</td><td>URLs mentioned in episode</td></tr>
-                            <tr><td><code>socialContent</code></td><td>object | null</td><td>AI-generated tweet, LinkedIn post, blog title</td></tr>
+                            <tr><td><code>socialContent</code></td><td>object | null</td><td>Social post drafts, for episodes processed while Podcatch still made them</td></tr>
                             <tr><td><code>chapters</code></td><td>object[]</td><td>Chapter markers with title, start time, reason</td></tr>
                             <tr><td><code>transcript</code></td><td>string | null</td><td>Full episode transcript (plain text with timestamps)</td></tr>
                             <tr><td><code>entities</code></td><td>object[]</td><td>People, books, concepts, orgs, tech mentioned</td></tr>
@@ -113,7 +117,7 @@ export default function DataFormatPage() {
                             <tr><td><code>title</code></td><td>string</td><td>Prompt name</td></tr>
                             <tr><td><code>prompt</code></td><td>string</td><td>Prompt template text</td></tr>
                             <tr><td><code>category</code></td><td>string | null</td><td>business, education, research, or content</td></tr>
-                            <tr><td><code>isPublic</code></td><td>boolean</td><td>Whether shared to gallery</td></tr>
+                            <tr><td><code>isPublic</code></td><td>boolean</td><td>Whether it was shared to the former prompt gallery</td></tr>
                             <tr><td><code>createdAt</code></td><td>ISO 8601</td><td>Creation date</td></tr>
                         </tbody>
                     </table>
@@ -143,6 +147,41 @@ export default function DataFormatPage() {
                             <tr><td><code>createdAt</code></td><td>ISO 8601</td><td>Notification date</td></tr>
                         </tbody>
                     </table>
+
+                    <h3 className="text-xl font-semibold mt-6">listening[]</h3>
+                    <p>Where you are in each episode you’ve played.</p>
+                    <table className="text-sm">
+                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>episodeTitle</code></td><td>string</td><td>Episode</td></tr>
+                            <tr><td><code>audioUrl</code></td><td>string</td><td>Direct audio file URL</td></tr>
+                            <tr><td><code>positionSec</code></td><td>number</td><td>Your place, in seconds</td></tr>
+                            <tr><td><code>durationSec</code></td><td>number | null</td><td>Episode length, once known</td></tr>
+                            <tr><td><code>finishedAt</code></td><td>ISO 8601 | null</td><td>When you finished it or marked it played</td></tr>
+                            <tr><td><code>updatedAt</code></td><td>ISO 8601</td><td>Last saved</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 className="text-xl font-semibold mt-6">upNext[]</h3>
+                    <p>Your queue, in order.</p>
+                    <table className="text-sm">
+                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>episodeTitle</code></td><td>string</td><td>Episode</td></tr>
+                            <tr><td><code>audioUrl</code></td><td>string</td><td>Direct audio file URL</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 className="text-xl font-semibold mt-6">playerSettings</h3>
+                    <p>Your player choices.</p>
+                    <table className="text-sm">
+                        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>skipBackSec</code></td><td>number</td><td>Skip back length in seconds</td></tr>
+                            <tr><td><code>skipForwardSec</code></td><td>number</td><td>Skip forward length in seconds</td></tr>
+                            <tr><td><code>continuousPlay</code></td><td>boolean</td><td>Whether Up next keeps playing</td></tr>
+                        </tbody>
+                    </table>
                 </section>
 
                 <section>
@@ -159,7 +198,7 @@ export default function DataFormatPage() {
                 <section>
                     <h2 className="text-2xl font-semibold">Schema Versioning</h2>
                     <p>
-                        The <code>exportVersion</code> field tracks the schema version. We will not remove fields from the export — new fields may be added in future versions. The current version is <code>1.0</code>.
+                        The <code>exportVersion</code> field tracks the schema version. We won’t remove fields from the export, and new fields may be added. The current version is <code>1.1</code>, which added <code>listening</code>, <code>upNext</code>, <code>playerSettings</code> and each subscription’s <code>playbackRate</code>.
                     </p>
                 </section>
             </article>

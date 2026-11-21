@@ -92,6 +92,13 @@ model User {
   quietHoursEnd      String?  // "HH:mm" e.g. "07:00"
   deactivatedAt      DateTime?
   usageLogs       UsageLog[]
+
+  // Player preferences (follow the person to every device)
+  skipBackSec    Int     @default(15)
+  skipForwardSec Int     @default(30)
+  continuousPlay Boolean @default(true) // when an episode ends, start the next in Up next
+  playbackStates PlaybackState[]
+  queueItems     QueueItem[]
 }
 
 model Account {
@@ -142,6 +149,7 @@ model Subscription {
   userId      String
   feedId      String
   autoProcess Boolean  @default(false)
+  playbackRate Float?  // per-show speed; null = the person's last-used speed
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -208,6 +216,8 @@ model Episode {
   entities        Entity[]
   entityRelations EntityRelation[]
   collections     Collection[]
+  playbackStates  PlaybackState[]
+  queueItems      QueueItem[]
 
   @@index([feedId])
   @@index([status])
@@ -414,4 +424,40 @@ model RateLimit {
   updatedAt DateTime @updatedAt
 
   @@index([expiresAt])
+}
+
+// Where a person is in an episode, and whether they've finished it. One row
+// per person per episode, written by the player every few seconds while it
+// plays, so the place follows them from phone to laptop.
+model PlaybackState {
+  id          String    @id @default(cuid())
+  userId      String
+  episodeId   String
+  positionSec Float     @default(0)
+  durationSec Float?
+  completedAt DateTime? // set when it finishes or is marked played; cleared by "Mark unplayed"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId, updatedAt])
+}
+
+// Up next: the person's own queue. Ordered by `position` (a float, so an
+// episode can be placed between two others without renumbering the rest).
+model QueueItem {
+  id        String   @id @default(cuid())
+  userId    String
+  episodeId String
+  position  Float
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId, position])
 }

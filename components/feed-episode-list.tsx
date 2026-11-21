@@ -14,6 +14,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { processEpisodeAction } from '@/actions/process-episode-action';
 import { toast } from 'sonner';
+import { EpisodeActions } from '@/components/episode-actions';
+import { leftLabel, statusWords } from '@/lib/player/format';
 
 type EpisodeStatus = 'DISCOVERED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
@@ -23,21 +25,28 @@ type Episode = {
     description: string | null;
     publishedAt: Date;
     status: EpisodeStatus;
+    audioUrl: string;
+    youtubeId: string | null;
+    positionSec?: number;
+    durationSec?: number | null;
+    completed?: boolean;
     insight?: { id: string; summary: string } | null;
 };
+
+type FeedInfo = { id: string; title: string | null; image: string | null };
 
 type SortOption = 'newest' | 'oldest' | 'status';
 
 const PAGE_SIZE = 20;
 
 const statusConfig: Record<EpisodeStatus, { icon: React.ComponentType<any>; label: string; color: string; animate?: boolean; order: number }> = {
-    PROCESSING: { icon: Loader2, label: 'Processing', color: 'bg-status-warning', animate: true, order: 0 },
-    DISCOVERED: { icon: PlayCircle, label: 'Discovered', color: 'bg-status-info', order: 1 },
-    FAILED: { icon: AlertCircle, label: 'Failed', color: 'bg-status-danger', order: 2 },
-    COMPLETED: { icon: CheckCircle2, label: 'Completed', color: 'bg-status-success', order: 3 },
+    PROCESSING: { icon: Loader2, label: 'Transcribing', color: '', animate: true, order: 0 },
+    DISCOVERED: { icon: PlayCircle, label: 'Not transcribed', color: '', order: 1 },
+    FAILED: { icon: AlertCircle, label: 'Couldn’t be transcribed', color: '', order: 2 },
+    COMPLETED: { icon: CheckCircle2, label: 'Transcribed', color: '', order: 3 },
 };
 
-export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episode[] }) {
+export function FeedEpisodeList({ episodes: initialEpisodes, feed }: { episodes: Episode[]; feed: FeedInfo }) {
     const [sort, setSort] = useState<SortOption>('newest');
     const [page, setPage] = useState(1);
     const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -221,45 +230,45 @@ export function FeedEpisodeList({ episodes: initialEpisodes }: { episodes: Episo
                             </div>
                         )}
 
-                        <Link href={`/episodes/${episode.id}`} className="flex-1 min-w-0">
-                            <Card className="group transition-all hover:shadow-md cursor-pointer">
-                                <CardHeader>
-                                    <div className="flex flex-wrap items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-[12rem]">
-                                            <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                                                {episode.title}
-                                            </CardTitle>
-                                            <CardDescription className="mt-2 flex items-center gap-2 text-sm">
-                                                <Calendar className="h-4 w-4" />
-                                                {formatDistanceToNow(new Date(episode.publishedAt), { addSuffix: true })}
-                                            </CardDescription>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <Badge
-                                                variant="secondary"
-                                                className={`flex items-center gap-1 ${status.color} text-white whitespace-nowrap`}
-                                            >
-                                                <StatusIcon className={`h-3 w-3 ${status.animate ? 'animate-spin' : ''}`} />
-                                                {status.label}
-                                            </Badge>
-                                            {episode.status === 'DISCOVERED' && (
-                                                <div onClick={e => e.preventDefault()}>
-                                                    <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
-                                                </div>
-                                            )}
-                                            {episode.status === 'PROCESSING' && (
-                                                <EpisodeStatusPoller episodeId={episode.id} initialStatus="PROCESSING" />
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                {episode.description && episode.status === 'COMPLETED' && (
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground line-clamp-2">{episode.description}</p>
-                                    </CardContent>
+                        <Card className="min-w-0 flex-1">
+                            <CardHeader>
+                                <CardTitle className="line-clamp-2 leading-snug">
+                                    <Link href={`/episodes/${episode.id}`} className="-my-2.5 inline-flex min-h-11 items-center hover:underline">{episode.title}</Link>
+                                </CardTitle>
+                                <CardDescription
+                                    className={`mt-1 flex flex-wrap items-center gap-x-2 text-sm ${episode.status === 'FAILED' ? 'text-destructive' : ''}`}
+                                    role={episode.status === 'PROCESSING' ? 'status' : undefined}
+                                >
+                                    <span>{formatDistanceToNow(new Date(episode.publishedAt), { addSuffix: true })}</span>
+                                    <span aria-hidden>·</span>
+                                    <span className="inline-flex items-center gap-1">
+                                        <StatusIcon className={`h-3.5 w-3.5 ${status.animate ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden />
+                                        {statusWords(episode.status)}
+                                    </span>
+                                    {leftLabel(episode.positionSec ?? 0, episode.durationSec) && !episode.completed && (
+                                        <><span aria-hidden>·</span><span>{leftLabel(episode.positionSec ?? 0, episode.durationSec)}</span></>
+                                    )}
+                                    {episode.completed && <><span aria-hidden>·</span><span>played</span></>}
+                                </CardDescription>
+                                {episode.status === 'PROCESSING' && (
+                                    <EpisodeStatusPoller episodeId={episode.id} initialStatus="PROCESSING" />
                                 )}
-                            </Card>
-                        </Link>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {episode.description && episode.status === 'COMPLETED' && (
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{episode.description}</p>
+                                )}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <EpisodeActions
+                                        compact
+                                        episode={{ ...episode, feedId: feed.id, feedTitle: feed.title, image: feed.image }}
+                                    />
+                                    {(episode.status === 'DISCOVERED' || episode.status === 'FAILED') && (
+                                        <ProcessEpisodeButton episodeId={episode.id} status={episode.status} />
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 );
             })}

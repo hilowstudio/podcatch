@@ -113,7 +113,7 @@ export default async function RootLayout({
         className={`${publicSans.variable} ${vollkorn.variable} ${plexMono.variable} ${libreBaskerville.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
         <SerwistProvider>
-          <AudioProvider>
+          <AudioProvider signedIn={!!session?.user}>
             <NetworkStatus />
             <SiteHeader />
             {/* Signed in: room at the bottom for the player and, on phones, the

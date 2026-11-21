@@ -21,6 +21,7 @@ export const PRIVATE_ROUTES = [
     '/search',
     '/settings',
     '/snips',
+    '/up-next',
 ] as const;
 
 // Public pages. Each one decides what it shows: /share and /snip load only

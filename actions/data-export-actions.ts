@@ -102,8 +102,22 @@ export async function exportUserData() {
         take: 100,
     });
 
+    const [listening, upNext, playerPrefs] = await Promise.all([
+        prisma.playbackState.findMany({
+            where: { userId },
+            select: { positionSec: true, durationSec: true, completedAt: true, updatedAt: true, episode: { select: { title: true, audioUrl: true } } },
+            orderBy: { updatedAt: 'desc' },
+        }),
+        prisma.queueItem.findMany({
+            where: { userId },
+            select: { episode: { select: { title: true, audioUrl: true } } },
+            orderBy: { position: 'asc' },
+        }),
+        prisma.user.findUnique({ where: { id: userId }, select: { skipBackSec: true, skipForwardSec: true, continuousPlay: true } }),
+    ]);
+
     const exportData = {
-        exportVersion: '1.0',
+        exportVersion: '1.1',
         exportDate: new Date().toISOString(),
         product: 'Podcatch',
         user: {
@@ -115,6 +129,7 @@ export async function exportUserData() {
             feedTitle: s.feed.title,
             feedType: s.feed.type,
             autoProcess: s.autoProcess,
+            playbackRate: s.playbackRate,
             subscribedAt: s.createdAt.toISOString(),
         })),
         episodes: episodes.map(ep => ({
@@ -157,6 +172,16 @@ export async function exportUserData() {
             ...n,
             createdAt: n.createdAt.toISOString(),
         })),
+        listening: listening.map(l => ({
+            episodeTitle: l.episode.title,
+            audioUrl: l.episode.audioUrl,
+            positionSec: l.positionSec,
+            durationSec: l.durationSec,
+            finishedAt: l.completedAt?.toISOString() ?? null,
+            updatedAt: l.updatedAt.toISOString(),
+        })),
+        upNext: upNext.map(q => ({ episodeTitle: q.episode.title, audioUrl: q.episode.audioUrl })),
+        playerSettings: playerPrefs,
     };
 
     return { success: true, data: exportData };

@@ -11,6 +11,7 @@ const startsWithAny = (pathname: string, prefixes: string[]) =>
     prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 export const NAV_PLACES: NavPlace[] = [
+    { href: '/up-next', label: 'Up next', match: (p) => startsWithAny(p, ['/up-next']) },
     {
         href: '/',
         label: 'Library',

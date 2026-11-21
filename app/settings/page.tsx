@@ -5,6 +5,7 @@ import { ProfileForm } from '@/components/profile/profile-form';
 import { ConnectedAccounts } from '@/components/profile/connected-accounts';
 import { UsageCard } from '@/components/profile/usage-card';
 import { ThemeChoiceSetting } from '@/components/theme-choice';
+import { PlaybackSettings } from '@/components/playback-settings';
 import { DigestSettings } from '@/components/digest-settings';
 import { LanguageSettings } from '@/components/language-settings';
 import { ScheduleSettings } from '@/components/schedule-settings';
@@ -35,6 +36,11 @@ export default async function SettingsAccountPage() {
         <div className="grid grid-cols-1 gap-10">
             <section>
                 <UsageCard userId={session.user.id} />
+            </section>
+
+            <section id="playback" className="scroll-mt-24">
+                <h2 className="text-xl font-semibold mb-4">Playback</h2>
+                <PlaybackSettings />
             </section>
 
             <section>

@@ -57,7 +57,7 @@ export function EpisodePlayerButton({
             ) : (
                 <>
                     <Play className="mr-2 h-4 w-4" />
-                    {isCurrentEpisode ? 'Resume' : 'Play Episode'}
+                    {isCurrentEpisode ? 'Resume' : 'Play'}
                 </>
             )}
         </Button>

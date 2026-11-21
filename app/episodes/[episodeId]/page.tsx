@@ -7,7 +7,8 @@ import { MarkdownCopyButton } from '@/components/markdown-copy-button';
 import { ProcessEpisodeButton } from '@/components/process-episode-button';
 import { AddToCollectionButton } from '@/components/add-to-collection-button';
 import { EpisodeChatButton } from '@/components/episode-chat-button';
-import { EpisodePlayerButton } from '@/components/episode-player-button';
+import { EpisodeActions } from '@/components/episode-actions';
+import { leftLabel, statusWords } from '@/lib/player/format';
 import { EpisodeStatusPoller } from '@/components/episode-status-poller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,14 @@ export default async function EpisodePage({ params }: PageProps) {
     if (!episode) {
         notFound();
     }
+
+    // Where this person is in the episode (for Resume and "played")
+    const playback = session?.user?.id
+        ? await prisma.playbackState.findUnique({
+            where: { userId_episodeId: { userId: session.user.id, episodeId: episode.id } },
+            select: { positionSec: true, durationSec: true, completedAt: true },
+        })
+        : null;
 
     // Check if user has Claude configured
     let isClaudeConfigured = false;
@@ -101,52 +110,31 @@ export default async function EpisodePage({ params }: PageProps) {
                                 </div>
                             )}
 
-                            {/* Audio Player (Only for RSS) */}
-                            {!episode.youtubeId && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-lg">Listen</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <EpisodePlayerButton
+                            {/* Listen: the page's main action, with Up next and Mark played */}
+                            <Card>
+                                <CardContent className="space-y-3 pt-6 text-sm">
+                                    {!episode.youtubeId && (
+                                        <EpisodeActions
+                                            primary
                                             episode={{
                                                 id: episode.id,
                                                 title: episode.title,
                                                 audioUrl: episode.audioUrl,
-                                                image: episode.feed.image ?? undefined,
-                                                feedTitle: episode.feed.title ?? undefined
+                                                youtubeId: episode.youtubeId,
+                                                feedId: episode.feedId,
+                                                feedTitle: episode.feed.title,
+                                                image: episode.feed.image,
+                                                status: episode.status,
+                                                positionSec: playback?.positionSec ?? 0,
+                                                durationSec: playback?.durationSec ?? null,
+                                                completed: !!playback?.completedAt,
                                             }}
-                                            className="w-full"
                                         />
-                                        <p className="text-xs text-muted-foreground mt-2 text-center">
-                                            Use the player bar at the bottom to control playback
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Metadata */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Details</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-sm">
-                                    <div className="flex gap-2">
-                                        <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="font-medium">Published</p>
-                                            <p className="text-muted-foreground">
-                                                {format(episode.publishedAt, 'PPP')} ({formatDistanceToNow(episode.publishedAt, { addSuffix: true })})
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="pt-2">
-                                        <Badge
-                                            variant={episode.status === 'COMPLETED' ? 'default' : episode.status === 'FAILED' ? 'destructive' : 'secondary'}
-                                        >
-                                            {episode.status}
-                                        </Badge>
-                                    </div>
+                                    )}
+                                    <p className="text-muted-foreground">
+                                        {format(episode.publishedAt, 'PPP')} · {statusWords(episode.status)}
+                                        {playback?.completedAt ? ' · played' : leftLabel(playback?.positionSec ?? 0, playback?.durationSec) ? ` · ${leftLabel(playback?.positionSec ?? 0, playback?.durationSec)}` : ''}
+                                    </p>
                                 </CardContent>
                             </Card>
                         </div>

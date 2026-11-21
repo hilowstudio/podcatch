@@ -2,11 +2,12 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Library, Highlighter, Search, MessageCircleQuestion, type LucideIcon } from 'lucide-react';
+import { Library, Highlighter, Search, MessageCircleQuestion, ListMusic, type LucideIcon } from 'lucide-react';
 import { NAV_PLACES, isBareRoute } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 
 const ICONS: Record<string, LucideIcon> = {
+    '/up-next': ListMusic,
     '/': Library,
     '/snips': Highlighter,
     '/search': Search,
@@ -21,7 +22,7 @@ export function BottomNav({ signedIn }: { signedIn: boolean }) {
 
     return (
         <nav aria-label="Main" className="thumb-zone-nav border-t bg-background/95 backdrop-blur-md md:hidden">
-            <div className="grid h-16 grid-cols-4 safe-x">
+            <div className="grid h-16 grid-cols-5 safe-x">
                 {NAV_PLACES.map((place) => {
                     const Icon = ICONS[place.href];
                     const current = place.match(pathname);

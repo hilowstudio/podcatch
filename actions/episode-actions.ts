@@ -22,10 +22,20 @@ export async function getEpisodesByFeed(feedId: string) {
                         summary: true,
                     },
                 },
+                // Where this person is in each episode, for Resume and progress.
+                playbackStates: {
+                    where: { userId: session.user.id },
+                    select: { positionSec: true, durationSec: true, completedAt: true },
+                },
             },
         });
 
-        return episodes;
+        return episodes.map(({ playbackStates, ...e }) => ({
+            ...e,
+            positionSec: playbackStates[0]?.positionSec ?? 0,
+            durationSec: playbackStates[0]?.durationSec ?? null,
+            completed: !!playbackStates[0]?.completedAt,
+        }));
     } catch (error) {
         console.error('Error fetching episodes:', error);
         return [];

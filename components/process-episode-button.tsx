@@ -33,7 +33,7 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
             const result = await processEpisodeAction(formData);
 
             if (result.success) {
-                toast.success('Processing started');
+                toast('Transcribing. It’s usually ready in a few minutes.');
             } else if (result.upgradeRequired) {
                 setUpgradeData({
                     currentPlan: result.plan,
@@ -52,39 +52,38 @@ export function ProcessEpisodeButton({ episodeId, status }: ProcessEpisodeButton
                 onClick={handleProcess}
                 disabled={isPending}
                 size="sm"
-                className="gap-2"
+                variant="outline"
+                className="min-h-11 gap-2"
             >
                 {isPending ? (
                     <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Queuing...
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                        Starting
                     </>
                 ) : (
                     <>
-                        <PlayCircle className="h-4 w-4" />
-                        Process Episode
+                        <PlayCircle className="h-4 w-4" aria-hidden />
+                        {status === 'FAILED' ? 'Try transcribing again' : 'Transcribe'}
                     </>
                 )}
             </Button>
 
             {upgradeData && (
-                <Card className="border-primary/20 bg-primary/5">
+                <Card role="status" className="border-primary/20 bg-primary/5">
                     <CardContent className="flex items-start gap-3 p-4">
-                        <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden />
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">Usage Limit Reached</p>
+                            <p className="text-sm font-medium">This month’s transcriptions are used</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                                You&apos;ve processed {upgradeData.limit} episodes this month on the {upgradeData.currentPlan} plan.
-                                Upgrade to {upgradeData.nextPlan} for more.
+                                {upgradeData.currentPlan} includes {upgradeData.limit} a month. Listening is still unlimited.
+                                {upgradeData.nextPlan ? ` ${upgradeData.nextPlan} includes more.` : ''}
                             </p>
-                            <Link href="/pricing" className="inline-block mt-2">
-                                <Button size="sm" variant="outline" className="gap-1.5">
-                                    View Plans
-                                </Button>
-                            </Link>
+                            <Button asChild size="sm" variant="outline" className="mt-2 min-h-11">
+                                <Link href="/pricing">See plans</Link>
+                            </Button>
                         </div>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0" onClick={() => setUpgradeData(null)}>
-                            <X className="h-3.5 w-3.5" />
+                        <Button variant="ghost" size="icon" className="size-11 flex-shrink-0" onClick={() => setUpgradeData(null)} aria-label="Dismiss">
+                            <X className="h-4 w-4" aria-hidden />
                         </Button>
                     </CardContent>
                 </Card>
